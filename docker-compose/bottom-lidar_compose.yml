@@ -1,0 +1,30 @@
+version: "2.29.1"
+
+services:
+  bottom-lidar:
+    image: kwu-cvrl/bottom-lidar:${DOCKER_TAG}
+    build:
+      context: ../
+      dockerfile: ./dockerfile/bottom-lidar.Dockerfile
+    tty: true
+    runtime: nvidia
+    environment: # used inside a docker.
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - __NV_PRIME_RENDER_OFFLOAD=1
+      - __GLX_VENDOR_LIBRARY_NAME=nvidia
+      - DEBUG=
+      - DISPLAY=${DISPLAY}
+      - ROS_MASTER_URI=${__ROS_MASTER_URI}
+      - ROS_HOSTNAME=${__ROS_HOSTNAME}
+      - QT_X11_NO_MITSHM=1
+    container_name: bottom-lidar
+    network_mode: host
+    privileged: true
+    volumes:
+      - /home/${USERNAME}/${WORK_FOLDER}/dataset:/root/dataset
+      - ../:/root/catkin_ws/
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev:/dev
+      # connect devices
+    command: bash
