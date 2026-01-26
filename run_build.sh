@@ -53,7 +53,7 @@ exec_command=(
     "${PROJECT_NAME}"
     "/bin/bash"
     "-c"
-    "source /opt/ros/noetic/setup.bash && cd ~/catkin_ws && catkin_make && source ~/catkin_ws/devel/setup.bash"
+    "mkdir -p build && cd build && cmake .. && make -j$(nproc) && ./bottom_lidar_slam"
 )
 
 stop_command=(

@@ -5,7 +5,7 @@ services:
     image: kwu-cvrl/bottom-lidar:${DOCKER_TAG}
     build:
       context: ../
-      dockerfile: ./dockerfile/bottom-lidar.Dockerfile
+      dockerfile: ./dockerfile/gtsam-points-cpu.Dockerfile
     tty: true
     runtime: nvidia
     environment: # used inside a docker.
@@ -23,7 +23,7 @@ services:
     privileged: true
     volumes:
       - /home/${USERNAME}/${WORK_FOLDER}/dataset:/root/dataset
-      - ../:/root/catkin_ws/
+      - ../:/root/workdir/
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /dev:/dev
       # connect devices
