@@ -8,6 +8,10 @@
 #include <cmath>
 #include <boost/format.hpp>
 
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/fmt/ostr.h>
+
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
@@ -28,7 +32,8 @@
 #include <gtsam_points/factors/integrated_icp_factor.hpp>
 #include <gtsam_points/factors/integrated_gicp_factor.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor.hpp>
-#include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
+// GPU acceleration not used in this configuration
+// #include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_points/optimizers/linearization_hook.hpp>
@@ -38,9 +43,17 @@
 #include <glk/primitives/primitives.hpp>
 #include <guik/viewer/light_viewer.hpp>
 
-class MatchingCostFactorDemo {
+class MatchingCostFactorDemo 
+{
 public:
-  MatchingCostFactorDemo() {
+  MatchingCostFactorDemo() 
+  {
+    // Initialize spdlog
+    auto console = spdlog::stdout_color_mt("demo");
+    spdlog::set_default_logger(console);
+    spdlog::set_level(spdlog::level::info);
+    spdlog::set_pattern("[%^%l%$] %v");
+    
     auto viewer = guik::LightViewer::instance();
     viewer->enable_vsync();
 
@@ -52,36 +65,41 @@ public:
     Eigen::Vector3d t_base_lidar(0.0, 0.0, 0.124);
     Eigen::Quaterniond q_base_lidar(0.0, 0.0, 0.0, 1.0);  // w, x, y, z order in Eigen
     gtsam::Pose3 T_base_lidar(gtsam::Rot3(q_base_lidar), t_base_lidar);
-    std::cout << "T_base_lidar translation: " << T_base_lidar.translation().transpose() << std::endl;
-    std::cout << "T_base_lidar rotation (ypr): " << T_base_lidar.rotation().ypr().transpose() << std::endl;
+    spdlog::info("T_base_lidar translation: [{:.3f}, {:.3f}, {:.3f}]", 
+                 T_base_lidar.translation().x(), T_base_lidar.translation().y(), T_base_lidar.translation().z());
+    auto ypr = T_base_lidar.rotation().ypr();
+    spdlog::info("T_base_lidar rotation (ypr): [{:.3f}, {:.3f}, {:.3f}]", ypr.x(), ypr.y(), ypr.z());
 
     // Read gt-tum.txt and build timestamp -> pose map
     std::map<double, gtsam::Pose3> gt_poses;
     {
       std::ifstream ifs(data_path + "/gt-tum.txt");
-      if (!ifs) {
-        std::cerr << "error: failed to open " << data_path + "/gt-tum.txt" << std::endl;
+      if (!ifs) 
+      {
+        spdlog::error("Failed to open {}/gt-tum.txt", data_path);
         abort();
       }
       
       double timestamp;
       gtsam::Vector3 trans;
       gtsam::Quaternion quat;
-      while (ifs >> timestamp >> trans.x() >> trans.y() >> trans.z() >> quat.x() >> quat.y() >> quat.z() >> quat.w()) {
+      while (ifs >> timestamp >> trans.x() >> trans.y() >> trans.z() >> quat.x() >> quat.y() >> quat.z() >> quat.w()) 
+      {
         gt_poses[timestamp] = gtsam::Pose3(gtsam::Rot3(quat), trans);
       }
-      std::cout << "Loaded " << gt_poses.size() << " poses from gt-tum.txt" << std::endl;
+      spdlog::info("Loaded {} poses from gt-tum.txt", gt_poses.size());
     }
 
 #ifdef GTSAM_POINTS_USE_CUDA
-    std::cout << "Register GPU linearization hook" << std::endl;
+    spdlog::info("Register GPU linearization hook");
     gtsam_points::LinearizationHook::register_hook([] { return gtsam_points::create_nonlinear_factor_set_gpu(); });
 #endif
 
     // Read test data
     frames.resize(5);
     voxelmaps.resize(5);
-    voxelmaps_gpu.resize(5);
+    // GPU voxelmaps (not used in CPU-only mode)
+    // voxelmaps_gpu.resize(5);
 
     // Get list of PCD files sorted by name
     std::vector<std::string> pcd_files;
@@ -99,21 +117,25 @@ public:
     
     if (pcd_files.size() < 5) 
     {
-      std::cerr << "error: expected at least 5 PCD files, found " << pcd_files.size() << std::endl;
+      spdlog::error("Expected at least 5 PCD files, found {}", pcd_files.size());
       abort();
     }
 
     // Lambda to find closest pose by timestamp
-    auto find_closest_pose = [&gt_poses](double target_ts) -> gtsam::Pose3 {
+    auto find_closest_pose = [&gt_poses](double target_ts) -> gtsam::Pose3 
+    {
       auto it = gt_poses.lower_bound(target_ts);
-      if (it == gt_poses.end()) {
+      if (it == gt_poses.end()) 
+      {
         return gt_poses.rbegin()->second;
       }
-      if (it == gt_poses.begin()) {
+      if (it == gt_poses.begin()) 
+      {
         return it->second;
       }
       auto prev_it = std::prev(it);
-      if (std::abs(it->first - target_ts) < std::abs(prev_it->first - target_ts)) {
+      if (std::abs(it->first - target_ts) < std::abs(prev_it->first - target_ts)) 
+      {
         return it->second;
       }
       return prev_it->second;
@@ -129,7 +151,7 @@ public:
     for (int i = 0; i < 5; i++) 
     {
       const std::string points_path = pcd_files[i];
-      std::cout << "loading " << points_path << std::endl;
+      spdlog::info("Loading {}", points_path);
 
       // Extract timestamp from PCD filename (e.g., "1710406871.842252000.pcd")
       std::string filename = fs::path(points_path).stem().string();  // "1710406871.842252000"
@@ -144,37 +166,42 @@ public:
       
       poses.insert(i, relative_pose);
       poses_gt.insert(i, relative_pose);
-      std::cout << "  matched timestamp: " << std::fixed << pcd_timestamp << std::endl;
-      std::cout << "  relative pose (L0_T_Li): " << relative_pose.translation().transpose() << std::endl;
+      spdlog::info("  Matched timestamp: {:.6f}", pcd_timestamp);
+      auto t = relative_pose.translation();
+      spdlog::info("  Relative pose (L0_T_Li): [{:.3f}, {:.3f}, {:.3f}]", t.x(), t.y(), t.z());
 
       auto points_f = gtsam_points::read_points(points_path);
-      if (points_f.empty()) {
-        std::cerr << "error: failed to read points " << points_path << std::endl;
+      if (points_f.empty()) 
+      {
+        spdlog::error("Failed to read points from {}", points_path);
         abort();
       }
       
       // Debug: print point stats
       Eigen::Vector3f min_pt = points_f[0], max_pt = points_f[0];
-      for (const auto& p : points_f) {
+      for (const auto& p : points_f) 
+      {
         min_pt = min_pt.cwiseMin(p);
         max_pt = max_pt.cwiseMax(p);
       }
-      std::cout << "  loaded " << points_f.size() << " points" << std::endl;
-      std::cout << "  bounds: [" << min_pt.transpose() << "] to [" << max_pt.transpose() << "]" << std::endl;
+      spdlog::info("  Loaded {} points", points_f.size());
+      spdlog::debug("  Bounds: [{:.2f}, {:.2f}, {:.2f}] to [{:.2f}, {:.2f}, {:.2f}]", 
+                    min_pt.x(), min_pt.y(), min_pt.z(), max_pt.x(), max_pt.y(), max_pt.z());
 
       // Points are in sensor local frame - keep as is
       // The pose will transform them to world frame during visualization and optimization
       std::vector<Eigen::Vector4d> points(points_f.size());
-      std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) {
+      std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) 
+      {
         return (Eigen::Vector4d() << p.cast<double>(), 1.0).finished();
       });
       auto covs = gtsam_points::estimate_covariances(points);
 
 #ifndef GTSAM_POINTS_USE_CUDA
-      std::cout << "Create CPU frame" << std::endl;
+      spdlog::debug("Create CPU frame");
       auto frame = std::make_shared<gtsam_points::PointCloudCPU>();
 #else
-      std::cout << "Create GPU frame" << std::endl;
+      spdlog::debug("Create GPU frame");
       auto frame = std::make_shared<gtsam_points::PointCloudGPU>();
 #endif
       frame->add_points(points);
@@ -222,11 +249,14 @@ public:
     correspondence_update_tolerance_rot = 0.0f;
     correspondence_update_tolerance_trans = 0.0f;
 
-    viewer->register_ui_callback("control", [this] {
+    viewer->register_ui_callback("control", [this] 
+    {
       // Add noise on the initial poses
       ImGui::DragFloat("noise_scale", &pose_noise_scale, 0.01f, 0.0f);
-      if (ImGui::Button("add noise")) {
-        for (int i = 1; i < 5; i++) {
+      if (ImGui::Button("add noise")) 
+      {
+        for (int i = 1; i < 5; i++) 
+        {
           gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * pose_noise_scale);
           poses.update<gtsam::Pose3>(i, poses_gt.at<gtsam::Pose3>(i) * noise);
         }
@@ -244,16 +274,22 @@ public:
       ImGui::DragFloat("corr update tolerance trans", &correspondence_update_tolerance_trans, 0.01f, 0.0f, 1.0f);
 
       // Run optimization
-      if (ImGui::Button("optimize")) {
-        if (optimization_thread.joinable()) {
+      if (ImGui::Button("optimize")) 
+      {
+        if (optimization_thread.joinable()) 
+        {
           optimization_thread.join();
         }
-        optimization_thread = std::thread([this] { run_optimization(); });
+        optimization_thread = std::thread([this] 
+        { 
+          run_optimization(); 
+        });
       }
     });
   }
 
-  ~MatchingCostFactorDemo() {
+  ~MatchingCostFactorDemo() 
+  {
     if (optimization_thread.joinable()) 
     {
       optimization_thread.join();
@@ -263,7 +299,7 @@ public:
   void update_viewer(const gtsam::Values& values) 
   {
     guik::LightViewer::instance()->invoke([=] 
-      {
+    {
       auto viewer = guik::LightViewer::instance();
 
       std::vector<Eigen::Vector3f> factor_lines;
@@ -296,8 +332,9 @@ public:
     gtsam::Key source_key,
     const gtsam_points::PointCloud::ConstPtr& target,
     const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap,
-    const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
-    const gtsam_points::PointCloud::ConstPtr& source) {
+    const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,  // Not used in CPU-only mode
+    const gtsam_points::PointCloud::ConstPtr& source) 
+  {
 
     if (factor_types[factor_type] == std::string("ICP")) 
     {
@@ -329,45 +366,52 @@ public:
       factor->set_num_threads(num_threads);
       return factor;
     } 
-    else if (factor_types[factor_type] == std::string("VGICP_GPU")) 
-    {
-#ifdef GTSAM_POINTS_USE_CUDA
-      return gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap_gpu, source);
-#endif
-    }
+    // GPU-accelerated VGICP (disabled in CPU-only mode)
+    // else if (factor_types[factor_type] == std::string("VGICP_GPU")) 
+    // {
+    // #ifdef GTSAM_POINTS_USE_CUDA
+    //   return gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap_gpu, source);
+    // #endif
+    // }
 
-    std::cerr << "error: unknown factor type " << factor_types[factor_type] << std::endl;
+    spdlog::error("Unknown factor type: {}", factor_types[factor_type]);
     return nullptr;
   }
 
-  void run_optimization() {
+  void run_optimization() 
+  {
     gtsam::NonlinearFactorGraph graph;
     graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, poses.at<gtsam::Pose3>(0), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
 
     // Create factors
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++) 
+    {
       // If full_connection == false, factors are only created between consecutive frames
       int j_end = full_connection ? 5 : std::min(i + 2, 5);
-      for (int j = i + 1; j < j_end; j++) {
-        auto factor = create_factor(i, j, frames[i], voxelmaps[i], voxelmaps_gpu[i], frames[j]);
+      for (int j = i + 1; j < j_end; j++) 
+      {
+        // Note: voxelmaps_gpu is nullptr in CPU-only mode
+        auto factor = create_factor(i, j, frames[i], voxelmaps[i], nullptr, frames[j]);
         graph.add(factor);
       }
     }
 
-    std::cout << "\n========================================" << std::endl;
-    std::cout << "Factor Type: " << factor_types[factor_type] << std::endl;
-    std::cout << "Optimizer: " << optimizer_types[optimizer_type] << std::endl;
-    std::cout << "========================================" << std::endl;
+    spdlog::info("========================================");
+    spdlog::info("Factor Type: {}", factor_types[factor_type]);
+    spdlog::info("Optimizer: {}", optimizer_types[optimizer_type]);
+    spdlog::info("========================================");
 
     gtsam::Values optimized_values;
 
     // Levenberg-Marquardt optimization
-    if (optimizer_types[optimizer_type] == std::string("LM")) {
+    if (optimizer_types[optimizer_type] == std::string("LM")) 
+    {
       gtsam_points::LevenbergMarquardtExtParams lm_params;
       lm_params.maxIterations = 100;
       lm_params.relativeErrorTol = 1e-5;
       lm_params.absoluteErrorTol = 1e-5;
-      lm_params.callback = [this](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+      lm_params.callback = [this](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) 
+      {
         guik::LightViewer::instance()->append_text(status.to_string());
         update_viewer(values);
       };
@@ -376,7 +420,8 @@ public:
       optimized_values = optimizer.optimize();
     }
     // iSAM2 optimization
-    else if (optimizer_types[optimizer_type] == std::string("ISAM2")) {
+    else if (optimizer_types[optimizer_type] == std::string("ISAM2")) 
+    {
       gtsam::ISAM2Params isam2_params;
       isam2_params.relinearizeSkip = 1;
       isam2_params.setRelinearizeThreshold(0.0);
@@ -387,7 +432,8 @@ public:
       update_viewer(isam2.calculateEstimate());
       guik::LightViewer::instance()->append_text(status.to_string());
 
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 5; i++) 
+      {
         auto status = isam2.update();
         update_viewer(isam2.calculateEstimate());
         guik::LightViewer::instance()->append_text(status.to_string());
@@ -401,7 +447,7 @@ public:
     }
 
     // Print comparison: Optimized vs GT
-    std::cout << "\n--- Results: " << factor_types[factor_type] << " ---" << std::endl;
+    spdlog::info("--- Results: {} ---", factor_types[factor_type]);
     for (int i = 0; i < 5; i++) 
     {
       gtsam::Pose3 opt_pose = optimized_values.at<gtsam::Pose3>(i);
@@ -410,13 +456,18 @@ public:
       // Compute error
       gtsam::Pose3 error = gt_pose.inverse() * opt_pose;
       
-      std::cout << "\nFrame " << i << ":" << std::endl;
-      std::cout << "  [Optimized] t: " << opt_pose.translation().transpose() << std::endl;
-      std::cout << "              R (ypr): " << opt_pose.rotation().ypr().transpose() * 180.0 / M_PI << " deg" << std::endl;
-      std::cout << "  [GT]        t: " << gt_pose.translation().transpose() << std::endl;
-      std::cout << "              R (ypr): " << gt_pose.rotation().ypr().transpose() * 180.0 / M_PI << " deg" << std::endl;
-      std::cout << "  [Error]     t: " << error.translation().norm() << " m" << std::endl;
-      std::cout << "              R: " << error.rotation().axisAngle().second * 180.0 / M_PI << " deg" << std::endl;
+      auto opt_t = opt_pose.translation();
+      auto opt_ypr = opt_pose.rotation().ypr() * 180.0 / M_PI;
+      auto gt_t = gt_pose.translation();
+      auto gt_ypr = gt_pose.rotation().ypr() * 180.0 / M_PI;
+      
+      spdlog::info("Frame {}:", i);
+      spdlog::info("  [Optimized] t: [{:.6f}, {:.6f}, {:.6f}]", opt_t.x(), opt_t.y(), opt_t.z());
+      spdlog::info("              R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", opt_ypr.x(), opt_ypr.y(), opt_ypr.z());
+      spdlog::info("  [GT]        t: [{:.6f}, {:.6f}, {:.6f}]", gt_t.x(), gt_t.y(), gt_t.z());
+      spdlog::info("              R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", gt_ypr.x(), gt_ypr.y(), gt_ypr.z());
+      spdlog::info("  [Error]     t: {:.6f} m", error.translation().norm());
+      spdlog::info("              R: {:.6f} deg", error.rotation().axisAngle().second * 180.0 / M_PI);
     }
     
     // Summary statistics
@@ -430,10 +481,10 @@ public:
       total_trans_error += error.translation().norm();
       total_rot_error += error.rotation().axisAngle().second * 180.0 / M_PI;
     }
-    std::cout << "\n--- Summary ---" << std::endl;
-    std::cout << "Mean Translation Error: " << total_trans_error / 5.0 << " m" << std::endl;
-    std::cout << "Mean Rotation Error: " << total_rot_error / 5.0 << " deg" << std::endl;
-    std::cout << "========================================\n" << std::endl;
+    spdlog::info("--- Summary ---");
+    spdlog::info("Mean Translation Error: {:.6f} m", total_trans_error / 5.0);
+    spdlog::info("Mean Rotation Error: {:.6f} deg", total_rot_error / 5.0);
+    spdlog::info("========================================");
   }
 
 private:
@@ -456,10 +507,12 @@ private:
   gtsam::Values poses_gt;
   std::vector<gtsam_points::PointCloud::Ptr> frames;
   std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps;
-  std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps_gpu;
+  // GPU voxelmaps (not used in CPU-only mode)
+  // std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps_gpu;
 };
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
   MatchingCostFactorDemo demo;
   guik::LightViewer::instance()->spin();
   return 0;
