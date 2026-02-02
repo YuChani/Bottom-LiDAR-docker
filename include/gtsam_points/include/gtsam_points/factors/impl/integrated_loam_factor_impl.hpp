@@ -156,7 +156,18 @@ double IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::evaluate(
     Eigen::Vector4d transed_x_i = delta * x_i;
     Eigen::Vector4d normal = Eigen::Vector4d::Zero();
     normal.head<3>() = (x_j - x_l).template head<3>().cross((x_j - x_m).template head<3>());
-    normal = normal / normal.norm();
+    
+    ////////////////////////////////////////////////////////
+    // yuchan_copilot_add : normal 예외처리부분
+    // NaN prevention: Check if normal is valid before normalization
+    double normal_norm = normal.norm();
+    if (normal_norm < 1e-6) 
+    {
+      // Collinear points detected, skip this correspondence
+      return 0.0;
+    }
+    ////////////////////////////////////////////////////////
+    normal = normal / normal_norm;
 
     Eigen::Vector4d residual = x_j - transed_x_i;
     Eigen::Vector4d plane_residual = residual.array() * normal.array();
