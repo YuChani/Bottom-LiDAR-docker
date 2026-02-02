@@ -17,15 +17,16 @@ option(BUILD_WITH_OPENMP "Build with OpenMP" ON)
 option(BUILD_WITH_CUDA "Build with CUDA" OFF)
 
 
-add_subdirectory(include/gtsam_points)
 # Thirdparty
+add_subdirectory(thirdparty/gtsam_points)
 add_subdirectory(thirdparty)
 
 
 # build
 include_directories(
-    include/gtsam_points/include  # gtsam_points 
-    thirdparty/spdlog/include     # spdlog 
+    thirdparty/gtsam_points/include  # gtsam_points 
+    thirdparty/spdlog/include        # spdlog 
+    include                          # loam_feature.hpp
     ${PCL_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
     ${GTSAM_INCLUDE_DIR}
@@ -33,8 +34,11 @@ include_directories(
 
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable(calculate_rt src/main.cpp)
-target_link_libraries(calculate_rt
+add_executable(matching_factor_demo 
+    src/main.cpp
+    src/loam_feature.cpp
+)
+target_link_libraries(matching_factor_demo
     ${PCL_LIBRARIES}
     gtsam
     gtsam_points   
