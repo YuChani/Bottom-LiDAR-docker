@@ -34,11 +34,11 @@ include_directories(
 
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable(matching_factor_demo 
+add_executable(lidar_registration_benchmark 
     src/main.cpp
     src/loam_feature.cpp
 )
-target_link_libraries(matching_factor_demo
+target_link_libraries(lidar_registration_benchmark
     ${PCL_LIBRARIES}
     gtsam
     gtsam_points   

@@ -1,0 +1,653 @@
+@startuml LOAM_Curvature_Comparison
+
+title LOAM 곡률 계산 비교
+
+' 각 구현별 색상 설정
+skinparam class {
+    BackgroundColor<<Original>> LightGreen
+    BackgroundColor<<LIO-SAM>> LightBlue
+    BackgroundColor<<Current>> #FFCCCC
+    BackgroundColor<<Fixed>> LightYellow
+}
+
+package "Original LOAM (laboshinl/loam_velodyne)" <<Original>> {
+    class OriginalLOAM {
+        **입력 파라미터**
+        --
+        + X_i : Vector3 (중심점)
+        + X_j : Vector3[] (10개 이웃 점)
+        + curvatureRegion : int = 5
+        --
+        **알고리즘**
+        --
+        1. diff = -10 * X_i
+        2. diff += Σ(X_{i+j} for j=-5..5, j≠0)
+        3. c = ||diff||²
+        --
+        **출력**
+        --
+        + curvature : float [m²]
+        --
+        **속성**
+        --
+        ✓ 제곱 노름 (Squared norm)
+        ✓ 정규화 없음
+        ✓ 스케일: 거리²
+        ✓ 거리 의존성 있음
+    }
+    
+    note right of OriginalLOAM::curvature
+        **공식:**
+        c = ||Σ X_j - 10·X_i||²
+        
+        **단위:** m² (거리의 제곱)
+        **범위:** 실외 기준 0.001 - 1.0
+        
+        **물리적 의미:**
+        국소적 매끄러움(smoothness)으로부터의 이탈 정도
+    end note
+}
+
+package "LIO-SAM (TixiaoShan/LIO-SAM)" <<LIO-SAM>> {
+    class LIOSAM {
+        **입력 파라미터**
+        --
+        + range_i : float (중심 거리)
+        + range_j : float[] (10개 이웃 거리)
+        --
+        **알고리즘**
+        --
+        1. diff = Σ(range_{i+j} for j=-5..5, j≠0)
+        2. diff -= 10 * range_i
+        3. c = diff²
+        --
+        **출력**
+        --
+        + curvature : float [m²]
+        --
+        **속성**
+        --
+        ✓ 제곱 형태 유지
+        ✓ 정규화 없음
+        ✓ 1D (거리값만 사용)
+        ✓ 거리 의존성 있음
+        ⚡ 3D보다 효율적임
+    }
+    
+    note right of LIOSAM::curvature
+        **공식:**
+        c = (Σ range_j - 10·range_i)²
+        
+        **최적화:**
+        3D 좌표 대신 1D 거리(range) 사용
+        → 계산 속도 향상
+        → 동일한 수학적 동작 유지
+    end note
+}
+
+package "현재 구현 (버그 발생)" <<Current>> {
+    class CurrentImplementation {
+        **입력 파라미터**
+        --
+        + X_i : Vector3 (중심점)
+        + X_j : Vector3[] (10개 이웃 점)
+        --
+        **알고리즘**
+        --
+        1. diff = 10 * X_i
+        2. diff -= Σ(X_{i+j} for j=-5..5, j≠0)
+        3. c = ||diff|| / (10 * ||X_i||)
+        --
+        **출력**
+        --
+        + curvature : float [무차원]
+        --
+        **속성**
+        --
+        ✗ 단일 노름 (제곱 아님)
+        ✗ ||X_i||로 정규화됨
+        ✗ 무차원(Dimensionless)
+        ✗ 거리 무관함
+        ⚠️ 잘못된 공식
+    }
+    
+    note right of CurrentImplementation::curvature
+        **공식:**
+        c = ||10·X_i - Σ X_j|| / (10·||X_i||)
+        
+        **버그 원인:**
+        1. ||X_i||로 나눔 → 거리 편향 발생
+        2. 제곱하지 않음 → 다른 스케일 적용됨
+        3. 무차원 → 기존 임계값과 호환 불가
+        
+        **영향:**
+        먼 점은 인위적으로 낮은 곡률을 가짐
+        가까운 점은 인위적으로 높은 곡률을 가짐
+    end note
+}
+
+package "수정된 구현 (정상)" <<Fixed>> {
+    class FixedImplementation {
+        **입력 파라미터**
+        --
+        + X_i : Vector3 (중심점)
+        + X_j : Vector3[] (10개 이웃 점)
+        --
+        **알고리즘**
+        --
+        1. diff = -10 * X_i
+        2. diff += Σ(X_{i+j} for j=-5..5, j≠0)
+        3. c = ||diff||²
+        --
+        **출력**
+        --
+        + curvature : float [m²]
+        --
+        **속성**
+        --
+        ✓ Original LOAM과 일치
+        ✓ 제곱 노름 사용
+        ✓ 정규화 없음
+        ✓ 거리 의존성 복구
+    }
+    
+    note right of FixedImplementation
+        **Original LOAM과 동일**
+        동일한 공식, 단위, 동작을 보장함
+    end note
+}
+
+' 관계 설정
+OriginalLOAM <|-- LIOSAM : 최적화 (1D)
+OriginalLOAM <|.. FixedImplementation : 이 방식으로 수정
+CurrentImplementation ..> FixedImplementation : 수정 필요 방향
+
+' 비교 범례
+legend right
+    **구현 상태**
+    |= 기호 |= 의미 |
+    | ✓ | 올바른 속성 |
+    | ✗ | 잘못된 속성 |
+    | ⚡ | 최적화 적용 |
+    | ⚠️ | 치명적인 버그 |
+endlegend
+
+@enduml
+
+@startuml LOAM_Feature_Extraction_Flow
+
+title LOAM 특징 추출 알고리즘 흐름 비교
+
+|오리지널 LOAM|
+start
+:포인트 클라우드 로드;
+:링(Ring) ID별 그룹화;
+:각도별 정렬;
+
+partition "곡률 계산" {
+    :각 포인트 i에 대해;
+    :10개의 이웃 확보 (±5);
+    :diff = -10 * X_i;
+    :diff += Σ(X_j);
+    :**c = ||diff||²**;
+    note right
+        제곱 노름 사용
+        정규화 없음
+    end note
+}
+
+partition "특징점 선택" {
+    :곡률 기준 정렬;
+    :상위 5%를 **EDGE**로 선택;
+    note right: 높은 곡률
+    :하위 10%를 **PLANAR**로 선택;
+    note right: 낮은 곡률
+}
+
+:엣지(Edge) 및 평면(Planar) 특징점 반환;
+stop
+
+|LIO-SAM|
+start
+:포인트 클라우드 로드;
+:링(Ring) ID별 그룹화;
+:각도별 정렬;
+
+partition "곡률 계산" {
+    :각 포인트 i에 대해;
+    :10개의 이웃 확보 (±5);
+    :diff = Σ(range_j) - 10*range_i;
+    :**c = diff²**;
+    note right
+        1D 거리 사용 (최적화됨)
+        여전히 제곱 형태 유지
+    end note
+}
+
+partition "특징점 선택" {
+    :곡률 기준 정렬;
+    :상위 포인트를 **EDGE**로 선택;
+    :하위 포인트를 **PLANAR**로 선택;
+}
+
+:엣지(Edge) 및 평면(Planar) 특징점 반환;
+stop
+
+|현재 구현 (버그 발생)|
+start
+:포인트 클라우드 로드;
+:링(Ring) ID별 그룹화;
+:각도별 정렬;
+
+partition "곡률 계산" {
+    :각 포인트 i에 대해;
+    :10개의 이웃 확보 (±5);
+    :diff = Σ(X_i - X_j);
+    :**c = ||diff|| / (10*||X_i||)**;
+    note right: ❌ 오류
+        제곱하지 않음
+        ||X_i||로 정규화함
+        → 거리 편향 발생
+    end note
+}
+
+partition "특징점 선택" {
+    :곡률 기준 정렬;
+    :상위 5%를 **EDGE**로 선택;
+    note right: 순위 산정 오류 발생!
+    :하위 10%를 **PLANAR**로 선택;
+}
+
+:엣지(Edge) 및 평면(Planar) 특징점 반환;
+note right: 잘못된 특징점들
+stop
+
+@enduml
+
+@startuml LOAM_Bug_Impact_Sequence
+
+title 버그 영향: 거리에 따른 곡률 변화 시뮬레이션
+
+participant "가까운 점\n(1m 거리)" as Near
+participant "먼 점\n(10m 거리)" as Far
+participant "현재 구현\n(버그 발생)" as Current
+participant "오리지널 LOAM" as LOAM
+
+== 동일한 기하학적 곡률 조건 ==
+
+Near -> Current : X_i = [1, 0, 0]\nneighbors = [0.95, ...]
+activate Current
+Current -> Current : diff = ||10*X_i - Σ X_j|| = 0.5
+Current -> Current : c = 0.5 / (10 * 1) = **0.05**
+Current --> Near : 곡률 = 0.05
+deactivate Current
+
+Far -> Current : X_i = [10, 0, 0]\nneighbors = [9.5, ...]
+activate Current
+Current -> Current : diff = ||100 - 95|| = 5.0
+Current -> Current : c = 5.0 / (10 * 10) = **0.05**
+Current --> Far : 곡률 = 0.05 ⚠️
+deactivate Current
+note right: 동일한 값이 나옴!\n잘못된 결과임!
+
+Near -> LOAM : X_i = [1, 0, 0]
+activate LOAM
+LOAM -> LOAM : diff = Σ X_j - 10*X_i
+LOAM -> LOAM : c = ||diff||² = **0.25 m²**
+LOAM --> Near : 곡률 = 0.25
+deactivate LOAM
+
+Far -> LOAM : X_i = [10, 0, 0]
+activate LOAM
+LOAM -> LOAM : diff = Σ X_j - 100*X_i
+LOAM -> LOAM : c = ||diff||² = **25 m²**
+LOAM --> Far : 곡률 = 25 ✓
+deactivate LOAM
+note right: 100배 더 큰 값\n정상적인 스케일링!
+
+== 특징점 선택 결과 ==
+
+Current -> Current : rank_near = rank_far\n(둘 다 0.05)
+note left: 거리 편향 발생!\n먼 거리 엣지 누락
+|
+LOAM -> LOAM : rank_far > rank_near\n(25 >> 0.25)
+note right: 거리²에 따른\n올바른 순위 산정
+
+@enduml
+
+@startuml LOAM_Math_Comparison
+
+title 수학적 공식 비교 상세
+
+rectangle "**오리지널 LOAM 공식**" #LightGreen {
+    card "입력" {
+        * X_i : 중심점 [x, y, z]
+        * {X_{i-5}, ..., X_{i+5}} : 이웃 점들
+        * |S| = 10개 이웃
+    }
+    
+    card "계산 과정" {
+        **diff_vec = Σ(j=-5 to 5, j≠0) X_{i+j} - 10·X_i**
+        
+        상세 전개:
+        diff_x = Σ X_j.x - 10·X_i.x
+        diff_y = Σ X_j.y - 10·X_i.y  
+        diff_z = Σ X_j.z - 10·X_i.z
+    }
+    
+    card "출력" #PaleGreen {
+        **c = ||diff_vec||²**
+        **c = diff_x² + diff_y² + diff_z²**
+        
+        단위: **[m²]**
+        범위: 0.001 - 1.0 (실외)
+    }
+}
+
+rectangle "**현재 구현 (버그)**" #FFCCCC {
+    card "입력" {
+        * X_i : 중심점 [x, y, z]
+        * {X_{i-5}, ..., X_{i+5}} : 이웃 점들
+        * |S| = 10개 이웃
+    }
+    
+    card "계산 과정" {
+        **diff_vec = Σ(j=-5 to 5, j≠0) (X_i - X_{i+j})**
+        
+        상세 전개:
+        diff_vec = 10·X_i - Σ X_j
+        (분자는 LOAM과 동일함)
+    }
+    
+    card "출력" #Pink {
+        **c = ||diff_vec|| / (10·||X_i||)** ❌
+        
+        단위: **무차원(dimensionless)**
+        범위: 약 0.01 - 0.1
+        
+        **문제점:**
+        • 제곱하지 않음 (·² 대신 √ 형태)
+        • ||X_i||로 나눔 (거리 편향 발생)
+        • 단위가 다름 (호환 불가)
+     card
+    }
+}
+
+note bottom of "**오리지널 LOAM 공식**"
+    **속성:**
+    ✓ 거리 의존성 (r²에 비례하여 스케일링)
+    ✓ 아웃라이어 강조 (이차식 페널티)
+    ✓ 제곱근 계산이 필요 없음
+    ✓ LOAM 원본 논문과 일치함
+end note
+
+note bottom of "**현재 구현 (버그)**"
+    **틀린 이유:**
+    1. **거리 편향**: 먼 점이 낮은 c값을 가짐
+    2. **스케일 불일치**: LOAM 임계값 사용 불가
+    3. **순위 오류**: 특징점 선택 우선순위 왜곡
+    4. **물리적 의미**: "매끄러움"의 척도가 변질됨
+end note
+
+@enduml
+
+@startuml LOAM_Class_Diagram
+
+title LOAM 특징 추출 클래스 구조
+
+interface PointCloud {
+    + points : Vector4d[]
+    + size() : int
+}
+
+abstract class FeatureExtractor {
+    # points : PointCloud
+    # half_neighbor : int = 5
+    --
+    + {abstract} extractFeatures() : LOAMFeatures
+    # {abstract} calculateCurvature(i : int) : float
+    # selectFeatures(curvatures : float[]) : LOAMFeatures
+}
+
+class OriginalLOAM {
+    --
+    + extractFeatures() : LOAMFeatures
+    # calculateCurvature(i : int) : float
+    --
+    **알고리즘:**
+    diff = -10*X_i + Σ X_j
+    return ||diff||²
+}
+
+class LIO_SAM {
+    --
+    + extractFeatures() : LOAMFeatures
+    # calculateCurvature(i : int) : float
+    --
+    **알고리즘:**
+    diff = -10*range_i + Σ range_j
+    return diff²
+}
+
+class CurrentImplementation <<Buggy>> {
+    --
+    + extractFeatures() : LOAMFeatures
+    # calculateCurvature(i : int) : float
+    --
+    **알고리즘 (오류):**
+    diff = 10*X_i - Σ X_j
+    return ||diff|| / (10*||X_i||)
+}
+
+class FixedImplementation {
+    --
+    + extractFeatures() : LOAMFeatures
+    # calculateCurvature(i : int) : float
+    --
+    **알고리즘 (수정완료):**
+    diff = -10*X_i + Σ X_j
+    return ||diff||²
+}
+
+class LOAMFeatures {
+    + edge_points : PointCloud
+    + planar_points : PointCloud
+    + num_edge() : int
+    + num_planar() : int
+}
+
+FeatureExtractor <|-- OriginalLOAM
+FeatureExtractor <|-- LIO_SAM
+FeatureExtractor <|-- CurrentImplementation
+FeatureExtractor <|-- FixedImplementation
+
+FeatureExtractor --> PointCloud : 사용
+FeatureExtractor ..> LOAMFeatures : 생성
+
+OriginalLOAM ..> LOAMFeatures : 올바른 특징점
+LIO_SAM ..> LOAMFeatures : 올바른 특징점
+CurrentImplementation ..> LOAMFeatures : 잘못된 특징점 ❌
+FixedImplementation ..> LOAMFeatures : 올바른 특징점 ✓
+
+note right of OriginalLOAM
+    **레퍼런스 구현체**
+    Source: laboshinl/loam_velodyne
+    File: BasicScanRegistration.cpp
+end note
+
+note right of LIO_SAM
+    **최적화 버전**
+    Source: TixiaoShan/LIO-SAM
+    File: featureExtraction.cpp
+    변경점: 3D 대신 1D 거리 사용
+end note
+
+note right of CurrentImplementation
+    **현재 버그 발생 지점**
+    File: loam_feature.cpp
+    Line: 132-135
+    이슈: 잘못된 정규화 방식
+end note
+
+note right of FixedImplementation
+    **수정된 버전**
+    Original LOAM 공식과 일치
+    배포 준비 완료
+end note
+
+@enduml
+
+@startuml LOAM_State_Machine
+
+title 특징점 분류 상태 머신
+
+[*] --> PointLoaded
+
+PointLoaded : 포인트 X_i 로드됨
+PointLoaded : 이웃 점들 탐색 완료
+
+PointLoaded --> CurvatureComputed : 곡률 계산 실행
+
+state CurvatureComputed {
+    state "오리지널 LOAM" as LOAM_State #LightGreen {
+        LOAM_State : c = ||Σ X_j - 10·X_i||²
+        LOAM_State : 단위: m²
+    }
+    
+    state "현재 구현 (버그)" as Current_State #FFCCCC {
+        Current_State : c = ||10·X_i - Σ X_j|| / (10·||X_i||)
+        Current_State : 단위: 무차원 ❌
+    }
+}
+
+CurvatureComputed --> FeatureClassification : 정렬 및 임계값 적용
+
+state FeatureClassification {
+    state choice1 <<choice>>
+    
+    choice1 --> EdgeFeature : c > threshold_high
+    choice1 --> PlanarFeature : c < threshold_low
+    choice1 --> NonFeature : else
+    
+    EdgeFeature : 높은 곡률
+    EdgeFeature : 날카로운 엣지, 모서리
+    
+    PlanarFeature : 낮은 곡률
+    PlanarFeature : 평평한 표면, 벽면
+    
+    NonFeature : 중간 곡률
+    NonFeature : 특징적이지 않음
+}
+
+FeatureClassification --> [*]
+
+note right of LOAM_State
+    **올바른 동작**
+    먼 거리의 동일 기하 구조
+    → 높은 곡률 산출 (r² 비례)
+    → 여전히 엣지로 선택됨 ✓
+end note
+
+note right of Current_State
+    **버그 발생 동작**
+    먼 거리의 동일 기하 구조
+    → 동일한 곡률 산출 (정규화됨)
+    → 엣지로 선택되지 않을 수 있음 ❌
+end note
+
+@enduml
+
+@startuml LOAM_Component_Diagram
+
+title LOAM 특징 추출 컴포넌트 아키텍처
+
+package "입력 처리" {
+    [포인트 클라우드 리더] as Reader
+    [링 그룹화] as Ring
+    [각도 정렬] as Sort
+}
+
+package "곡률 계산" <<Rectangle>> {
+    package "오리지널 LOAM" #LightGreen {
+        [이웃 탐색] as NS1
+        [3D 벡터 차이] as Diff1
+        [제곱 노름] as Norm1
+        
+        NS1 --> Diff1
+        Diff1 --> Norm1
+        
+        note right of Norm1
+            c = ||Σ X_j - 10·X_i||²
+        end note
+    }
+    
+    package "LIO-SAM" #LightBlue {
+        [이웃 탐색] as NS2
+        [1D 거리 차이] as Diff2
+        [제곱값] as Norm2
+        
+        NS2 --> Diff2
+        Diff2 --> Norm2
+        
+        note right of Norm2
+            c = (Σ range_j - 10·range_i)²
+            (3D보다 빠름)
+        end note
+    }
+    
+    package "현재 구현 (버그)" #FFCCCC {
+        [이웃 탐색] as NS3
+        [3D 벡터 차이] as Diff3
+        [정규화된 노름] as Norm3
+        
+        NS3 --> Diff3
+        Diff3 --> Norm3
+        
+        note right of Norm3
+            c = ||...|| / (10·||X_i||) ❌
+            잘못된 정규화!
+        end note
+    }
+}
+
+package "특징점 선택" {
+    [곡률 기준 정렬] as SortC
+    [임계값 필터] as Filter
+    [엣지 특징점] as Edge
+    [평면 특징점] as Planar
+    
+    SortC --> Filter
+    Filter --> Edge
+    Filter --> Planar
+}
+
+package "출력" {
+    [LOAMFeatures] as Output
+}
+
+Reader --> Ring
+Ring --> Sort
+Sort --> NS1
+Sort --> NS2
+Sort --> NS3
+
+Norm1 --> SortC : 올바른 값 전달 ✓
+Norm2 --> SortC : 올바른 값 전달 ✓
+Norm3 --> SortC : 잘못된 값 전달 ❌
+
+Edge --> Output
+Planar --> Output
+
+note bottom of Output
+    **버그의 영향:**
+    
+    오리지널 LOAM → 올바른 특징점 추출
+    LIO-SAM → 올바른 특징점 추출
+    현재 구현 → 거리 편향된 특징점 추출 ❌
+    
+    **수정 방안:**
+    ||X_i||에 의한 정규화 제거
+    제곱 노름(Squared norm) 사용
+end note
+
+@enduml

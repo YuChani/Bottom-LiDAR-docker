@@ -267,8 +267,8 @@ public:
     optimizer_types.push_back("ISAM2");
 
     factor_type = 2;  // 기본 팩터 최적화 알고리즘 타입은 2 : GICP
-    factor_types.push_back("ICP"); // 0 : Point-to-point ICP
-    factor_types.push_back("ICP_PLANE"); // 1 : Point-to-plane ICP
+    factor_types.push_back("Point-to-Point"); // 0 : Point-to-point ICP
+    factor_types.push_back("Point-to-Plane"); // 1 : Point-to-plane ICP
     factor_types.push_back("GICP"); // 2 : GICP
     factor_types.push_back("VGICP"); // 3 : VG-ICP
     factor_types.push_back("LOAM"); // 4 : LOAM
