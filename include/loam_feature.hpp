@@ -1,11 +1,3 @@
-/**
- * loam_feature.hpp - LOAM Feature Extraction
- * 
- * LOAM (Lidar Odometry and Mapping) 알고리즘의 특징점 추출 기능
- * - Ring 기반 특징 추출 (LOAM 논문 원본 방식)
- * - 3D KNN 기반 특징 추출 (백업용)
- */
-
 #pragma once
 
 #include <vector>
@@ -61,19 +53,12 @@ struct LOAMFeatures
 std::vector<PointWithRing> read_points_with_ring_pcl(const std::string& pcd_path);
 
 
-// Ring 기반 LOAM feature 추출 (LOAM 논문 원본 방식)
-// 
-// LOAM 논문의 Curvature 공식:
-//   c_i = ||Σ(X_i - X_j)||
-// 
-// 여기서:
-//   - X_i: 현재 포인트
-//   - X_j: 같은 Ring 내 ±5개 이웃 포인트
-//   - |S|: 이웃 포인트 수 (10개)
-// 
+// Ring 기반 LOAM feature 추출 (LIO-SAM 방식 채용) 이유는 아래와 같음:
+// 1. Ring 정보 활용: 각 Ring 별로 포인트를 나누어 처리
+// 2. 동일 Ring 내에서 최근접 이웃 검색: 2D 방식으로 곡률 계산
+// 3. 정확도 향상: 다른 Ring의 포인트가 섞이지 않아 더 정확한 특징점 추출 가능
 // Edge: 높은 곡률 (코너, 엣지 부분)
 // Planar: 낮은 곡률 (평면 부분)
-
 LOAMFeatures extract_loam_features_ring_based(const std::vector<PointWithRing>& points_with_ring);
 
 
