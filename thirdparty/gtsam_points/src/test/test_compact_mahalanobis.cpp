@@ -148,7 +148,11 @@ TEST_P(CompactMahalanobisTest, FactorTest) {
 
     gtsam::Vector6 noise3;
     std::generate(noise3.data(), noise3.data() + noise3.size(), [&] { return dist(mt) * 0.1; });
-    values.insert_or_assign(0, gtsam::Pose3::Expmap(noise2) * gtsam::Pose3::Expmap(noise3));
+    if (values.exists(0)) {
+      values.update(0, gtsam::Pose3::Expmap(noise2) * gtsam::Pose3::Expmap(noise3));
+    } else {
+      values.insert(0, gtsam::Pose3::Expmap(noise2) * gtsam::Pose3::Expmap(noise3));
+    }
 
     const double error_full = factor_full->error(values);
     const double error_compact = factor_compact->error(values);

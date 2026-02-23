@@ -533,7 +533,7 @@ void IntegratedLOAMFactor_<TargetFrame, SourceFrame>::validate_correspondences()
     const double v_theta3 = std::atan2(pt3.z(), pt3.template head<2>().norm());
 
     // Reject pairs in a same scan line
-    if (std::abs(v_theta1 - v_theta2) < 0.1 * M_PI / 180.0 && std::abs(v_theta1 - v_theta3) < 0.1 * M_PI * 180.0) {
+    if (std::abs(v_theta1 - v_theta2) < 0.1 * M_PI / 180.0 && std::abs(v_theta1 - v_theta3) < 0.1 * M_PI / 180.0) {
       corr = std::make_tuple(-1, -1, -1);
     }
   }

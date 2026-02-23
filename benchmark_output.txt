@@ -1,0 +1,956 @@
+[info] T_base_lidar translation: [0.000, 0.000, 0.124]
+[info] T_base_lidar rotation (ypr): [3.142, -0.000, 0.000]
+[info] Loaded 12270 poses from gt-tum.txt
+[info] Found 7 PCD files, loading 7 frames
+[info] Loading /root/workdir/data/pcd/1710406871.842252000.pcd
+[info]   Matched timestamp: 1710406871.842252
+[info]   Relative pose (L0_T_Li): [0.000, 0.000, 0.000]
+[info] PCL: Read 52158 points with ring info from /root/workdir/data/pcd/1710406871.842252000.pcd
+[info]   Loaded 52158 points
+[info]   Extracting LOAM features (Ring-based)...
+[info] Found 64 rings in point cloud
+[info] LOAM features (LIO-SAM): 473 edge, 893 planar from 52158 points
+[info] Edge points: 473, Planar points: 893
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 52158 points to PCL format
+[info] Built CloudInfo for 64 rings
+[info] LIO-SAM features: 863 edge, 588722 planar
+[info] LIO-SAM Edge points: 863, Planar points: 588722
+[info] Loading /root/workdir/data/pcd/1710406873.040731000.pcd
+[info]   Matched timestamp: 1710406873.040731
+[info]   Relative pose (L0_T_Li): [-1.426, -0.002, 0.065]
+[info] PCL: Read 51759 points with ring info from /root/workdir/data/pcd/1710406873.040731000.pcd
+[info]   Loaded 51759 points
+[info]   Extracting LOAM features (Ring-based)...
+[info] Found 64 rings in point cloud
+[info] LOAM features (LIO-SAM): 466 edge, 871 planar from 51759 points
+[info] Edge points: 466, Planar points: 871
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 51759 points to PCL format
+[info] Built CloudInfo for 64 rings
+[info] LIO-SAM features: 834 edge, 590370 planar
+[info] LIO-SAM Edge points: 834, Planar points: 590370
+[info] Loading /root/workdir/data/pcd/1710406875.138717000.pcd
+[info]   Matched timestamp: 1710406875.138717
+[info]   Relative pose (L0_T_Li): [-3.991, -0.201, 0.210]
+[info] PCL: Read 50993 points with ring info from /root/workdir/data/pcd/1710406875.138717000.pcd
+[info]   Loaded 50993 points
+[info]   Extracting LOAM features (Ring-based)...
+[info] Found 64 rings in point cloud
+[info] LOAM features (LIO-SAM): 496 edge, 899 planar from 50993 points
+[info] Edge points: 496, Planar points: 899
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 50993 points to PCL format
+[info] Built CloudInfo for 64 rings
+[info] LIO-SAM features: 800 edge, 601126 planar
+[info] LIO-SAM Edge points: 800, Planar points: 601126
+[info] Loading /root/workdir/data/pcd/1710406878.434653000.pcd
+[info]   Matched timestamp: 1710406878.434653
+[info]   Relative pose (L0_T_Li): [-8.006, -0.711, 0.390]
+[info] PCL: Read 49617 points with ring info from /root/workdir/data/pcd/1710406878.434653000.pcd
+[info]   Loaded 49617 points
+[info]   Extracting LOAM features (Ring-based)...
+[info] Found 64 rings in point cloud
+[info] LOAM features (LIO-SAM): 494 edge, 866 planar from 49617 points
+[info] Edge points: 494, Planar points: 866
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 49617 points to PCL format
+[info] Built CloudInfo for 64 rings
+[info] LIO-SAM features: 654 edge, 579598 planar
+[info] LIO-SAM Edge points: 654, Planar points: 579598
+[info] Loading /root/workdir/data/pcd/1710406880.032087000.pcd
+[info]   Matched timestamp: 1710406880.032087
+[info]   Relative pose (L0_T_Li): [-9.936, -0.704, 0.508]
+[info] PCL: Read 49412 points with ring info from /root/workdir/data/pcd/1710406880.032087000.pcd
+[info]   Loaded 49412 points
+[info]   Extracting LOAM features (Ring-based)...
+[info] Found 64 rings in point cloud
+[info] LOAM features (LIO-SAM): 501 edge, 869 planar from 49412 points
+[info] Edge points: 501, Planar points: 869
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 49412 points to PCL format
+[info] Built CloudInfo for 64 rings
+[info] LIO-SAM features: 666 edge, 573490 planar
+[info] LIO-SAM Edge points: 666, Planar points: 573490
+[info] Loading /root/workdir/data/pcd/1710406882.729361000.pcd
+[info]   Matched timestamp: 1710406882.729361
+[info]   Relative pose (L0_T_Li): [-13.261, -0.216, 0.708]
+[info] PCL: Read 49431 points with ring info from /root/workdir/data/pcd/1710406882.729361000.pcd
+[info]   Loaded 49431 points
+[info]   Extracting LOAM features (Ring-based)...
+[info] Found 64 rings in point cloud
+[info] LOAM features (LIO-SAM): 489 edge, 854 planar from 49431 points
+[info] Edge points: 489, Planar points: 854
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 49431 points to PCL format
+[info] Built CloudInfo for 64 rings
+[info] LIO-SAM features: 748 edge, 558611 planar
+[info] LIO-SAM Edge points: 748, Planar points: 558611
+[info] Loading /root/workdir/data/pcd/1710406884.925416000.pcd
+[info]   Matched timestamp: 1710406884.925416
+[info]   Relative pose (L0_T_Li): [-15.762, 1.021, 0.869]
+[info] PCL: Read 49743 points with ring info from /root/workdir/data/pcd/1710406884.925416000.pcd
+[info]   Loaded 49743 points
+[info]   Extracting LOAM features (Ring-based)...
+[info] Found 64 rings in point cloud
+[info] LOAM features (LIO-SAM): 499 edge, 956 planar from 49743 points
+[info] Edge points: 499, Planar points: 956
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 49743 points to PCL format
+[info] Built CloudInfo for 64 rings
+[info] LIO-SAM features: 1068 edge, 460995 planar
+[info] LIO-SAM Edge points: 1068, Planar points: 460995
+[info] 
+
+[info] ╔══════════════════════════════════════════════════════════╗
+[info] ║       Headless 6-Factor Registration Benchmark          ║
+[info] ╚══════════════════════════════════════════════════════════╝
+[info] Noise scale: 0.100
+[info] Frames: 7
+[info] Optimizer: LM
+[info] Full connection: true
+[info] 
+[info] ────────────────────────────────────────
+[info] Running: Point-to-Point
+[info] ────────────────────────────────────────
+[info] ========================================
+[info] Frames: 7
+[info] Factor Type: Point-to-Point
+[info] Optimizer: LM
+[info] ========================================
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0          192499         26938.6      1e-05     x     x    292.843   0.099659    8.49354    310.502
+[info]     1     1          175216         13823.2      1e-06     x     x    300.766   0.063639    9.59171    630.596
+[info]     2     2          167445         10874.5      1e-07     x     x    295.521   0.066039    8.65574    944.008
+[info]     3     3          161057          9628.5      1e-08     x     x    288.463   0.066859    9.55617    1252.07
+[info]     4     4          154311         8319.87      1e-09     x     x     283.89   0.065019    8.83326    1554.38
+[info]     5     5          148264         7404.41      1e-10     x     x     290.02   0.066379    8.86069     1862.9
+[info]     6     6          143291         6705.37      1e-11     x     x    291.575   0.066539    8.91461    2172.97
+[info]     7     7          138965         6297.55      1e-12     x     x    282.567   0.088899    11.8655    2477.34
+[info]     8     8          135295          6090.6      1e-13     x     x    281.351   0.066779    9.15236    2778.12
+[info]     9     9          132316         5867.26      1e-14     x     x    287.108   0.063979    9.06453    3084.06
+[info]    10    10          128497         5563.48      1e-15     x     x    279.042   0.066969    9.08661    3381.86
+[info]    11    11          124728         5211.75      1e-16     x     x    280.239   0.079929    9.25116    3681.32
+[info]    12    12          120352         4729.99      1e-17     x     x     276.59   0.069839    10.9805    3979.54
+[info]    13    13          116181         4239.06      1e-18     x     x    278.511   0.066949    9.16477    4277.02
+[info]    14    14          111835         3491.38      1e-19     x     x    277.753    0.06634    9.23471       4574
+[info]    15    15          107762         2746.42      1e-20     x     x    277.932   0.066829    9.27545    4871.04
+[info]    16    16          104372         2094.38      1e-21     x     x    276.693   0.067389    9.27899    5167.08
+[info]    17    17          101578         1483.17      1e-22     x     x    274.452    0.06406    9.25466    5460.65
+[info]    18    18           99599         1003.33      1e-23     x     x    275.013   0.067489    9.15247    5754.64
+[info]    19    19         98209.5         664.457      1e-24     x     x    274.378   0.066519    9.20994    6048.15
+[info]    20    20         97244.4         426.489      1e-25     x     x    276.764    0.06527    9.18812    6343.99
+[info]    21    21         96549.4           260.4      1e-26     x     x    272.454   0.065039    9.18296    6635.48
+[info]    22    22         96208.7         160.529      1e-27     x     x    272.825   0.065099    9.26378    6927.31
+[info]    23    23         96045.6         99.3439      1e-28     x     x     271.58   0.065799    9.55691    7218.38
+[info]    24    24         95871.2         63.9245      1e-29     x     x     272.09   0.066799    9.29469    7509.69
+[info]    25    25         95740.6         39.0669      1e-30     x     x    271.122   0.064239    9.24913    7800.16
+[info]    26    26         95646.6         26.3846      1e-31     x     x    272.011   0.066839    10.2141    8093.12
+[info]    27    27         95620.6         16.0801      1e-32     x     x    269.727   0.065249    9.28621    8382.06
+[info]    28    28         95581.8         10.3233      1e-33     x     x    272.494   0.065809    9.17405    8673.63
+[info]    29    29         95566.1         6.75092      1e-34     x     x    274.836   0.066939    9.33834    8967.69
+[info]    30    30         95562.9         4.30146      1e-35     x     x    271.875   0.066109    9.21354     9258.6
+[info] --- Results: Point-to-Point ---
+[info] Frame 0:
+[info]   [Optimized] t: [0.000000, -0.000000, -0.000000]
+[info]               R (ypr): [0.000, -0.000, 0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.424310, 0.029320, 0.081279]
+[info]               R (ypr): [-1.341, 1.942, 2.495] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.035515 m
+[info]               R: 0.601619 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.962202, -0.225483, 0.223152]
+[info]               R (ypr): [-2.087, -1.609, 0.382] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.039497 m
+[info]               R: 0.198323 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.948419, -0.801311, 0.403639]
+[info]               R (ypr): [-2.973, -0.594, 2.003] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.108152 m
+[info]               R: 0.398403 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.881541, -0.826479, 0.504590]
+[info]               R (ypr): [-5.491, 0.699, -0.412] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.134106 m
+[info]               R: 0.725039 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.149382, -0.286266, 0.707996]
+[info]               R (ypr): [-11.040, 0.714, 2.919] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.131571 m
+[info]               R: 0.581144 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.565284, 0.923532, 0.868431]
+[info]               R (ypr): [-40.770, 0.099, -3.799] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.219172 m
+[info]               R: 0.908431 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.095430 m
+[info] Mean Rotation Error: 0.487565 deg
+[info] Max  Translation Error: 0.219172 m
+[info] Max  Rotation Error: 0.908431 deg
+[info] Optimization Time: 9258.730 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: Point-to-Plane
+[info] ────────────────────────────────────────
+[info] ========================================
+[info] Frames: 7
+[info] Factor Type: Point-to-Plane
+[info] Optimizer: LM
+[info] ========================================
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0         96892.3         34838.9      1e-05     x     x    317.076   0.066759    10.7801    339.206
+[info]     1     1         66180.5         15068.1      1e-06     x     x    313.404   0.062949    10.9496    675.684
+[info]     2     2         52002.3         9993.21      1e-07     x     x    312.476   0.067869    10.8195    1011.39
+[info]     3     3         42723.2         7294.81      1e-08     x     x    312.087   0.063419    10.9804    1346.82
+[info]     4     4         37689.8          6409.8      1e-09     x     x    312.719   0.067159    10.7742    1683.05
+[info]     5     5         32051.5         5569.09      1e-10     x     x    305.612   0.064469    10.5197    2011.82
+[info]     6     6         25066.9         3674.01      1e-11     x     x    303.262   0.069999    11.3145    2339.05
+[info]     7     7         19892.9         1578.96      1e-12     x     x    303.476   0.064899    11.1837    2666.56
+[info]     8     8         17662.4          474.32      1e-13     x     x    306.749   0.070509     11.162    2997.76
+[info]     9     9         16992.9         131.065      1e-14     x     x    301.319   0.065399    10.6359    3322.15
+[info]    10    10         16819.8         37.7089      1e-15     x     x    302.768   0.072699    11.2065    3650.83
+[info]    11    11         16789.4         13.5368      1e-16     x     x    300.641   0.066009    11.2596    3975.62
+[info]    12    12         16781.8         5.52296      1e-17     x     x    299.805   0.066429    10.7266    4298.77
+[info]    13    13         16793.9         2.35149      1e-18     x     x    299.212   0.068919    11.5202    4622.12
+[info]    14    14         16800.5         1.01286      1e-19     x     x    306.385   0.066569    11.3353     4952.7
+[info]    15    15         16800.7        0.396191      1e-20     x     x    301.253   0.065879    11.6717    5278.53
+[info]    16    16         16807.7        0.224296      1e-21     x     x    302.093   0.069279     11.735    5605.47
+[info]    17    17         16801.5        0.129912      1e-22     x     x    305.192   0.073969    11.8088    5935.49
+[info]    18    18         16806.3       0.0436578      1e-23     x     x    309.651   0.065799    13.3478    6271.03
+[info]    19    19         16807.5        0.026149      1e-24     x     x    306.314   0.091529    12.9017    6603.96
+[info]    20    20         16806.4       0.0181755      1e-25     x     x    310.517   0.067159    10.5328    6937.86
+[info]    21    21           16804       0.0145493      1e-26     x     x    301.774   0.067529    11.6726    7264.17
+[info]    22    22           16803      0.00459856      1e-27     x     x     300.68   0.070279    12.1181    7589.76
+[info]    23    23         16802.6      0.00145002      1e-28     x     x    306.695   0.065529    11.1557     7920.5
+[info]    24    24         16802.5     0.000680565      1e-29     x     x    302.856   0.067129    11.6298       8248
+[info] --- Results: Point-to-Plane ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, -0.000000, 0.000000]
+[info]               R (ypr): [0.000, -0.000, 0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.419051, 0.024714, 0.080348]
+[info]               R (ypr): [-1.324, 1.899, 2.463] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.031787 m
+[info]               R: 0.555417 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.983250, -0.220911, 0.219287]
+[info]               R (ypr): [-2.056, -1.590, 0.393] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.022880 m
+[info]               R: 0.178034 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-8.006826, -0.791974, 0.402054]
+[info]               R (ypr): [-2.982, -0.553, 2.005] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.081944 m
+[info]               R: 0.372348 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.972906, -0.813891, 0.505344]
+[info]               R (ypr): [-5.446, 0.850, -0.472] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.116238 m
+[info]               R: 0.673891 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.244497, -0.265561, 0.711965]
+[info]               R (ypr): [-11.041, 0.876, 2.866] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.052182 m
+[info]               R: 0.431597 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.685669, 0.920867, 0.862436]
+[info]               R (ypr): [-40.784, 0.064, -3.947] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.125722 m
+[info]               R: 0.929910 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.061536 m
+[info] Mean Rotation Error: 0.448742 deg
+[info] Max  Translation Error: 0.125722 m
+[info] Max  Rotation Error: 0.929910 deg
+[info] Optimization Time: 8248.071 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: GICP
+[info] ────────────────────────────────────────
+[info] ========================================
+[info] Frames: 7
+[info] Factor Type: GICP
+[info] Optimizer: LM
+[info] ========================================
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0     3.97065e+06     1.47837e+06      1e-05     x     x    377.028   0.073369    23.9238    425.659
+[info]     1     1     3.75165e+06     1.21852e+06      1e-06     x     x    327.454   0.065719     26.463    803.611
+[info]     2     2     3.16403e+06     1.04184e+06      1e-07     x     x    328.966   0.069199    23.3509    1180.25
+[info]     3     3      2.5164e+06          907323      1e-08     x     x    325.214     0.0683    28.9573    1559.01
+[info]     4     4     1.53378e+06          327777      1e-09     x     x    321.482   0.068609    23.9079    1929.39
+[info]     5     5     1.14497e+06         77794.8      1e-10     x     x    315.904   0.070459    27.5538    2297.77
+[info]     6     6     1.04564e+06         27522.9      1e-11     x     x    319.456   0.069709    23.7037    2665.71
+[info]     7     7     1.01081e+06         9325.25      1e-12     x     x     314.62   0.069709    23.9051    3029.24
+[info]     8     8          999543         2955.72      1e-13     x     x    319.488   0.071749    25.1582     3399.6
+[info]     9     9          995388         1239.03      1e-14     x     x    325.657   0.068909    23.7502    3774.04
+[info]    10    10          992722           606.6      1e-15     x     x    322.589   0.065819    23.7801    4145.16
+[info]    11    11          991924         311.302      1e-16     x     x    316.319   0.068359    23.7724    4509.96
+[info]    12    12          991166         115.087      1e-17     x     x    319.682   0.069609     23.549    4877.92
+[info]    13    13          992527         69.1255      1e-18     x     x    313.968   0.072689    24.3764     5241.1
+[info]    14    14          991920         87.0285      1e-19     x     x    316.031   0.068689    24.0586    5606.38
+[info]    15    15          992108         71.7459      1e-20     x     x    315.515   0.066499    23.8888    5970.19
+[info]    16    16          991538         41.0556      1e-21     x     x    314.986   0.069809    23.8179    6335.89
+[info]    17    17          991147         17.8457      1e-22     x     x    315.122   0.067859    24.0332    6699.89
+[info]    18    18          990204         17.6674      1e-23     x     x    316.023   0.072449    24.6015    7069.49
+[info]    19    19          990163         9.16102      1e-24     x     x     315.05   0.069259    23.8594    7433.38
+[info]    20    20          990788         11.6163      1e-25     x     x    314.775   0.067999    28.6532    7801.52
+[info]    21    21          991274         2.17424      1e-26     x     x    319.544   0.067949    23.8362    8169.46
+[info]    22    22          991365        0.688307      1e-27     x     x    317.772   0.069049    24.3537     8536.8
+[info]    23    23          991649          1.1856      1e-28     x     x    317.795   0.068649    24.3117    8903.93
+[info]    24    24          991665        0.635296      1e-29     x     x     313.51   0.069149    23.4291    9265.95
+[info]    25    25          991613        0.405782      1e-30     x     x    317.698   0.067869     23.949    9631.98
+[info]    26    26          991633        0.376007      1e-31     x     x    314.284   0.067589    23.5096    9994.04
+[info]    27    27          991712         0.22937      1e-32     x     x    320.463   0.070069    24.0115    10363.2
+[info]    28    28          991701       0.0588213      1e-33     x     x    317.813   0.068029    23.6767    10729.3
+[info]    29    29          991731       0.0966886      1e-34     x     x    324.824   0.068109    23.8893    11105.1
+[info]    30    30          991740       0.0514889      1e-35     x     x    314.389    0.06859    23.5834    11467.8
+[info] --- Results: GICP ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, -0.000000, -0.000000]
+[info]               R (ypr): [0.000, -0.000, 0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.396707, 0.013643, 0.086084]
+[info]               R (ypr): [-1.386, 1.794, 2.479] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.039581 m
+[info]               R: 0.568578 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.970746, -0.236868, 0.195759]
+[info]               R (ypr): [-2.100, -1.733, 0.339] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.042849 m
+[info]               R: 0.329004 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.998580, -0.803734, 0.352468]
+[info]               R (ypr): [-3.067, -0.779, 1.982] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.100520 m
+[info]               R: 0.483810 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.973481, -0.841655, 0.425284]
+[info]               R (ypr): [-5.470, 0.702, -0.652] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.165061 m
+[info]               R: 0.741284 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.239861, -0.267121, 0.614182]
+[info]               R (ypr): [-11.127, 0.682, 2.938] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.108407 m
+[info]               R: 0.634917 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.672731, 0.995573, 0.774139]
+[info]               R (ypr): [-40.933, 0.104, -3.584] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.132595 m
+[info]               R: 1.102780 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.084145 m
+[info] Mean Rotation Error: 0.551482 deg
+[info] Max  Translation Error: 0.165061 m
+[info] Max  Rotation Error: 1.102780 deg
+[info] Optimization Time: 11467.841 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: VGICP
+[info] ────────────────────────────────────────
+[info] ========================================
+[info] Frames: 7
+[info] Factor Type: VGICP
+[info] Optimizer: LM
+[info] ========================================
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0          284330           43888      1e-05     x     x    120.655   0.075659    9.63517    140.961
+[info]     1     1          304955         44505.2      1e-06     x     x    86.0032   0.064239    9.86092    247.768
+[info]     2     2          335603         46749.6      1e-07     x     x    91.9913   0.068159    11.3357    362.982
+[info]     3     3          354236         54468.3      1e-08     x     x    91.7887   0.064339    10.7026    476.864
+[info]     4     4          371582         53391.6      1e-09     x     x    98.4022   0.067259    11.3426    598.529
+[info]     5     5          362394         44002.1      1e-10     x     x    98.7621   0.064989    11.0011    720.215
+[info]     6     6          363607           41883      1e-11     x     x    107.826   0.066239    12.0206    852.251
+[info]     7     7          361812         39965.1      1e-12     x     x    104.343   0.065619    12.0565    980.915
+[info]     8     8          350281         30366.6      1e-13     x     x    109.339   0.066999    12.2688    1115.05
+[info]     9     9          341813           22491      1e-14     x     x    107.655   0.065789    12.3271    1247.56
+[info]    10    10          326037         14131.7      1e-15     x     x    112.396   0.067389    12.4022    1384.96
+[info]    11    11          322374         13795.1      1e-16     x     x    110.314   0.064669    12.4719    1520.31
+[info]    12    12          322856         13411.8      1e-17     x     x    115.819   0.067019    12.2094    1661.02
+[info]    13    13          315724         7890.94      1e-18     x     x    113.512   0.072469    12.7384    1800.09
+[info]    14    14          309540         3836.24      1e-19     x     x    117.031   0.069119    13.7896    1943.97
+[info]    15    15          307867         2645.07      1e-20     x     x    115.302   0.068839    12.3608    2088.05
+[info]    16    16          307439          1983.3      1e-21     x     x    113.861   0.068279    12.8647    2227.73
+[info]    17    17          305726         1722.54      1e-22     x     x    118.486   0.067109    13.0125    2372.01
+[info]    18    18          309315         1743.89      1e-23     x     x    113.801   0.065329    12.8647    2511.48
+[info]    19    19          315085         2603.32      1e-24     x     x    119.842    0.06628    12.8209    2657.78
+[info]    20    20          324474          3611.3      1e-25     x     x    115.003   0.068909    12.9873    2798.69
+[info]    21    21          335230         5388.84      1e-26     x     x    120.072   0.066059    12.6853    2944.56
+[info]    22    22          352707          8405.2      1e-27     x     x    116.093   0.066819    12.8056    3090.68
+[info]    23    23          381762         17428.4      1e-28     x     x    116.866   0.066869    12.9815    3233.53
+[info]    24    24          408210         29066.4      1e-29     x     x    125.962   0.071319    14.2912    3388.23
+[info]    25    25          383023         3825.96      1e-30     x     x    126.229   0.067219    12.8208    3540.81
+[info]    26    26          375500         788.061      1e-31     x     x    128.786   0.065509    13.1099    3695.66
+[info]    27    27          372679         551.105      1e-32     x     x    126.745    0.06842    13.3641    3849.29
+[info]    28    28          368929         555.244      1e-33     x     x    124.658   0.066219    12.7497    4000.44
+[info]    29    29          365816         400.363      1e-34     x     x    128.545   0.067999     13.349    4155.31
+[info]    30    30          362681         305.704      1e-35     x     x    125.636   0.067079    13.0301    4307.07
+[info]    31    31          361824         153.691      1e-36     x     x    126.057   0.066449    12.6047    4458.84
+[info]    32    32          359830         114.367      1e-37     x     x    126.691   0.066489    12.7607    4611.66
+[info]    33    33          359558          52.921      1e-38     x     x    123.205   0.075529    12.8651    4761.18
+[info]    34    34          358979         34.9251      1e-39     x     x    126.172   0.066089    12.7972    4913.49
+[info]    35    35          358916         21.6314      1e-40     x     x    123.362   0.067749    14.1197    5064.11
+[info]    36    36          358732         16.8719      1e-41     x     x    125.066   0.065799    12.9763    5215.46
+[info]    37    37          358438         14.0455      1e-42     x     x    125.739   0.066839    12.7289    5367.15
+[info]    38    38          358591         16.2806      1e-43     x     x    126.034   0.067459    14.0457     5520.5
+[info]    39    39          358184         13.2416      1e-44     x     x    126.614   0.067359    13.4659    5674.17
+[info]    40    40          358558         15.0147      1e-45     x     x    127.285   0.073969    15.7163    5835.69
+[info]    41    41          358387          8.2313      1e-46     x     x    128.103   0.066779    13.3977     5990.5
+[info]    42    42          358579         6.24915      1e-47     x     x    128.481   0.068009    12.6322    6144.72
+[info]    43    43          358523         3.72313      1e-48     x     x    124.705   0.065169    12.6711    6295.24
+[info]    44    44          358395         3.25004      1e-49     x     x    128.112   0.071199    12.9276    6449.23
+[info]    45    45          358020          3.4684      1e-50     x     x     126.33   0.067529    12.8632    6601.74
+[info]    46    46          358303         2.93185      1e-51     x     x    122.997   0.065929      12.85    6750.77
+[info]    47    47          357986         2.38552      1e-52     x     x    128.241   0.068119    12.7892    6904.82
+[info]    48    48          357854         1.85201      1e-53     x     x    125.181   0.067309    12.8561    7056.12
+[info]    49    49          357844         2.03987      1e-54     x     x    130.771   0.068079    12.7184     7212.3
+[info]    50    50          357993        0.948092      1e-55     x     x     129.84   0.067179    13.1649    7368.42
+[info]    51    51          357956        0.932237      1e-56     x     x    123.099   0.066109    13.2287    7518.02
+[info]    52    52          357836        0.355887      1e-57     x     x    128.317   0.067319    12.8566    7672.12
+[info]    53    53          357828        0.449773      1e-58     x     x    123.043   0.065029      16.74    7825.01
+[info]    54    54          357932        0.747944      1e-59     x     x    122.591   0.067439     12.821    7973.48
+[info]    55    55          357971         1.89554      1e-60     x     x    125.529   0.073279    13.1707    8125.47
+[info]    56    56          357952         1.32657      1e-61     x     x    124.213   0.066579    13.5562    8276.67
+[info]    57    57          357996         1.04688      1e-62     x     x    131.609   0.068209     13.302    8435.12
+[info]    58    58          358129        0.514025      1e-63     x     x     123.12   0.070969    13.5877     8589.2
+[info]    59    59          358123        0.458538      1e-64     x     x    123.728   0.067379     13.378     8739.3
+[info]    60    60          357978        0.334056      1e-65     x     x    126.496    0.06795    13.1005    8892.12
+[info]    61    61          358094         0.37211      1e-66     x     x    123.367   0.066259    12.8266    9041.49
+[info]    62    62          358149        0.878584      1e-67     x     x     126.24   0.068169    13.0471    9193.93
+[info]    63    63          358109         1.18548      1e-68     x     x    126.043    0.06712    13.1906    9348.27
+[info]    64    64          357945        0.960511      1e-69     x     x    122.457   0.067779    13.0908    9497.03
+[info]    65    65          358001        0.820926      1e-70     x     x    125.375   0.065189    12.5892    9649.22
+[info]    66    66          358004         1.08783      1e-71     x     x     122.28   0.064539    12.7538    9797.52
+[info] --- Results: VGICP ---
+[info] Frame 0:
+[info]   [Optimized] t: [0.000000, -0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.387913, 0.019791, 0.083933]
+[info]               R (ypr): [-1.372, 1.720, 2.352] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.048034 m
+[info]               R: 0.508251 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.963386, -0.227019, 0.195944]
+[info]               R (ypr): [-2.039, -1.734, 0.148] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.039695 m
+[info]               R: 0.444466 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-9.069916, -0.522280, 0.419511]
+[info]               R (ypr): [0.262, -0.657, 1.790] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 1.080683 m
+[info]               R: 3.464607 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.953899, -0.804958, 0.455886]
+[info]               R (ypr): [-5.147, 0.637, -0.903] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.115157 m
+[info]               R: 1.104901 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.229778, -0.281984, 0.647114]
+[info]               R (ypr): [-11.154, 0.795, 2.748] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.094574 m
+[info]               R: 0.575597 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.656655, 0.970788, 0.798027]
+[info]               R (ypr): [-41.063, 0.316, -3.874] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.136360 m
+[info]               R: 1.169274 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.216358 m
+[info] Mean Rotation Error: 1.038157 deg
+[info] Max  Translation Error: 1.080683 m
+[info] Max  Rotation Error: 3.464607 deg
+[info] Optimization Time: 9797.592 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: LOAM
+[info] ────────────────────────────────────────
+[info] ========================================
+[info] Frames: 7
+[info] Factor Type: LOAM
+[info] Optimizer: LM
+[info] ========================================
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0         5639.14         1214.24      1e-05     x     x    6.30017   0.058219   0.368625    6.97262
+[info]     1     1         4975.67         842.655      1e-06     x     x    7.51813   0.064179   0.426265    15.6053
+[info]     2     2         4342.08         691.291      1e-07     x     x    6.63582   0.043439   0.370425    22.9869
+[info]     3     3         3619.75         512.025      1e-08     x     x    6.32852    0.03604   0.365085    30.0227
+[info]     4     4         2974.05         152.191      1e-09     x     x    6.45457    0.03584   0.366534    37.1793
+[info]     5     5         2813.18         28.3238      1e-10     x     x    6.14802   0.032869   0.362205    44.0285
+[info]     6     6         2802.34         4.39839      1e-11     x     x    5.38893   0.036589   0.387434     50.147
+[info]     7     7         2820.06        0.993987      1e-12     x     x    4.36815   0.031639   0.361365    55.2126
+[info]     8     8         2830.74        0.244626      1e-13     x     x    3.78855    0.02887   0.362165    59.6954
+[info]     9     9         2829.99      0.00762647      1e-14     x     x    2.97074   0.028399   0.355185     63.348
+[info]    10    10         2829.98       1.513e-05      1e-15     x     x    3.47951   0.066419   0.430874    67.6115
+[info] --- Results: LOAM ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, -0.000000, -0.000000]
+[info]               R (ypr): [-0.000, -0.000, -0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.359235, 0.100926, 0.064229]
+[info]               R (ypr): [-1.308, 1.744, 2.789] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.122886 m
+[info]               R: 0.659390 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.811116, -0.242216, 0.134587]
+[info]               R (ypr): [-2.180, -2.540, 0.509] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.198680 m
+[info]               R: 1.111598 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.881719, -0.807209, 0.236043]
+[info]               R (ypr): [-3.021, -1.281, 2.031] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.220345 m
+[info]               R: 0.968689 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.974690, -0.795831, 0.325830]
+[info]               R (ypr): [-5.744, 0.299, -0.464] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.207641 m
+[info]               R: 0.905895 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-12.970217, -0.162331, 0.441590]
+[info]               R (ypr): [-11.180, 0.147, 3.654] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.397532 m
+[info]               R: 1.363791 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-14.987008, 1.093224, 0.473618]
+[info]               R (ypr): [-40.391, -0.674, -1.831] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.872851 m
+[info]               R: 2.327760 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.288562 m
+[info] Mean Rotation Error: 1.048161 deg
+[info] Max  Translation Error: 0.872851 m
+[info] Max  Rotation Error: 2.327760 deg
+[info] Optimization Time: 67.668 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: NDT
+[info] ────────────────────────────────────────
+[info] ========================================
+[info] Frames: 7
+[info] Factor Type: NDT
+[info] Optimizer: LM
+[info] ========================================
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0     1.30705e+06         19501.5      1e-05     x     x    293.576   0.069919    21.5508    337.128
+[info]     1     1     1.29681e+06           18086      1e-06     x     x    200.653   0.067579    21.5976    581.343
+[info]     2     2     1.29024e+06           16805      1e-07     x     x    200.526   0.071359    21.9629    826.019
+[info]     3     3     1.28411e+06         15359.8      1e-08     x     x    198.027   0.068189    21.9482    1068.24
+[info]     4     4     1.28018e+06         14485.6      1e-09     x     x    199.293   0.068939    22.0711    1311.98
+[info]     5     5     1.27724e+06         13257.9      1e-10     x     x    201.667   0.071039    22.5048     1558.9
+[info]     6     6     1.27611e+06         12674.2      1e-11     x     x    201.182   0.068739     22.487    1805.38
+[info]     7     7     1.27602e+06         12362.8      1e-12     x     x    206.005   0.083829    23.5313    2058.07
+[info]     8     8     1.27537e+06         12294.1      1e-13     x     x    208.005   0.070899    22.7368    2311.74
+[info]     9     9     1.27464e+06           12675      1e-14     x     x    204.801   0.077209    22.9715    2562.65
+[info]    10    10     1.27297e+06         12414.3      1e-15     x     x    205.819   0.069549    23.2292    2814.99
+[info]    11    11     1.27196e+06         12769.5      1e-16     x     x    207.982   0.070409    23.3875    3069.76
+[info]    12    12     1.26968e+06         13545.9      1e-17     x     x    206.986   0.069009    23.5233     3323.9
+[info]    13    13     1.26443e+06         15008.6      1e-18     x     x    209.072   0.067359    23.4441    3580.19
+[info]    14    14     1.25699e+06         16938.3      1e-19     x     x     212.42   0.069829    23.8537    3840.39
+[info]    15    15     1.24626e+06         17736.6      1e-20     x     x    215.184   0.070459    24.3685     4105.5
+[info]    16    16     1.23347e+06         18812.7      1e-21     x     x    216.428   0.069979    23.8453    4369.73
+[info]    17    17     1.21984e+06         18711.1      1e-22     x     x    214.456   0.069679    24.8813    4633.48
+[info]    18    18     1.20407e+06         18169.1      1e-23     x     x    215.111   0.069439    24.1289    4897.05
+[info]    19    19     1.18982e+06         18182.3      1e-24     x     x    215.595   0.068469    24.2712    5161.24
+[info]    20    20     1.17577e+06         17678.5      1e-25     x     x    213.898   0.068579    24.3117     5423.9
+[info]    21    21     1.16213e+06         17939.3      1e-26     x     x    214.709   0.068919    24.4614    5687.62
+[info]    22    22     1.14919e+06         17900.1      1e-27     x     x    216.807   0.068929    26.3551    5955.52
+[info]    23    23     1.13466e+06         17544.6      1e-28     x     x     216.27   0.083889    24.8528    6223.48
+[info]    24    24     1.12162e+06         17621.7      1e-29     x     x    215.647   0.074859    25.0346    6492.13
+[info]    25    25     1.10987e+06         17971.8      1e-30     x     x    219.791   0.067819    24.8845     6761.7
+[info]    26    26     1.09853e+06         17077.3      1e-31     x     x    218.904   0.068619    24.9282     7030.5
+[info]    27    27     1.08812e+06         16576.7      1e-32     x     x    220.222   0.071369    24.9745    7300.83
+[info]    28    28     1.07906e+06         15891.6      1e-33     x     x    220.922   0.069769    25.2095    7572.23
+[info]    29    29     1.06814e+06         15273.6      1e-34     x     x    222.943   0.069539    25.3035    7845.86
+[info]    30    30     1.05846e+06         15030.9      1e-35     x     x    225.893   0.071269    25.4478    8122.72
+[info]    31    31     1.04881e+06         14354.9      1e-36     x     x     226.82   0.068489    25.5262    8400.64
+[info]    32    32     1.03951e+06         13862.3      1e-37     x     x    222.905   0.069209    25.6992    8674.83
+[info]    33    33     1.03063e+06         13070.3      1e-38     x     x    224.256   0.069439    27.1072    8952.01
+[info]    34    34     1.02283e+06         12154.7      1e-39     x     x    223.376   0.069569    25.7793    9227.97
+[info]    35    35     1.01506e+06         10974.9      1e-40     x     x    235.783   0.074039    27.1461    9516.96
+[info]    36    36     1.00733e+06         9939.91      1e-41     x     x    228.212   0.070229    25.9569    9797.19
+[info]    37    37     1.00178e+06          9253.4      1e-42     x     x    227.419   0.071859    26.3027      10077
+[info]    38    38          996327         8885.45      1e-43     x     x    227.443   0.069259    26.2589    10357.2
+[info]    39    39          991645         8447.45      1e-44     x     x     229.14   0.068999    26.1844    10638.7
+[info]    40    40          987808         7769.72      1e-45     x     x    230.462   0.067809    26.2906    10921.8
+[info]    41    41          983666         7130.08      1e-46     x     x    231.153   0.068909    27.6578      11207
+[info]    42    42          979825         6450.92      1e-47     x     x    229.043   0.071449    26.5387    11491.6
+[info]    43    43          976172          6056.4      1e-48     x     x    229.988   0.068879     26.404    11774.5
+[info]    44    44          973915          5768.5      1e-49     x     x    232.903   0.070329    26.5849    12060.5
+[info]    45    45          971218         5455.93      1e-50     x     x    233.341   0.069679    26.6156    12347.5
+[info]    46    46          969668         5240.45      1e-51     x     x    234.607   0.069659    26.5433    12635.3
+[info]    47    47          968210            4984      1e-52     x     x    233.006   0.069119    26.5527    12921.5
+[info]    48    48          967337         4474.63      1e-53     x     x    237.471   0.070479    28.1576    13213.9
+[info]    49    49          966543         3881.88      1e-54     x     x    231.069   0.067639    26.9047    13501.9
+[info]    50    50          965977         3367.24      1e-55     x     x    236.759   0.070879    26.8449    13792.4
+[info]    51    51          966031         2886.54      1e-56     x     x    234.661   0.068869    27.0948    14081.3
+[info]    52    52          966886          2582.8      1e-57     x     x    235.696   0.068149    26.8788    14371.1
+[info]    53    53          968692         2253.61      1e-58     x     x    234.915   0.069249    26.9545      14660
+[info]    54    54          971434          2042.4      1e-59     x     x    239.947   0.070789     28.745    14955.8
+[info]    55    55          973718         1849.62      1e-60     x     x    234.508   0.068689    27.2656    15248.3
+[info]    56    56          976571         1663.72      1e-61     x     x    236.514   0.069639     27.137    15539.1
+[info]    57    57          978670         1536.41      1e-62     x     x    236.356   0.069249    27.1473    15829.8
+[info]    58    58          980519         1479.05      1e-63     x     x    236.906   0.073259    27.3191    16122.5
+[info]    59    59          983382         1423.32      1e-64     x     x    235.825   0.070979    27.4722    16413.1
+[info]    60    60          985134         1414.64      1e-65     x     x    237.157   0.072279    28.6938    16706.3
+[info]    61    61          987477         1434.97      1e-66     x     x    235.341   0.069129    27.3642    16997.7
+[info]    62    62          989949         1468.55      1e-67     x     x    236.787   0.069989    27.4575    17289.5
+[info]    63    63          991889         1395.18      1e-68     x     x    237.471   0.068259     27.411    17581.9
+[info]    64    64          994205         1386.34      1e-69     x     x    238.341   0.069149    27.5513    17875.4
+[info]    65    65          996178          1334.8      1e-70     x     x    239.704   0.067959     27.629    18170.4
+[info]    66    66          999253          1310.9      1e-71     x     x    239.067   0.068169    29.7803    18466.8
+[info]    67    67     1.00415e+06         1332.21      1e-72     x     x    240.792   0.068829    27.7217      18763
+[info]    68    68     1.01056e+06         1378.18      1e-73     x     x    239.298   0.067369      27.76    19057.9
+[info]    69    69     1.01627e+06         1447.09      1e-74     x     x     239.35   0.069359    27.8915      19353
+[info]    70    70     1.02138e+06         1560.02      1e-75     x     x    241.922   0.068669    27.8988    19650.7
+[info]    71    71     1.02612e+06          1621.5      1e-76     x     x    242.058   0.068959      28.35    19949.2
+[info]    72    72     1.03022e+06         1715.13      1e-77     x     x     242.72   0.068049    28.1016      20251
+[info]    73    73     1.03392e+06         1725.78      1e-78     x     x    244.678   0.069679    28.1911    20552.2
+[info]    74    74     1.03735e+06         1757.26      1e-79     x     x    242.722   0.067769    28.2244    20851.4
+[info]    75    75     1.04069e+06          1928.7      1e-80     x     x    247.275   0.069569    28.2181    21156.1
+[info]    76    76     1.04447e+06         2095.15      1e-81     x     x    243.278   0.066989    29.9565    21457.7
+[info]    77    77     1.04801e+06         2364.57      1e-82     x     x    241.732   0.071109    28.4295    21757.1
+[info]    78    78     1.04978e+06         2705.56      1e-83     x     x    244.659   0.068039    28.5285    22058.7
+[info]    79    79     1.05189e+06         3120.09      1e-84     x     x    243.693   0.068689    28.5719    22359.6
+[info]    80    80     1.05293e+06         3529.19      1e-85     x     x    245.598   0.064849    28.6276    22662.5
+[info]    81    81     1.05332e+06         4149.72      1e-86     x     x    247.019   0.081559    30.8568    22969.1
+[info]    82    82     1.05228e+06         4647.87      1e-87     x     x    247.804   0.069309    28.8501    23274.6
+[info]    83    83      1.0501e+06         4829.73      1e-88     x     x    247.906   0.068919    28.9281    23580.4
+[info]    84    84     1.04705e+06         5121.84      1e-89     x     x    249.393    0.06826     28.929    23887.8
+[info]    85    85     1.04308e+06         5875.57      1e-90     x     x    252.018   0.068739     29.005    24197.8
+[info]    86    86     1.03784e+06          6452.4      1e-91     x     x    249.871   0.068949    29.0532    24507.3
+[info]    87    87     1.03188e+06         6948.33      1e-92     x     x    248.987   0.070169     29.472    24814.9
+[info]    88    88     1.02521e+06          7984.1      1e-93     x     x    250.982   0.068829    29.1382    25124.2
+[info]    89    89     1.01743e+06         8480.71      1e-94     x     x     252.07   0.069029    29.2162    25434.8
+[info]    90    90     1.00868e+06         8889.93      1e-95     x     x    250.607   0.071559       30.4    25747.1
+[info]    91    91          998788         9264.55      1e-96     x     x    252.314   0.075129    29.9839    26058.9
+[info]    92    92          988053         8773.52      1e-97     x     x     253.51   0.069809    29.3106    26371.5
+[info]    93    93          978165         7067.81      1e-98     x     x    254.326   0.073959    29.3528    26684.6
+[info]    94    94          969630         5126.04      1e-99     x     x    254.212   0.069349    29.6133      26999
+[info]    95    95          963511         3533.13     1e-100     x     x    255.479   0.068609     31.256    27315.2
+[info]    96    96          959212         2434.73     1e-101     x     x    260.847   0.070069    29.4241      27635
+[info]    97    97          956483         1824.19     1e-102     x     x    250.901   0.068759    29.3999    27944.7
+[info]    98    98          954345         1337.74     1e-103     x     x     257.76   0.070349    29.4459    28262.4
+[info]    99    99          953383         1020.18     1e-104     x     x    255.373   0.068709    29.4802    28576.7
+[info]   100   100          951900         833.298     1e-105     x     x    255.136   0.071619    29.5334    28890.9
+[info] --- Results: NDT ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, 0.000000, -0.000000]
+[info]               R (ypr): [-0.000, 0.000, 0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.393295, 0.014413, 0.097559]
+[info]               R (ypr): [-1.358, 1.889, 2.288] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.049220 m
+[info]               R: 0.556727 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.970930, -0.241461, 0.232004]
+[info]               R (ypr): [-2.047, -1.542, 0.186] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.049821 m
+[info]               R: 0.308946 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.989092, -0.779103, 0.411358]
+[info]               R (ypr): [-2.801, -0.538, 1.917] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.073435 m
+[info]               R: 0.454100 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.914581, -0.841708, 0.507124]
+[info]               R (ypr): [-5.788, 0.824, -0.834] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.139494 m
+[info]               R: 0.515284 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.223114, -0.299964, 0.720500]
+[info]               R (ypr): [-11.114, 0.815, 2.608] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.092761 m
+[info]               R: 0.607931 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.652537, 0.928923, 0.870464]
+[info]               R (ypr): [-40.992, 0.118, -4.044] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.142668 m
+[info]               R: 1.129417 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.078200 m
+[info] Mean Rotation Error: 0.510344 deg
+[info] Max  Translation Error: 0.142668 m
+[info] Max  Rotation Error: 1.129417 deg
+[info] Optimization Time: 28890.954 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: LOAM_LIOSAM
+[info] ────────────────────────────────────────
+[info] ========================================
+[info] Frames: 7
+[info] Factor Type: LOAM_LIOSAM
+[info] Optimizer: LM
+[info] ========================================
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0         6788.55         2753.14      1e-05     x     x    22474.8   0.066759    36.7097      22548
+[info]     1     1         5316.47            1851      1e-06     x     x    20126.4    0.06726    36.6434    42747.9
+[info]     2     2         3028.28         542.103      1e-07     x     x    17988.3   0.065379    36.8585    60810.1
+[info]     3     3         2653.89         570.712      1e-08     x     x    17808.4   0.092569    38.3197    78695.8
+[info]     4     4         1807.02         123.224      1e-09     x     x    16266.1   0.065539      36.07    95034.5
+[info]     5     5         1774.55         136.864      1e-10     x     x    16117.7   0.067019     36.613     111227
+[info]     6     6         1892.45         113.563      1e-11     x     x    15175.8   0.070879    37.0378     126478
+[info]     7     7         1502.15         93.0799      1e-12     x     x    14559.3   0.068389    36.4792     141110
+[info]     8     8         1784.72          77.526      1e-13     x     x    14375.4   0.066249    36.4395     155558
+[info]     9     9         1378.04         66.9655      1e-14     x     x    14195.2   0.064389    36.1491     169826
+[info]    10    10         1309.57         47.2425      1e-15     x     x    13151.3   0.064899     36.739     183052
+[info]    11    11         1390.05         30.9356      1e-16     x     x    13600.5   0.068809     39.675     196729
+[info]    12    12         1552.73         37.3361      1e-17     x     x    13202.1   0.067119    36.8373     210006
+[info]    13    13         1370.49         52.6666      1e-18     x     x    13946.6   0.081849    39.0222     224033
+[info]    14    14         1386.32         66.0106      1e-19     x     x    13032.9   0.069229     36.956     237140
+[info]    15    15         1561.87         62.8978      1e-20     x     x    13512.2     0.0661    36.5316     250725
+[info]    16    16         1690.03         72.1202      1e-21     x     x    13213.5    0.06676    37.1195     264013
+[info]    17    17         1382.26         66.3521      1e-22     x     x    13181.5   0.067479    36.6337     277268
+[info]    18    18          1381.5         51.8427      1e-23     x     x    13721.7   0.070289    36.7366     291063
+[info]    19    19         1420.29          44.308      1e-24     x     x    12793.3   0.068519    37.3457     303932
+[info]    20    20         1376.96         57.2972      1e-25     x     x    13655.2   0.066639     37.707     317662
+[info]    21    21         1194.87         42.6291      1e-26     x     x    13727.5   0.069949    36.7988     331463
+[info]    22    22         1528.12         78.0641      1e-27     x     x    12946.2   0.068109    36.7168     344483
+[info]    23    23         1605.06         67.0923      1e-28     x     x    12847.5   0.068959    37.2795     357405
+[info]    24    24         1397.78         65.6049      1e-29     x     x    13185.1   0.063579    37.8013     370665
+[info]    25    25          1403.2         92.3399      1e-30     x     x    13476.9   0.067919    36.8522     384217
+[info]    26    26          1478.1         55.4015      1e-31     x     x    13534.8   0.067449    36.1383     397824
+[info]    27    27         1591.19         81.0127      1e-32     x     x    13770.5   0.066399    38.0782     411669
+[info]    28    28         1733.46          61.597      1e-33     x     x    13741.9   0.067189     36.498     425485
+[info]    29    29         1432.93         47.4656      1e-34     x     x    13506.2   0.073538    36.7906     439064
+[info]    30    30         1333.36         44.0688      1e-35     x     x    12741.6   0.066189    36.9641     451880
+[info]    31    31         1205.17         38.3723      1e-36     x     x    13332.5   0.068429    37.1007     465286
+[info]    32    32         1194.29         49.9461      1e-37     x     x    12907.5   0.067769    37.0185     478268
+[info]    33    33         1489.27         59.7674      1e-38     x     x    12312.4   0.067539    38.5718     490656
+[info]    34    34          1328.2         27.6033      1e-39     x     x    13812.8   0.066049    36.5943     504543
+[info]    35    35         1415.13         45.0337      1e-40     x     x    11589.4   0.066699    36.4192     516205
+[info]    36    36         1433.92         66.8913      1e-41     x     x    13456.6   0.067369     37.191     529736
+[info]    37    37          1347.3           46.21      1e-42     x     x    12396.2   0.068659    37.0525     542206
+[info]    38    38         1333.69         80.5699      1e-43     x     x    12321.2   0.071249    38.1818     554602
+[info]    39    39         1335.21         51.2694      1e-44     x     x    13243.5   0.065099    36.7306     567919
+[info]    40    40         1368.76         28.0499      1e-45     x     x    13290.7   0.067129    36.3592     581282
+[info]    41    41         1214.52         19.1583      1e-46     x     x    12199.3    0.06967    37.0887     593556
+[info]    42    42         1357.88         21.9341      1e-47     x     x    11743.4   0.067659    37.8197     605374
+[info]    43    43         1268.26         66.6805      1e-48     x     x    13254.2   0.069029    36.9991     618702
+[info]    44    44         1533.72         45.3771      1e-49     x     x    13148.5    0.06793    36.6505     631925
+[info]    45    45         1378.67         35.1463      1e-50     x     x    13572.3   0.067329    36.8333     645571
+[info]    46    46         1433.16         45.6874      1e-51     x     x    13260.7   0.068229     36.402     658907
+[info]    47    47          1450.3         55.0531      1e-52     x     x    13268.3   0.068819    36.7093     672249
+[info]    48    48         1468.03         66.1451      1e-53     x     x    12727.9   0.067319    36.9848     685051
+[info]    49    49         1326.32          39.663      1e-54     x     x    13272.8   0.067989    38.6433     698399
+[info]    50    50          1437.3         56.1944      1e-55     x     x    13792.4   0.069549    36.6451     712264
+[info]    51    51         1251.02         58.0598      1e-56     x     x    12859.9   0.067429    36.8052     725201
+[info]    52    52         1621.18         57.4467      1e-57     x     x    13448.3    0.06674    36.4679     738722
+[info]    53    53         1098.69         50.9119      1e-58     x     x      13356   0.067949    38.7562     752154
+[info]    54    54         1776.83         144.459      1e-59     x     x    13428.4   0.065749    38.5841     765657
+[info]    55    55          1277.2         60.7638      1e-60     x     x    13221.7   0.067119    36.7247     778953
+[info]    56    56         1312.78         24.3287      1e-61     x     x    13329.2   0.068069    36.7021     792356
+[info]    57    57         1261.96         16.8017      1e-62     x     x    11948.3   0.076639    36.3799     804377
+[info]    58    58          1417.5         41.8315      1e-63     x     x    12547.8   0.066789    36.6342     816998
+[info]    59    59         1433.14          93.311      1e-64     x     x    13697.8   0.067679    36.8149     830770
+[info]    60    60         1315.31         56.9143      1e-65     x     x    13693.9   0.068189    37.5929     844542
+[info]    61    61         1482.09          69.866      1e-66     x     x    14120.4   0.064269    39.3608     858738
+[info]    62    62         1785.37         132.764      1e-67     x     x    13709.6   0.068499     37.002     872523
+[info]    63    63         1235.35         49.4182      1e-68     x     x      14106   0.066729    36.7047     886703
+[info]    64    64         1502.72         40.8973      1e-69     x     x    13206.2   0.071269    36.8781     899982
+[info]    65    65         1446.09         35.9438      1e-70     x     x    12736.3   0.064749    36.5641     912794
+[info]    66    66         1661.68         52.5425      1e-71     x     x    12574.6   0.068539    36.1968     925441
+[info]    67    67         1568.12         79.2811      1e-72     x     x    13282.9   0.067949    36.6559     938800
+[info]    68    68         1487.13         93.8352      1e-73     x     x    13391.7   0.069239    38.3318     952266
+[info]    69    69         1444.97         92.9808      1e-74     x     x    12973.9   0.066849    37.5488     965318
+[info]    70    70         1354.32         36.6825      1e-75     x     x    13274.5   0.069899     36.619     978666
+[info]    71    71         1158.09         21.7722      1e-76     x     x    13420.4   0.067919    36.6439     992159
+[info]    72    72         1480.41         38.0684      1e-77     x     x    10186.2   0.067499     36.157 1.00242e+06
+[info]    73    73         1217.12         32.6779      1e-78     x     x    13431.1   0.068899    37.5336 1.01592e+06
+[info]    74    74          1427.6          47.444      1e-79     x     x    12914.9   0.069119    36.8842 1.02891e+06
+[info]    75    75         1275.11         73.4151      1e-80     x     x    13253.7   0.068439    36.7401 1.04224e+06
+[info]    76    76         1280.64         40.3228      1e-81     x     x      13502   0.067069    36.3978 1.05582e+06
+[info]    77    77         1255.06         47.9586      1e-82     x     x    12609.8   0.068219    36.7452 1.0685e+06
+[info]    78    78         1312.82         41.2842      1e-83     x     x    13312.6   0.068559    36.4212 1.08188e+06
+[info]    79    79         1377.34         28.3373      1e-84     x     x    13412.9   0.066709    36.6263 1.09537e+06
+[info]    80    80         1450.48         62.6934      1e-85     x     x    12866.6   0.068979    36.4589 1.10831e+06
+[info]    81    81         1689.14         86.3924      1e-86     x     x    13461.7   0.068429    36.6651 1.12185e+06
+[info]    82    82         1329.94         40.9959      1e-87     x     x    13597.1   0.070509     36.659 1.13552e+06
+[info]    83    83         1412.22         59.0631      1e-88     x     x    13005.7   0.067489    37.6952 1.1486e+06
+[info]    84    84         1339.92         31.8696      1e-89     x     x      13303   0.068469    36.6037 1.16197e+06
+[info]    85    85         1334.27         51.5594      1e-90     x     x    13626.2   0.066809    36.5805 1.17567e+06
+[info]    86    86         1747.19         62.6709      1e-91     x     x    13386.2   0.066819     37.163 1.18913e+06
+[info]    87    87          1182.9         52.7433      1e-92     x     x    12809.3   0.068989    36.8598 1.20201e+06
+[info]    88    88         1626.06         75.9517      1e-93     x     x    12656.9   0.067119    37.9682 1.21475e+06
+[info]    89    89         1543.05         67.0043      1e-94     x     x    12683.4   0.069399    37.0869 1.2275e+06
+[info]    90    90         1497.52         75.3061      1e-95     x     x    13360.3   0.068389     36.354 1.24094e+06
+[info]    91    91          1406.8         93.9229      1e-96     x     x    13422.5    0.06709    36.9602 1.25443e+06
+[info]    92    92         1704.15         85.9598      1e-97     x     x    12732.6   0.066849    36.6722 1.26724e+06
+[info]    93    93         1293.01         55.1451      1e-98     x     x    13173.9   0.071659    36.6633 1.28049e+06
+[info]    94    94         1219.57         33.9616      1e-99     x     x    13931.7   0.075909    36.7024 1.29449e+06
+[info]    95    95         1261.78         15.9604     1e-100     x     x    12738.2   0.070499    37.0125 1.3073e+06
+[info]    96    96         1387.21         21.4175     1e-101     x     x    10939.6   0.073049    36.5929 1.31832e+06
+[info]    97    97         1358.87         49.5293     1e-102     x     x      13307   0.065669    36.5367 1.3317e+06
+[info]    98    98         1260.93         42.3011     1e-103     x     x    13371.4   0.073119    37.7013 1.34514e+06
+[info]    99    99         1171.61         21.9932     1e-104     x     x    13265.3   0.069629    38.2538 1.35848e+06
+[info]   100   100         1207.49         14.9658     1e-105     x     x    13577.5   0.070629    37.5016 1.37214e+06
+[info] --- Results: LOAM_LIOSAM ---
+[info] Frame 0:
+[info]   [Optimized] t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, -0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.502512, -0.017510, 0.135744]
+[info]               R (ypr): [-0.819, 3.661, 1.847] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.105289 m
+[info]               R: 2.110393 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-4.222218, -0.257315, 0.349728]
+[info]               R (ypr): [-1.422, 0.317, 0.246] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.276466 m
+[info]               R: 1.882752 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-8.225329, -0.777063, 0.730421]
+[info]               R (ypr): [-2.622, 1.616, 0.795] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.410020 m
+[info]               R: 2.279909 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-10.102704, -0.864507, 0.928517]
+[info]               R (ypr): [-4.210, 3.327, -1.699] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.480323 m
+[info]               R: 3.104181 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.295776, -0.360006, 1.219082]
+[info]               R (ypr): [-10.324, 3.132, 1.606] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.532515 m
+[info]               R: 2.374535 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.491178, 0.771388, 1.476608]
+[info]               R (ypr): [-39.538, 1.810, -6.055] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.710182 m
+[info]               R: 2.667026 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.359256 m
+[info] Mean Rotation Error: 2.059828 deg
+[info] Max  Translation Error: 0.710182 m
+[info] Max  Rotation Error: 3.104181 deg
+[info] Optimization Time: 1372135.458 ms
+[info] ========================================
+[info] 
+
+[info] ╔══════════════════════════════════════════════════════════════════════════════════════╗
+[info] ║                        Final Comparison Table                                       ║
+[info] ╠════════════════╦═══════════════╦═══════════════╦═══════════════╦═══════════════╦═════╣
+[info] ║ Factor         ║ Mean T (m)    ║ Mean R (deg)  ║ Max T (m)     ║ Max R (deg)   ║ ms  ║
+[info] ╠════════════════╬═══════════════╬═══════════════╬═══════════════╬═══════════════╬═════╣
+[info] ║ Point-to-Point ║      0.095430 ║      0.487565 ║      0.219172 ║      0.908431 ║ 9259║
+[info] ║ Point-to-Plane ║      0.061536 ║      0.448742 ║      0.125722 ║      0.929910 ║ 8248║
+[info] ║ GICP           ║      0.084145 ║      0.551482 ║      0.165061 ║      1.102780 ║11468║
+[info] ║ VGICP          ║      0.216358 ║      1.038157 ║      1.080683 ║      3.464607 ║ 9798║
+[info] ║ LOAM           ║      0.288562 ║      1.048161 ║      0.872851 ║      2.327760 ║   68║
+[info] ║ NDT            ║      0.078200 ║      0.510344 ║      0.142668 ║      1.129417 ║28891║
+[info] ║ LOAM_LIOSAM    ║      0.359256 ║      2.059828 ║      0.710182 ║      3.104181 ║1372135║
+[info] ╚════════════════╩═══════════════╩═══════════════╩═══════════════╩═══════════════╩═════╝

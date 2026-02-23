@@ -7,11 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 
-find_package(PCL REQUIRED COMPONENTS common io)
+find_package(PCL REQUIRED COMPONENTS common io filters)
 find_package(Eigen3 REQUIRED)
 find_package(GTSAM REQUIRED)
 find_package(OpenMP REQUIRED)
-find_package(Iridescence REQUIRED)
+find_package(Iridescence)
 
 option(BUILD_WITH_OPENMP "Build with OpenMP" ON)
 option(BUILD_WITH_CUDA "Build with CUDA" OFF)
@@ -37,6 +37,7 @@ add_definitions(${PCL_DEFINITIONS})
 add_executable(lidar_registration_benchmark 
     src/main.cpp
     src/loam_feature.cpp
+    src/featureExtraction.cpp
 )
 target_link_libraries(lidar_registration_benchmark
     ${PCL_LIBRARIES}
@@ -45,3 +46,16 @@ target_link_libraries(lidar_registration_benchmark
     OpenMP::OpenMP_CXX
     Iridescence::Iridescence
 )
+
+
+# test_all_factors는 사용하지 않으므로 빌드 제외
+# add_executable(test_all_factors
+#     src/test_all_factors.cpp
+#     src/loam_feature.cpp
+# )
+# target_link_libraries(test_all_factors
+#     ${PCL_LIBRARIES}
+#     gtsam
+#     gtsam_points   
+#     OpenMP::OpenMP_CXX
+# )

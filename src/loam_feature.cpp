@@ -84,17 +84,17 @@ LOAMFeatures extract_loam_features_ring_based(const std::vector<PointWithRing>& 
 
   for (const auto& [ring_id, indices] : ring_groups)
   {
-    int n = indices.size();
-    if (n < 100) 
+    int cloudSize = indices.size();
+    if (cloudSize < 100) 
     {
       continue; // 너무 적은 포인트는 무시
     }
 
-    std::vector<float> ranges(n);
-    std::vector<float> curvatures(n, 0.0f);
-    std::vector<int> picked(n, 0);
+    std::vector<float> ranges(cloudSize);
+    std::vector<float> curvatures(cloudSize, 0.0f);
+    std::vector<int> picked(cloudSize, 0);
 
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < cloudSize; i++)
     {
       Eigen::Vector3d X = points_with_ring[indices[i]].point.head<3>();
       ranges[i] = X.norm();
@@ -107,24 +107,17 @@ LOAMFeatures extract_loam_features_ring_based(const std::vector<PointWithRing>& 
     // region_curvatures 벡터에 (인덱스, 곡률값) 쌍으로 저장하고, 내림차순 정렬하여 특징점 후보 선정(큰값 -> 작은값 순서)
     // curv < 0.1 : planar point 후보 -> 작은값 / curv > 0.1 : edge point 후보 -> 큰값
     // edge는 2개, planar는 4개씩 추출하는 why? -> edge는 상대적으로 적고, planar는 넓은 영역에서 많이 나올 수 있기 때문
-    for (int i = 5; i < n - 5; i++)
+    for (int i = 5; i < cloudSize - 5; i++)
     {
-      float diff_sq_sum = 0.0f;
-      for (int j = -5; j <= 5; j++)
-      {
-        if (j == 0) 
-        {
-          continue;
-        }
-
-        float diff = ranges[i] - ranges[i + j];
-        diff_sq_sum += diff * diff;
-      }
-      curvatures[i] = diff_sq_sum;
+      float diffRange = ranges[i-5] + ranges[i-4] + ranges[i-3] + ranges[i-2] + ranges[i-1]
+                      - ranges[i] * 10.0f
+                      + ranges[i+1] + ranges[i+2] + ranges[i+3] + ranges[i+4] + ranges[i+5];
+      
+      curvatures[i] = diffRange * diffRange;
     }
     // Occlusion 확인 : 특징점 후보 마킹(point에 마킹해서 제거할 포인트 표시)
     // 이 방식으로 장애물뒤에 있는데도 찍힌 point(ghost point)들을 제거가 가능함. 이거 안하면 이상한 point들이 Edge 특징점으로 뽑혀서 이상해짐
-    for (int i = 5; i < n - 5; i++)
+    for (int i = 5; i < cloudSize - 5; i++)
     {
       float depth1 = ranges[i];
       float depth2 = ranges[i + 1];
@@ -135,13 +128,13 @@ LOAMFeatures extract_loam_features_ring_based(const std::vector<PointWithRing>& 
         if (depth1 - depth2 > 0)
         {
           for (int k = -5; k <= 0; k++)
-            if (i + k >= 0 && i + k < n) picked[i + k] = 1;
+            if (i + k >= 0 && i + k < cloudSize) picked[i + k] = 1;
         }
         // depth2가 더 멀리있는 경우 : depth2 쪽이 장애물 뒤쪽일 가능성. 불안정한 point들이므로 오른쪽 6개 점 마킹
         else
         {
           for (int k = 1; k <= 6; k++)
-            if (i + k < n) picked[i + k] = 1;
+            if (i + k < cloudSize) picked[i + k] = 1;
         }
       }
       // Parrelle Beam : 레이저가 벽면과 거의 평행하게 입사되었을때 찍힌 점들. 연속된 점들 중에서 급격한 거리 변화가 있으면 주변점들 마킹
@@ -155,14 +148,14 @@ LOAMFeatures extract_loam_features_ring_based(const std::vector<PointWithRing>& 
     }
     // 6개 영역으로 나누어 각 영역에서 edge, planar 특징점 추출 -> 나눠진 영역안에서 특징점이 확보됨.
     const int num_regions = 6;
-    int region_size = n / num_regions;
+    int region_size = cloudSize / num_regions;
 
     for (int region = 0; region < num_regions; region++)
     {
       int sp = region * region_size;
-      int ep = (region == num_regions - 1) ? n - 5 : (region + 1) * region_size;
+      int ep = (region == num_regions - 1) ? cloudSize - 5 : (region + 1) * region_size;
       // Curvature 계산에 사용된 앞뒤 point 5개는 제외시킴 -> 곡률 계산이 부정확할 수 있음
-      if (sp >= ep || sp < 5 || ep >= n - 5) 
+      if (sp >= ep || sp < 5 || ep >= cloudSize - 5) 
       {
         continue;
       }
@@ -170,7 +163,7 @@ LOAMFeatures extract_loam_features_ring_based(const std::vector<PointWithRing>& 
       std::vector<std::pair<int, float>> region_curvatures;
       for (int i = sp; i < ep; i++)
       {
-        if (i < 5 || i >= n - 5) 
+        if (i < 5 || i >= cloudSize - 5) 
         {
           continue;
         }
@@ -200,7 +193,7 @@ LOAMFeatures extract_loam_features_ring_based(const std::vector<PointWithRing>& 
               picked[idx - k] = 1;
             }
 
-            if (idx + k < n) 
+            if (idx + k < cloudSize) 
             {
               picked[idx + k] = 1;
             }
@@ -232,7 +225,7 @@ LOAMFeatures extract_loam_features_ring_based(const std::vector<PointWithRing>& 
             {
               picked[idx - k] = 1;
             }
-            if (idx + k < n) 
+            if (idx + k < cloudSize) 
             {
               picked[idx + k] = 1;
             }

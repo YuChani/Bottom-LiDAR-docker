@@ -1,151 +1,126 @@
 # Documentation
 
-이 폴더에는 GTSAM-Points 데모 프로젝트의 문서가 포함되어 있습니다.
-
-## 문서 목록
-
-### 📘 [hyperparameters_tutorial.md](./hyperparameters_tutorial.md) (한글)
-**완전한 하이퍼파라미터 가이드**
-
-main.cpp에서 사용되는 모든 하이퍼파라미터에 대한 상세한 설명입니다.
-
-**내용**:
-- 데이터 구성 (PCD 파일, Ground Truth)
-- 센서 외부 캘리브레이션 (T_base_lidar)
-- 점군 전처리 (Covariance, Normal, Voxelmap)
-- ICP 알고리즘 파라미터 (ICP, ICP_PLANE, GICP, VGICP)
-- 최적화 알고리즘 (LM, iSAM2)
-- Factor Graph 구성
-- 시각화 및 UI 설정
-- 로깅 설정 (spdlog)
-- 튜닝 가이드
-- 현재 설정 요약
+Bottom-LiDAR-Docker 프로젝트 문서입니다.
 
 ---
 
-### 📗 [hyperparameters_tutorial_en.md](./hyperparameters_tutorial_en.md) (English)
-**Complete Hyperparameter Guide (English Version)**
+## 문서 구조
 
-Comprehensive documentation of all hyperparameters used in main.cpp.
-
-**Contents**:
-- Data Configuration (PCD files, Ground Truth)
-- Extrinsic Calibration (T_base_lidar)
-- Point Cloud Preprocessing (Covariance, Normal, Voxelmap)
-- ICP Algorithm Parameters (ICP, ICP_PLANE, GICP, VGICP)
-- Optimization Algorithms (LM, iSAM2)
-- Factor Graph Construction
-- Visualization and UI Settings
-- Logging Configuration (spdlog)
-- Tuning Guide
-- Current Configuration Summary
-
----
-
-### 📙 [quick_reference.md](./quick_reference.md)
-**빠른 참조 가이드 (Quick Reference)**
-
-핵심 하이퍼파라미터를 한눈에 볼 수 있는 간단한 치트시트입니다.
-
-**내용**:
-- 주요 설정값 표
-- 빠른 튜닝 가이드 (정확도 vs 속도)
-- 알고리즘 선택 가이드
-- 코드 라인 참조
-- 실행 방법
+```
+docs/
+├── README.md                          # 이 파일
+├── ARCHIVE_STRUCTURE.md               # 아카이브 구조 설명
+├── benchmark_results.md               # 6-Factor 벤치마크 결과 분석
+├── liosam_feature_extraction_integration.md # LIO-SAM 통합 및 7-Factor 분석 (신규)
+├── 변경내역_headless_benchmark.md      # Headless 모드/NDT 통합 변경내역
+├── ndt/                               # NDT Factor 문서 (최신)
+│   ├── README.md                      # NDT 파일 위치 및 구현 설명
+│   ├── uml.md                         # UML 다이어그램 (PlantUML 6종)
+│   ├── usage_guide.md                 # NDT 사용 가이드
+│   └── omp_comparison.md              # NDT vs ndt_omp 비교
+└── archive/
+    ├── 2026-01/                       # 2026년 1월 문서
+    │   ├── hyperparameters_tutorial.md
+    │   ├── quick_reference.md
+    │   └── demo_matching_cost_factors_report.md
+    └── 2026-02/                       # 2026년 2월 문서
+        ├── (LOAM 관련 5개)
+        ├── (Scan-to-Map 관련 3개)
+        └── (NDT 이전 버전 9개)
+```
 
 ---
 
-## 사용 방법
+## 📘 LIO-SAM Feature Extraction 문서
 
-### 처음 시작하는 경우
-1. **quick_reference.md**부터 읽어보세요 (빠른 시작)
-2. 상세한 내용은 **hyperparameters_tutorial.md** 참조
+LIO-SAM의 FeatureExtraction 클래스를 이식하고 7개 Factor를 비교 분석한 문서입니다.
 
-### 특정 파라미터 찾기
-- 목차를 활용하여 원하는 섹션으로 이동
-- 표 형태로 정리되어 검색이 쉽습니다
-
-### 튜닝이 필요한 경우
-- **섹션 9: 하이퍼파라미터 튜닝 가이드** 참조
-- 정확도 향상 vs 속도 향상 트레이드오프 확인
+| 문서 | 설명 | 대상 독자 |
+|------|------|-----------|
+| **[liosam_feature_extraction_integration.md](./liosam_feature_extraction_integration.md)** | LIO-SAM 통합 과정, 코드 변경점, 7-Factor 벤치마크 결과 | 개발자, 분석가 |
 
 ---
 
-## 관련 파일
+## 📘 NDT Factor 문서 (`docs/ndt/`)
+
+NDT(Normal Distributions Transform) Factor를 gtsam_points 라이브러리 내부에 구현한 내용을 정리한 문서입니다.
+
+| 문서 | 설명 | 대상 독자 |
+|------|------|-----------|
+| **[ndt/README.md](./ndt/README.md)** | NDT 소스 파일 위치, 구현 설명, 수학적 배경, 버그 수정 이력 | 개발자 (심화) |
+| **[ndt/uml.md](./ndt/uml.md)** | 클래스 계층, 데이터 구조, 실행 시퀀스 등 PlantUML 6종 | 개발자 (아키텍처) |
+| **[ndt/usage_guide.md](./ndt/usage_guide.md)** | NDT Factor 사용법, 파라미터 설명, main.cpp 적용 예시 | 사용자 (시작하기) |
+| **[ndt/omp_comparison.md](./ndt/omp_comparison.md)** | gtsam_points NDT vs pcl_ndt_omp 비교 분석 | 개발자 (참고) |
+
+**읽기 순서 추천**:
+1. `ndt/usage_guide.md` — 빠른 시작 및 파라미터 설명
+2. `ndt/README.md` — 파일 위치, 구현 상세, 수학적 배경
+3. `ndt/uml.md` — 구조 시각화 (6개 다이어그램)
+4. `ndt/omp_comparison.md` — 다른 NDT 구현과의 비교
+
+---
+
+## 📙 아카이브 문서 (`docs/archive/`)
+
+과거 작업 결과물을 날짜별로 보관합니다. 자세한 내용은 [ARCHIVE_STRUCTURE.md](./ARCHIVE_STRUCTURE.md) 참조.
+
+### 2026년 1월 (archive/2026-01/) — 3개
+
+| 문서 | 설명 |
+|------|------|
+| hyperparameters_tutorial.md | 하이퍼파라미터 튜토리얼 |
+| quick_reference.md | 빠른 참조 가이드 |
+| demo_matching_cost_factors_report.md | Matching Cost Factor 데모 리포트 |
+
+### 2026년 2월 (archive/2026-02/) — 17개
+
+| 주제 | 파일 수 | 설명 |
+|------|---------|------|
+| LOAM Curvature 버그 수정 | 5개 | LOAM 곡률 계산 버그 분석 및 수정 |
+| Scan-to-Map 구현 | 3개 | Scan-to-Map 방식 구현 및 통합 |
+| NDT Factor 이전 버전 | 9개 | NDT 초기 구현, 분석, 변경 이력 (→ `docs/ndt/`로 대체됨) |
+
+---
+
+## 프로젝트 파일 구조 (핵심)
 
 ```
 /root/workdir/
 ├── src/
-│   └── main.cpp                          # 메인 데모 코드
-├── data/
-│   └── pcd/
-│       ├── *.pcd                         # 점군 데이터
-│       └── gt-tum.txt                    # Ground Truth 포즈
-├── include/
-│   └── gtsam_points/
-│       └── include/gtsam_points/util/
-│           └── read_points.hpp           # PCD 파서
-└── docs/
-    ├── README.md                         # 이 파일
-    ├── hyperparameters_tutorial.md       # 상세 가이드 (한글)
-    ├── hyperparameters_tutorial_en.md    # 상세 가이드 (English)
-    └── quick_reference.md                # 빠른 참조
+│   └── main.cpp                                           # 메인 코드 (NDT/GICP/VGICP 사용)
+├── thirdparty/gtsam_points/
+│   ├── include/gtsam_points/factors/
+│   │   ├── integrated_ndt_factor.hpp                      # NDT Factor 헤더
+│   │   └── impl/integrated_ndt_factor_impl.hpp            # NDT Factor 템플릿 구현
+│   └── src/gtsam_points/factors/
+│       └── integrated_ndt_factor.cpp                      # NDT Factor 인스턴스화
+├── data/pcd/                                              # 점군 데이터 + Ground Truth
+├── build2/                                                # 빌드 디렉토리
+└── docs/                                                  # 문서 (이 폴더)
 ```
 
 ---
 
-## 실행 예제
+## 실행 방법
 
 ```bash
-# 빌드
-cd /root/workdir
-./run_build.sh
+# Docker 컨테이너 내부에서
+cd /root/workdir/build
+make -j$(nproc)
 
-# 실행
-cd build
-./calculate_rt
+# GUI 모드 (기본)
+./lidar_registration_benchmark
+
+# Headless 모드 (GUI 없이 7개 Factor 벤치마크)
+./lidar_registration_benchmark --headless
 ```
 
-**UI 사용법**:
-- `noise_scale`: 슬라이더로 노이즈 크기 조정
-- `add noise`: 버튼으로 초기 포즈에 노이즈 추가
-- `full connection`: 체크박스로 전체/인접 연결 선택
-- `num threads`: 병렬 스레드 수 조정
-- `factor type`: ICP/ICP_PLANE/GICP/VGICP 선택
-- `optimizer type`: LM/ISAM2 선택
+**UI 사용법** (GUI 모드):
+- `factor type`: Point-to-Point / Point-to-Plane / GICP / VGICP / LOAM / NDT / **LOAM_LIOSAM** 선택
+- `optimizer type`: LM / ISAM2 선택
 - `optimize`: 최적화 실행
-
----
-
-## 주요 하이퍼파라미터 요약
-
-### 전처리
-- **voxel_resolution**: 0.5m (VGICP 복셀 크기)
-- **k_neighbors**: 10 (covariance/normal 추정 이웃 수)
-
-### ICP
-- **correspondence_update_tolerance**: 0.0 (매 iteration 업데이트)
-- **num_threads**: 1 (단일 스레드)
-- **max_correspondence_distance**: 1.0m
-
-### 최적화 (LM)
-- **maxIterations**: 100
-- **relativeErrorTol**: 1e-5
-- **absoluteErrorTol**: 1e-5
-
-### Factor Graph
-- **prior_precision**: 1e6 (첫 프레임 고정)
-- **full_connection**: true (모든 프레임 쌍 연결)
-
----
-
-## 기여 및 수정
-
-문서 수정이 필요한 경우:
-1. 해당 `.md` 파일 직접 수정
-2. 변경 이력 섹션에 날짜와 내용 추가
-3. 코드 라인 번호가 변경된 경우 업데이트
+- `noise_scale` / `add noise`: 초기 포즈 노이즈 조정
+- `full connection`: 전체/인접 프레임 연결 선택
 
 ---
 
@@ -159,4 +134,4 @@ cd build
 ---
 
 생성일: 2026-01-26  
-최종 수정: 2026-01-26
+최종 수정: 2026-02-23

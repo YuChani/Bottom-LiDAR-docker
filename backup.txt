@@ -2,11 +2,6 @@
  * main.cpp - LiDAR Point Cloud Registration Demo
  * 
  * 상세 문서는 what_main.md 파일을 참조하세요.
- * 
- * 실행 모드:
- *   GUI 모드 (기본):  ./lidar_registration_benchmark
- *   Headless 모드:    ./lidar_registration_benchmark --headless
- *     → GUI 없이 6가지 factor를 순차 실행하고 R,t 오차를 비교 출력
  */
 
 #include <chrono>
@@ -17,7 +12,6 @@
 #include <algorithm>
 #include <map>
 #include <cmath>
-#include <cstring>
 #include <boost/format.hpp>
 
 #include <spdlog/spdlog.h>
@@ -46,9 +40,6 @@
 #include <gtsam_points/factors/integrated_gicp_factor.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_points/factors/integrated_loam_factor.hpp>
-// NDT factor from gtsam_points library
-#include <gtsam_points/factors/integrated_ndt_factor.hpp>
-
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_points/optimizers/linearization_hook.hpp>
@@ -60,13 +51,14 @@
 
 // LOAM Feature Extraction (Ring 기반 / KNN 기반)
 #include "loam_feature.hpp"
-#include "featureExtraction.hpp"
 
+// Scan-to-Map Registration
+#include "scan_to_map.hpp"
 
 class MatchingCostFactorDemo
 {
 public:
-  MatchingCostFactorDemo(bool headless_mode = false) : headless(headless_mode)
+  MatchingCostFactorDemo()
   {
     // Logging 초기화
     auto console = spdlog::stdout_color_mt("demo");
@@ -74,37 +66,42 @@ public:
     spdlog::set_level(spdlog::level::info);
     spdlog::set_pattern("[%^%l%$] %v");
     
-    // 3D Viewer 초기화 (GUI 모드에서만)
-    guik::LightViewer* viewer = nullptr;
-    if (!headless)
-    {
-      viewer = guik::LightViewer::instance();
-      viewer->enable_vsync();
-    }
-
+    // 3D Viewer 초기화
+    auto viewer = guik::LightViewer::instance();
+    viewer->enable_vsync();
     // yuchan_step data loader(pcd데이터파일 경로)
-    const std::string data_path = "/root/workdir/data/pcd";
+    // Scan-to-map mode: Use Oxford dataset
+    const bool use_scan_to_map = true;  // Toggle: true = scan-to-map, false = scan-to-scan
+    const std::string data_path = use_scan_to_map ? "/root/dataset/Oxford_spires/lidar-clouds" : "/root/workdir/data/pcd";
+    
+    // Global map for scan-to-map mode
+    std::shared_ptr<gtsam_points::GaussianVoxelMapCPU> global_map;
+     if (use_scan_to_map) {
+       global_map = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(0.5);
+       spdlog::info("스캔-투-맵 모드 활성화: 글로벌 맵 사용");
+     }
 
     // yuchan_step : Extrinsic: Base ← LiDAR (t = [0, 0, 0.124], R = I)
     // Base에서 LiDAR로 포즈를 변환시키는 부분 (sensor.yaml에서 값을 가져옴. 하드코딩임)
-    Eigen::Vector3d t_base_lidar(0.0, 0.0, 0.124);
+    // Oxford dataset doesn't have extrinsics or ground truth - use identity
+    Eigen::Vector3d t_base_lidar(0.0, 0.0, use_scan_to_map ? 0.0 : 0.124);
     Eigen::Quaterniond q_base_lidar(0.0, 0.0, 0.0, 1.0);
     gtsam::Pose3 T_base_lidar(gtsam::Rot3(q_base_lidar), t_base_lidar);
-    spdlog::info("T_base_lidar translation: [{:.3f}, {:.3f}, {:.3f}]", 
-                 T_base_lidar.translation().x(), T_base_lidar.translation().y(), T_base_lidar.translation().z());
+     spdlog::info("T_base_lidar 평행이동: [{:.3f}, {:.3f}, {:.3f}]", 
+                  T_base_lidar.translation().x(), T_base_lidar.translation().y(), T_base_lidar.translation().z());
     auto ypr = T_base_lidar.rotation().ypr();
-    spdlog::info("T_base_lidar rotation (ypr): [{:.3f}, {:.3f}, {:.3f}]", ypr.x(), ypr.y(), ypr.z());
+     spdlog::info("T_base_lidar 회전 (ypr): [{:.3f}, {:.3f}, {:.3f}]", ypr.x(), ypr.y(), ypr.z());
 
     // Ground Truth 포즈 로드 (TUM format)
     // gt_tum.txt : tx, yz, yz, qw, qx, qy, qz 형태로 구성되어있음
     std::map<double, gtsam::Pose3> gt_poses;
     {
       std::ifstream ifs(data_path + "/gt-tum.txt");
-      if (!ifs)
-      {
-        spdlog::error("Failed to open {}/gt-tum.txt", data_path);
-        abort();
-      }
+       if (!ifs)
+       {
+         spdlog::error("{}/gt-tum.txt 파일을 열 수 없습니다", data_path);
+         abort();
+       }
       
       double timestamp;
       gtsam::Vector3 trans;
@@ -113,12 +110,12 @@ public:
       {
         gt_poses[timestamp] = gtsam::Pose3(gtsam::Rot3(quat), trans);
       }
-      spdlog::info("Loaded {} poses from gt-tum.txt", gt_poses.size());
+       spdlog::info("gt-tum.txt에서 {} 개의 포즈 로드됨", gt_poses.size());
     }
 
 #ifdef GTSAM_POINTS_USE_CUDA
-    spdlog::info("Register GPU linearization hook");
-    gtsam_points::LinearizationHook::register_hook([] { return gtsam_points::create_nonlinear_factor_set_gpu(); });
+     spdlog::info("GPU 선형화 훅 등록");
+     gtsam_points::LinearizationHook::register_hook([] { return gtsam_points::create_nonlinear_factor_set_gpu(); });
 #endif
 
     // PCD 파일 목록 수집 및 정렬
@@ -137,14 +134,14 @@ public:
       std::sort(pcd_files.begin(), pcd_files.end());
     }
     
-    if (pcd_files.size() < 2)
-    {
-      spdlog::error("Expected at least 2 PCD files, found {}", pcd_files.size());
-      abort();
-    }
-    
-    int num_frames = std::min(max_frames, (int)pcd_files.size());
-    spdlog::info("Found {} PCD files, loading {} frames", pcd_files.size(), num_frames);
+     if (pcd_files.size() < 2)
+     {
+       spdlog::error("최소 2개의 PCD 파일이 필요하며, {} 개를 찾았습니다", pcd_files.size());
+       abort();
+     }
+     
+     int num_frames = std::min(max_frames, (int)pcd_files.size());
+     spdlog::info("{} 개의 PCD 파일을 찾았으며, {} 개의 프레임 로드 중", pcd_files.size(), num_frames);
     
     frames.resize(num_frames);
     voxelmaps.resize(num_frames);
@@ -173,8 +170,8 @@ public:
     // 각 프레임 로드 및 전처리
     for (int i = 0; i < num_frames; i++)
     {
-      const std::string points_path = pcd_files[i];
-      spdlog::info("Loading {}", points_path);
+       const std::string points_path = pcd_files[i];
+       spdlog::info("로딩 중 {}", points_path);
 
       std::string filename = fs::path(points_path).stem().string();
       double pcd_timestamp = std::stod(filename);
@@ -188,17 +185,17 @@ public:
       poses.insert(i, relative_pose);   // initial guess값으로 사용
       poses_gt.insert(i, relative_pose);  // ground truth로 사용(나중에 에러 비교용)
       
-      spdlog::info("  Matched timestamp: {:.6f}", pcd_timestamp);
-      auto t = relative_pose.translation();
-      spdlog::info("  Relative pose (L0_T_Li): [{:.3f}, {:.3f}, {:.3f}]", t.x(), t.y(), t.z());
+       spdlog::info("  일치하는 타임스탬프: {:.6f}", pcd_timestamp);
+       auto t = relative_pose.translation();
+       spdlog::info("  상대 포즈 (L0_T_Li): [{:.3f}, {:.3f}, {:.3f}]", t.x(), t.y(), t.z());
 
-      // 포인트 클라우드 로드 (PCL 사용, Ring 정보 포함)
-      auto points_with_ring = read_points_with_ring_pcl(points_path);
-      if (points_with_ring.empty())
-      {
-        spdlog::error("Failed to read points from {}", points_path);
-        abort();
-      }
+       // 포인트 클라우드 로드 (PCL 사용, Ring 정보 포함)
+       auto points_with_ring = read_points_with_ring_pcl(points_path);
+       if (points_with_ring.empty())
+       {
+         spdlog::error("포인트를 읽을 수 없습니다 {}", points_path);
+         abort();
+       }
       
       // Ring 정보 저장 (LOAM feature 추출용)
       frames_with_ring.push_back(points_with_ring);
@@ -217,7 +214,7 @@ public:
         min_pt = min_pt.cwiseMin(p);
         max_pt = max_pt.cwiseMax(p);
       }
-      spdlog::info("  Loaded {} points", points_f.size());
+       spdlog::info("  로드된 포인트 수: {}", points_f.size());
 
       // yuchan_step : float → double 변환 (homogeneous 좌표)
       // 3차원 점(x,y,z)를 4차원 homogeneous 좌표 (x,y,z,1)로 변환. R과t를 하나의 4x4행렬로 표현해서 선형변환.(p'=R*p+t)
@@ -233,31 +230,26 @@ public:
       auto covs = gtsam_points::estimate_covariances(points);
 
 #ifndef GTSAM_POINTS_USE_CUDA
-      spdlog::debug("Create CPU frame");
-      auto frame = std::make_shared<gtsam_points::PointCloudCPU>();
+       spdlog::debug("CPU 프레임 생성");
+       auto frame = std::make_shared<gtsam_points::PointCloudCPU>();
 #else
-      spdlog::debug("Create GPU frame");
-      auto frame = std::make_shared<gtsam_points::PointCloudGPU>();
+       spdlog::debug("GPU 프레임 생성");
+       auto frame = std::make_shared<gtsam_points::PointCloudGPU>();
 #endif
       frame->add_points(points);
       frame->add_covs(covs);
 
       // yuchan_step : 법선 벡터 추정
-      // p2pl : point-to-plane ICP에서 사용되는 법선 벡터 추정 방법(e = n^Tp+d)
+      // p2pl : point-to-plane ICP에서 사용되는 법선 벡터 추정 방법(e = (n^T)(p+d))
       // LOAM 특징점 추출에도 사용됨(curvature 계산용)
       frame->add_normals(gtsam_points::estimate_normals(frame->points, frame->size()));
       frames[i] = frame;
 
-      // yuchan_step : LOAM 특징점 추출 (Ring 기반)
-      spdlog::info("  Extracting LOAM features (Ring-based)...");
-      auto features = extract_loam_features_ring_based(points_with_ring);
-      loam_features.push_back(features);
-      spdlog::info("Edge points: {}, Planar points: {}", features.edge_points->size(), features.planar_points->size());
-      // yuchan_step : LIO-SAM 기반 LOAM 특징점 추출
-      spdlog::info("  Extracting LOAM features (LIO-SAM)...");
-      auto features_liosam = feature_extractor.process(points_with_ring);
-      loam_features_liosam.push_back(features_liosam);
-      spdlog::info("LIO-SAM Edge points: {}, Planar points: {}", features_liosam.edge_points->size(), features_liosam.planar_points->size());
+       // yuchan_step : LOAM 특징점 추출 (Ring 기반)
+       spdlog::info("  LOAM 특징점 추출 중 (Ring 기반)...");
+       auto features = extract_loam_features_ring_based(points_with_ring);
+       loam_features.push_back(features);
+       spdlog::info("엣지 포인트: {}, 평면 포인트: {}", features.edge_points->size(), features.planar_points->size());
 
       // yuchan_step : 가우시안 복셀맵 생성 (resolution = 0.5m)
       // VG-ICP에서 사용하는 r값을 설정하는 부분
@@ -271,17 +263,14 @@ public:
       voxelmaps_gpu[i] = voxelmap_gpu;
 #endif
 
-      // 시각화 업데이트 (GUI 모드에서만)
-      if (!headless && viewer)
-      {
-        viewer->update_drawable(
-          "frame_" + std::to_string(i), 
-          std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size()), 
-          guik::Rainbow().add("model_matrix", Eigen::Isometry3f(relative_pose.matrix().cast<float>())));
-      }
+      // 시각화 업데이트
+      viewer->update_drawable(
+        "frame_" + std::to_string(i), 
+        std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size()), 
+        guik::Rainbow().add("model_matrix", Eigen::Isometry3f(relative_pose.matrix().cast<float>())));
     }
 
-    if (!headless) update_viewer(poses);
+    update_viewer(poses);
 
     // yuchan_step : UI 파라미터 초기화
     pose_noise_scale = 0.1; // 포즈 노이즈 스케일. GT에 인위적인 노이즈 추가
@@ -296,11 +285,10 @@ public:
     factor_types.push_back("GICP"); // 2 : GICP
     factor_types.push_back("VGICP"); // 3 : VG-ICP
     factor_types.push_back("LOAM"); // 4 : LOAM
-    factor_types.push_back("NDT"); // 5 : NDT
-    factor_types.push_back("LOAM_LIOSAM"); // 6 : LOAM (LIO-SAM feature extraction)
+    factor_types.push_back("Scan-to-Map"); // 5 : Scan-to-Map
 
 #ifdef GTSAM_POINTS_USE_CUDA
-    factor_types.push_back("VGICP_GPU"); // 6 : VG-ICP GPU (if CUDA enabled)
+    factor_types.push_back("VGICP_GPU"); // 5 : VG-ICP GPU
 #endif
     full_connection = true;
     num_threads = 1;
@@ -309,45 +297,42 @@ public:
     correspondence_update_tolerance_trans = 0.0f;
 
     // UI 콜백 등록
-    if (!headless && viewer)
+    viewer->register_ui_callback("control", [this]
     {
-      viewer->register_ui_callback("control", [this]
+      int num_frames = frames.size();
+      
+      ImGui::DragFloat("noise_scale", &pose_noise_scale, 0.01f, 0.0f);
+      if (ImGui::Button("add noise"))
       {
-        int num_frames = frames.size();
-        
-        ImGui::DragFloat("noise_scale", &pose_noise_scale, 0.01f, 0.0f);
-        if (ImGui::Button("add noise"))
+        for (int i = 1; i < num_frames; i++)
         {
-          for (int i = 1; i < num_frames; i++)
-          {
-            gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * pose_noise_scale);
-            poses.update<gtsam::Pose3>(i, poses_gt.at<gtsam::Pose3>(i) * noise);
-          }
-          update_viewer(poses);
+          gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * pose_noise_scale);
+          poses.update<gtsam::Pose3>(i, poses_gt.at<gtsam::Pose3>(i) * noise);
         }
+        update_viewer(poses);
+      }
 
-        ImGui::Separator();
-        ImGui::Checkbox("full connection", &full_connection);
-        ImGui::DragInt("num threads", &num_threads, 1, 1, 128);
-        ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
-        ImGui::Combo("optimizer type", &optimizer_type, optimizer_types.data(), optimizer_types.size());
+      ImGui::Separator();
+      ImGui::Checkbox("full connection", &full_connection);
+      ImGui::DragInt("num threads", &num_threads, 1, 1, 128);
+      ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
+      ImGui::Combo("optimizer type", &optimizer_type, optimizer_types.data(), optimizer_types.size());
 
-        ImGui::DragFloat("corr update tolerance rot", &correspondence_update_tolerance_rot, 0.001f, 0.0f, 0.1f);
-        ImGui::DragFloat("corr update tolerance trans", &correspondence_update_tolerance_trans, 0.01f, 0.0f, 1.0f);
+      ImGui::DragFloat("corr update tolerance rot", &correspondence_update_tolerance_rot, 0.001f, 0.0f, 0.1f);
+      ImGui::DragFloat("corr update tolerance trans", &correspondence_update_tolerance_trans, 0.01f, 0.0f, 1.0f);
 
-        if (ImGui::Button("optimize"))
+      if (ImGui::Button("optimize"))
+      {
+        if (optimization_thread.joinable())
         {
-          if (optimization_thread.joinable())
-          {
-            optimization_thread.join();
-          }
-          optimization_thread = std::thread([this]
-          {
-            run_optimization();
-          });
+          optimization_thread.join();
         }
-      });
-    }
+        optimization_thread = std::thread([this]
+        {
+          run_optimization();
+        });
+      }
+    });
   }
 
   ~MatchingCostFactorDemo()
@@ -361,8 +346,6 @@ public:
   // yuchan_step : 뷰어 업데이트 함수(ImGui)
   void update_viewer(const gtsam::Values& values)
   {
-    if (headless) return;
-
     guik::LightViewer::instance()->invoke([=]
     {
       auto viewer = guik::LightViewer::instance();
@@ -407,7 +390,7 @@ public:
     // yuchan : Point-to-point ICP 팩터 생성
     // correspondence_update_tolerance_rot, correspondence_update_tolerance_trans
     // cost function = Σ || p_target - (R * p_source + t) ||^2
-    if (factor_types[factor_type] == std::string("Point-to-Point"))
+    if (factor_types[factor_type] == std::string("ICP"))
     {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
@@ -416,7 +399,7 @@ public:
     }
     // yuchan : Point-to-plane ICP 팩터 생성
     // cost function = Σ (n^T * (p_target - (R * p_source + t)))^2
-    else if (factor_types[factor_type] == std::string("Point-to-Plane"))
+    else if (factor_types[factor_type] == std::string("ICP_PLANE"))
     {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
@@ -450,46 +433,76 @@ public:
         loam_features[target_key].edge_points, loam_features[target_key].planar_points,
         loam_features[source_key].edge_points, loam_features[source_key].planar_points);
       
-      factor->set_enable_correspondence_validation(true);
+      factor->set_enable_correspondence_validation(true); // correspondence 검증 활성화
       factor->set_max_correspondence_distance(2.0, 2.0);
-      // LOAM-specific tolerance to prevent cost oscillation from correspondence switching
-      factor->set_correspondence_update_tolerance(0.005, 0.02);
-      factor->set_num_threads(num_threads);
-      return factor;
-    }
-    // yuchan : LOAM_LIOSAM 팩터 생성 (LIO-SAM 방식의 특징점 사용)
-    else if (factor_types[factor_type] == std::string("LOAM_LIOSAM"))
-    {
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedLOAMFactor>(
-        target_key, source_key, 
-        loam_features_liosam[target_key].edge_points, loam_features_liosam[target_key].planar_points,
-        loam_features_liosam[source_key].edge_points, loam_features_liosam[source_key].planar_points);
-      
-      factor->set_enable_correspondence_validation(true);
-      factor->set_max_correspondence_distance(2.0, 2.0);
-      factor->set_correspondence_update_tolerance(0.005, 0.02);
-      factor->set_num_threads(num_threads);
-      return factor;
-    }
-    else if (factor_types[factor_type] == std::string("NDT"))
-    {
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedNDTFactor_<gtsam_points::PointCloud>>(
-        target_key, source_key, target_voxelmap, source);
-      factor->set_num_threads(num_threads);
-      factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
-      factor->set_outlier_ratio(0.1);
-      factor->set_regularization_epsilon(1e-3);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      factor->set_num_threads(num_threads);
       return factor;
     }
 
-    spdlog::error("Unknown factor type: {}", factor_types[factor_type]);
+     spdlog::error("알 수 없는 팩터 타입: {}", factor_types[factor_type]);
     return nullptr;
   }
 
   void run_optimization()
   {
     int num_frames = frames.size();
+    
+    if (factor_types[factor_type] == std::string("Scan-to-Map"))
+    {
+      spdlog::info("========================================");
+      spdlog::info("프레임 수: {}", num_frames);
+      spdlog::info("팩터 타입: Scan-to-Map (순차 처리)");
+      spdlog::info("최적화 알고리즘: Sequential LM");
+      spdlog::info("========================================");
+      
+      ScanToMapRegistration scan_to_map_reg(0.5);
+      scan_to_map_reg.set_num_threads(num_threads);
+      scan_to_map_reg.set_max_iterations(100);
+      scan_to_map_reg.set_convergence_tolerance(1e-5);
+      
+      auto result = scan_to_map_reg.register_frames(frames, poses);
+      
+      spdlog::info("--- 결과: Scan-to-Map ---");
+      for (int i = 0; i < num_frames; i++)
+      {
+        gtsam::Pose3 opt_pose = result.poses.at<gtsam::Pose3>(i);
+        gtsam::Pose3 gt_pose = poses_gt.at<gtsam::Pose3>(i);
+        
+        gtsam::Pose3 error = gt_pose.inverse() * opt_pose;
+        
+        auto opt_t = opt_pose.translation();
+        auto opt_ypr = opt_pose.rotation().ypr() * 180.0 / M_PI;
+        auto gt_t = gt_pose.translation();
+        auto gt_ypr = gt_pose.rotation().ypr() * 180.0 / M_PI;
+        
+        spdlog::info("프레임 {}:", i);
+        spdlog::info("  [최적화] t: [{:.6f}, {:.6f}, {:.6f}]", opt_t.x(), opt_t.y(), opt_t.z());
+        spdlog::info("          R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", opt_ypr.x(), opt_ypr.y(), opt_ypr.z());
+        spdlog::info("  [GT]    t: [{:.6f}, {:.6f}, {:.6f}]", gt_t.x(), gt_t.y(), gt_t.z());
+        spdlog::info("          R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", gt_ypr.x(), gt_ypr.y(), gt_ypr.z());
+        spdlog::info("  [오차]  t: {:.6f} m", error.translation().norm());
+        spdlog::info("          R: {:.6f} deg", error.rotation().axisAngle().second * 180.0 / M_PI);
+      }
+      
+      double total_trans_error = 0.0;
+      double total_rot_error = 0.0;
+      for (int i = 0; i < num_frames; i++)
+      {
+        gtsam::Pose3 opt_pose = result.poses.at<gtsam::Pose3>(i);
+        gtsam::Pose3 gt_pose = poses_gt.at<gtsam::Pose3>(i);
+        gtsam::Pose3 error = gt_pose.inverse() * opt_pose;
+        total_trans_error += error.translation().norm();
+        total_rot_error += error.rotation().axisAngle().second * 180.0 / M_PI;
+      }
+      spdlog::info("--- 요약 ---");
+      spdlog::info("평균 위치 오차: {:.6f} m", total_trans_error / num_frames);
+      spdlog::info("평균 회전 오차: {:.6f} deg", total_rot_error / num_frames);
+      spdlog::info("========================================");
+      
+      update_viewer(result.poses);
+      return;
+    }
     
     gtsam::NonlinearFactorGraph graph;
     
@@ -507,14 +520,13 @@ public:
       }
     }
 
-    spdlog::info("========================================");
-    spdlog::info("Frames: {}", num_frames);
-    spdlog::info("Factor Type: {}", factor_types[factor_type]);
-    spdlog::info("Optimizer: {}", optimizer_types[optimizer_type]);
-    spdlog::info("========================================");
+     spdlog::info("========================================");
+     spdlog::info("프레임 수: {}", num_frames);
+     spdlog::info("팩터 타입: {}", factor_types[factor_type]);
+     spdlog::info("최적화 알고리즘: {}", optimizer_types[optimizer_type]);
+     spdlog::info("========================================");
 
     gtsam::Values optimized_values;
-    auto bench_start = std::chrono::high_resolution_clock::now();
 
     // optmizer 선택 및 실행(LM or ISAM2)
     if (optimizer_types[optimizer_type] == std::string("LM"))
@@ -526,12 +538,9 @@ public:
       
       lm_params.callback = [this](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values)
       {
+        guik::LightViewer::instance()->append_text(status.to_string());
         spdlog::info("{}", status.to_string());
-        if (!headless)
-        {
-          guik::LightViewer::instance()->append_text(status.to_string());
-          update_viewer(values);
-        }
+        update_viewer(values);
       };
 
       gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, poses, lm_params);
@@ -547,38 +556,25 @@ public:
       auto t1 = std::chrono::high_resolution_clock::now();
       
       auto status = isam2.update(graph, poses);
-      if (!headless)
-      {
-        update_viewer(isam2.calculateEstimate());
-        guik::LightViewer::instance()->append_text(status.to_string());
-      }
+      update_viewer(isam2.calculateEstimate());
+      guik::LightViewer::instance()->append_text(status.to_string());
 
       for (int i = 0; i < 5; i++)
       {
         auto status = isam2.update();
-        if (!headless)
-        {
-          update_viewer(isam2.calculateEstimate());
-          guik::LightViewer::instance()->append_text(status.to_string());
-        }
+        update_viewer(isam2.calculateEstimate());
+        guik::LightViewer::instance()->append_text(status.to_string());
       }
 
       auto t2 = std::chrono::high_resolution_clock::now();
       double msec = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
-      spdlog::info("ISAM2 total: {:.3f} ms", msec);
-      if (!headless)
-      {
-        guik::LightViewer::instance()->append_text((boost::format("total:%.3f[msec]") % msec).str());
-      }
+      guik::LightViewer::instance()->append_text((boost::format("total:%.3f[msec]") % msec).str());
       
       optimized_values = isam2.calculateEstimate();
     }
 
-    auto bench_end = std::chrono::high_resolution_clock::now();
-    last_total_ms = std::chrono::duration_cast<std::chrono::nanoseconds>(bench_end - bench_start).count() / 1e6;
-
-    // 결과 분석 및 출력
-    spdlog::info("--- Results: {} ---", factor_types[factor_type]);
+     // 결과 분석 및 출력
+     spdlog::info("--- 결과: {} ---", factor_types[factor_type]);
     for (int i = 0; i < num_frames; i++)
     {
       gtsam::Pose3 opt_pose = optimized_values.at<gtsam::Pose3>(i);
@@ -591,48 +587,33 @@ public:
       auto gt_t = gt_pose.translation();
       auto gt_ypr = gt_pose.rotation().ypr() * 180.0 / M_PI;
       
-      spdlog::info("Frame {}:", i);
-      spdlog::info("  [Optimized] t: [{:.6f}, {:.6f}, {:.6f}]", opt_t.x(), opt_t.y(), opt_t.z());
-      spdlog::info("              R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", opt_ypr.x(), opt_ypr.y(), opt_ypr.z());
-      spdlog::info("  [GT]        t: [{:.6f}, {:.6f}, {:.6f}]", gt_t.x(), gt_t.y(), gt_t.z());
-      spdlog::info("              R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", gt_ypr.x(), gt_ypr.y(), gt_ypr.z());
-      spdlog::info("  [Error]     t: {:.6f} m", error.translation().norm());
-      spdlog::info("              R: {:.6f} deg", error.rotation().axisAngle().second * 180.0 / M_PI);
+       spdlog::info("프레임 {}:", i);
+       spdlog::info("  [최적화됨] t: [{:.6f}, {:.6f}, {:.6f}]", opt_t.x(), opt_t.y(), opt_t.z());
+       spdlog::info("              R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", opt_ypr.x(), opt_ypr.y(), opt_ypr.z());
+       spdlog::info("  [GT]        t: [{:.6f}, {:.6f}, {:.6f}]", gt_t.x(), gt_t.y(), gt_t.z());
+       spdlog::info("              R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", gt_ypr.x(), gt_ypr.y(), gt_ypr.z());
+       spdlog::info("  [오차]      t: {:.6f} m", error.translation().norm());
+       spdlog::info("              R: {:.6f} deg", error.rotation().axisAngle().second * 180.0 / M_PI);
     }
     
     // Summary Statistics
     double total_trans_error = 0.0;
     double total_rot_error = 0.0;
-    double max_trans_error = 0.0;
-    double max_rot_error = 0.0;
-    
     for (int i = 0; i < num_frames; i++)
     {
       gtsam::Pose3 opt_pose = optimized_values.at<gtsam::Pose3>(i);
       gtsam::Pose3 gt_pose = poses_gt.at<gtsam::Pose3>(i);
       gtsam::Pose3 error = gt_pose.inverse() * opt_pose;
-      double te = error.translation().norm();
-      double re = error.rotation().axisAngle().second * 180.0 / M_PI;
-      total_trans_error += te;
-      total_rot_error += re;
-      if (te > max_trans_error) max_trans_error = te;
-      if (re > max_rot_error) max_rot_error = re;
+      total_trans_error += error.translation().norm();
+      total_rot_error += error.rotation().axisAngle().second * 180.0 / M_PI;
     }
-    last_mean_trans_error = total_trans_error / num_frames;
-    last_mean_rot_error = total_rot_error / num_frames;
-    last_max_trans_error = max_trans_error;
-    last_max_rot_error = max_rot_error;
-    spdlog::info("--- Summary ---");
-    spdlog::info("Mean Translation Error: {:.6f} m", last_mean_trans_error);
-    spdlog::info("Mean Rotation Error: {:.6f} deg", last_mean_rot_error);
-    spdlog::info("Max  Translation Error: {:.6f} m", last_max_trans_error);
-    spdlog::info("Max  Rotation Error: {:.6f} deg", last_max_rot_error);
-    spdlog::info("Optimization Time: {:.3f} ms", last_total_ms);
-    spdlog::info("========================================");
+     spdlog::info("--- 요약 ---");
+     spdlog::info("평균 위치 오차: {:.6f} m", total_trans_error / num_frames);
+     spdlog::info("평균 회전 오차: {:.6f} deg", total_rot_error / num_frames);
+     spdlog::info("========================================");
   }
 
 private:
-  bool headless;
   float pose_noise_scale;
 
   std::vector<const char*> factor_types;
@@ -655,106 +636,15 @@ private:
   std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps; // VG-ICP용 복셀맵
   
   std::vector<LOAMFeatures> loam_features;
-  std::vector<LOAMFeatures> loam_features_liosam;
-  FeatureExtraction feature_extractor;
   
   // yuchan : 각 프레임의 Ring 정보를 저장
   std::vector<std::vector<PointWithRing>> frames_with_ring;
-
-  double last_mean_trans_error = 0.0;
-  double last_mean_rot_error = 0.0;
-  double last_max_trans_error = 0.0;
-  double last_max_rot_error = 0.0;
-  double last_total_ms = 0.0;
-
-public:
-  void run_all_factors_headless()
-  {
-    int num_frames = frames.size();
-
-    spdlog::info("\n");
-    spdlog::info("╔══════════════════════════════════════════════════════════╗");
-    spdlog::info("║       Headless 6-Factor Registration Benchmark          ║");
-    spdlog::info("╚══════════════════════════════════════════════════════════╝");
-
-    gtsam::Values poses_noisy;
-    poses_noisy.insert(0, poses_gt.at<gtsam::Pose3>(0));
-    for (int i = 1; i < num_frames; i++)
-    {
-      gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * pose_noise_scale);
-      poses_noisy.insert(i, poses_gt.at<gtsam::Pose3>(i) * noise);
-    }
-
-    spdlog::info("Noise scale: {:.3f}", pose_noise_scale);
-    spdlog::info("Frames: {}", num_frames);
-    spdlog::info("Optimizer: LM");
-    spdlog::info("Full connection: {}", full_connection ? "true" : "false");
-    spdlog::info("");
-
-    struct Result {
-      std::string name;
-      double mean_t, mean_r, max_t, max_r, ms;
-    };
-    std::vector<Result> results;
-
-    int num_factors = static_cast<int>(factor_types.size());
-    #ifdef GTSAM_POINTS_USE_CUDA
-    num_factors = std::min(num_factors, 6);
-    #endif
-
-    for (int fi = 0; fi < num_factors; fi++)
-    {
-      factor_type = fi;
-      spdlog::info("────────────────────────────────────────");
-      spdlog::info("Running: {}", factor_types[fi]);
-      spdlog::info("────────────────────────────────────────");
-
-      poses = gtsam::Values();
-      for (int i = 0; i < num_frames; i++)
-      {
-        poses.insert(i, poses_noisy.at<gtsam::Pose3>(i));
-      }
-
-      optimizer_type = 0;
-      run_optimization();
-
-      results.push_back({factor_types[fi], last_mean_trans_error, last_mean_rot_error,
-                          last_max_trans_error, last_max_rot_error, last_total_ms});
-    }
-
-    spdlog::info("\n");
-    spdlog::info("╔══════════════════════════════════════════════════════════════════════════════════════╗");
-    spdlog::info("║                        Final Comparison Table                                       ║");
-    spdlog::info("╠════════════════╦═══════════════╦═══════════════╦═══════════════╦═══════════════╦═════╣");
-    spdlog::info("║ Factor         ║ Mean T (m)    ║ Mean R (deg)  ║ Max T (m)     ║ Max R (deg)   ║ ms  ║");
-    spdlog::info("╠════════════════╬═══════════════╬═══════════════╬═══════════════╬═══════════════╬═════╣");
-    for (const auto& r : results)
-    {
-      spdlog::info("║ {:14s} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║{:5.0f}║",
-                   r.name, r.mean_t, r.mean_r, r.max_t, r.max_r, r.ms);
-    }
-    spdlog::info("╚════════════════╩═══════════════╩═══════════════╩═══════════════╩═══════════════╩═════╝");
-  }
 };
 
 
 int main(int argc, char** argv)
 {
-  bool headless_mode = false;
-  for (int i = 1; i < argc; i++)
-  {
-    if (std::strcmp(argv[i], "--headless") == 0) headless_mode = true;
-  }
-
-  MatchingCostFactorDemo demo(headless_mode);
-
-  if (headless_mode)
-  {
-    demo.run_all_factors_headless();
-  }
-  else
-  {
-    guik::LightViewer::instance()->spin();
-  }
+  MatchingCostFactorDemo demo;
+  guik::LightViewer::instance()->spin();
   return 0;
 }

@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <optional>
+#include <vector>
 #include <gtsam/config.h>
 #include <gtsam/base/make_shared.h>
 #include <gtsam/base/Matrix.h>
@@ -49,7 +50,7 @@ using optional = boost::optional<T>;
 
 using OptionalMatrixType = boost::optional<gtsam::Matrix&>;
 using OptionalMatrixVecType = boost::optional<std::vector<gtsam::Matrix>&>;
-constexpr auto NoneValue = boost::none;
+const auto NoneValue = boost::none;
 
 #endif
 

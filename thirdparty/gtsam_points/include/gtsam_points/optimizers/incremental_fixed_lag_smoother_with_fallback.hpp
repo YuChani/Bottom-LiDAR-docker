@@ -31,7 +31,7 @@ public:
       const VALUE value = smoother->calculateEstimate<VALUE>(key);
       auto found = values.find(key);
       if (found != values.end()) {
-        values.insert_or_assign(key, value);
+        values.update(key, value);
       }
 
       return value;

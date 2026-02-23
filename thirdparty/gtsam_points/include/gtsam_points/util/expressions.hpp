@@ -3,9 +3,25 @@
 
 #pragma once
 
+#include <gtsam/config.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/expressions.h>
 #include <gtsam/nonlinear/expressions.h>
+
+namespace gtsam {
+// GTSAM 4.3a0+ already defines these in gtsam/slam/expressions.h
+#if !defined(GTSAM_VERSION_NUMERIC) || GTSAM_VERSION_NUMERIC < 40300
+namespace internal {
+inline Point3 translation(const Pose3& pose, OptionalJacobian<3, 6> H) {
+  return pose.translation(H);
+}
+}  // namespace internal
+
+inline Point3_ translation(const Pose3_& pose) {
+  return Point3_(internal::translation, pose);
+}
+#endif
+}  // namespace gtsam
 
 namespace gtsam_points {
 
