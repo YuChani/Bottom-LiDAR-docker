@@ -1,6 +1,6 @@
 # LIO-SAM Feature Extraction 통합 및 벤치마크 분석
 
-> **작업일**: 2026-02-23  
+> **작업일**: 2026-02-24  
 > **대상 파일**: `include/featureExtraction.hpp`, `src/featureExtraction.cpp`, `src/main.cpp`, `CMakeLists.txt`  
 > **Docker 환경**: `bottom-lidar` (container)
 
@@ -61,9 +61,9 @@ docker exec bottom-lidar bash -c "cd /root/workdir/build && ./lidar_registration
 
 ---
 
-## 5. 버그 수정 이력 (Phase 1-5)
+## 5. 버그 수정 이력 (Phase 1-7)
 
-개발 과정에서 총 5단계의 개선을 거쳤습니다.
+개발 과정에서 총 7단계의 개선을 거쳤습니다.
 
 ### Phase 1: 초기 이식 (버그 존재)
 *   **내용**: 기본적인 클래스 구조 이식 및 7번째 Factor 추가.
@@ -92,9 +92,37 @@ docker exec bottom-lidar bash -c "cd /root/workdir/build && ./lidar_registration
 *   **내용**: `buildCloudInfo()`에서 링 내부 포인트들을 `atan2(y, x)` 기준으로 정렬하여 공간적 이웃 관계를 명확히 했습니다. 누락되었던 `endRingIndex` 할당 로직도 최종 수정했습니다.
 *   **결과**: Mean T 0.308m, Mean R 1.133°, 실행 시간 106ms로 최적의 성능을 달성했습니다.
 
+### Phase 6: 시각화 및 Ring-based LOAM 비활성화
+*   **내용**:
+    *   **LOAM 비활성화**: 기존 Ring-based LOAM 알고리즘이 중복 계산되던 부분을 주석 처리하여 리소스를 절약했습니다.
+    *   **특징점 시각화**: ImGui 체크박스를 추가하여 LIO-SAM의 Edge(빨강) 및 Planar(파랑) 특징점을 실시간으로 시각화할 수 있게 개선했습니다.
+    *   **Headless 최적화**: GUI가 없는 벤치마크 모드에서 불필요한 LOAM 계산 로직을 건너뛰도록 수정했습니다.
+
+### Phase 7: 파라미터 튜닝 실험
+*   **내용**: LIO-SAM 특징점 추출기의 주요 파라미터를 체계적으로 변경하며 최적의 조합을 찾았습니다.
+
+| 실험 | edgeThreshold | surfThreshold | Edge/sector | Surf/sector | leafSize | Mean T (m) | Mean R (deg) | Edge/frame | Time (ms) |
+|------|--------------|--------------|-------------|-------------|----------|-----------|-------------|------------|-----------|
+| Baseline (Phase 5) | 0.1 | 0.1 | 2 | 4 | 0.4 | 0.308 | 1.133 | ~715 | 103 |
+| Exp 1: leafSize=0.2 | 0.1 | 0.1 | 2 | 4 | 0.2 | 0.314 | 1.138 | ~715 | 100 |
+| Exp 2: leafSize=0.0 | 0.1 | 0.1 | 2 | 4 | 0.0 | 0.318 | 1.140 | ~715 | 87 |
+| Exp 3: edge=1.0 ⭐ | 1.0 | 0.1 | 2 | 4 | 0.4 | 0.233 | 0.914 | ~436 | 78 |
+| **Exp 4: edge=1.0+20/sector ⭐⭐** | **1.0** | **0.1** | **20** | **4** | **0.4** | **0.225** | **0.773** | **~1130** | **117** |
+| Exp 5: surfThreshold=0.01 | 1.0 | 0.01 | 20 | 4 | 0.4 | 0.230 | 0.779 | ~1130 | 123 |
+| Exp 6a: edge=2.0 | 2.0 | 0.1 | 20 | 4 | 0.4 | 0.226 | 0.799 | ~950 | 115 |
+| Exp 6b: edge=0.5 | 0.5 | 0.1 | 20 | 4 | 0.4 | 0.232 | 0.833 | ~1380 | 147 |
+| Exp 7: surf/sector=20 | 1.0 | 0.1 | 20 | 20 | 0.4 | 0.265 | 0.847 | ~1130 | 192 |
+
+#### 주요 분석 결과
+1. VoxelGrid downsampling은 이 데이터셋에서 유의미한 영향 없음
+2. edgeThreshold=1.0 (LIO-SAM 원본 기본값)이 최적 — 24% translation 개선
+3. Edge per sector 20 (LIO-SAM 원본)이 2보다 나음 — rotation 15% 추가 개선
+4. surfThreshold, surface per sector는 변경해도 큰 영향 없거나 악화
+5. 최종 최적 구성: edgeThreshold=1.0, surfThreshold=0.1, edge/sector=20, surf/sector=4, leafSize=0.4
+
 ---
 
-## 6. 최종 벤치마크 결과 (Phase 5)
+## 6. 최종 벤치마크 결과
 
 수중 LiDAR 데이터셋을 활용한 7개 Factor 비교 결과입니다.
 
@@ -108,7 +136,7 @@ docker exec bottom-lidar bash -c "cd /root/workdir/build && ./lidar_registration
 | VGICP | 0.216358 | 1.038157 | 1.080683 | 3.464607 | 9,695 |
 | LOAM (Ring-based) | 0.288562 | 1.048161 | 0.872851 | 2.327760 | 66 |
 | NDT | 0.078200 | 0.510344 | 0.142668 | 1.129417 | 28,936 |
-| **LOAM_LIOSAM** | **0.307849** | **1.132587** | **0.901764** | **2.447329** | **106** |
+| **LOAM_LIOSAM** | **0.225** | **0.773** | **-** | **-** | **117** |
 
 ### LOAM_LIOSAM 프레임별 상세 결과
 
@@ -135,6 +163,8 @@ docker exec bottom-lidar bash -c "cd /root/workdir/build && ./lidar_registration
 | Phase 3 | 링 경계 처리 | 0.708 | 2.609 | 14,039 | ~7300 / ~25K |
 | Phase 4 | 파라미터 튜닝 | 0.694 | 2.367 | 8,000 | 768 / ~14K |
 | Phase 5 | 각도 기반 정렬 | 0.308 | 1.133 | 106 | ~715 / ~1,225 |
+| Phase 6 | 시각화 + Ring LOAM 비활성화 | 0.308 | 1.133 | 106 | ~715 / ~1,225 |
+| **Phase 7** | **파라미터 튜닝 (최적)** | **0.225** | **0.773** | **117** | **~1130 / ~1,112** |
 
 ### 상세 분석
 *   **인덱스 오류**: Phase 1에서 거의 모든 점이 Surface로 분류된 이유는 `cloudLabel` 참조 시 정렬 인덱스를 원본 인덱스로 변환하지 않았기 때문입니다.
@@ -147,15 +177,13 @@ docker exec bottom-lidar bash -c "cd /root/workdir/build && ./lidar_registration
 
 최종적으로 적용된 주요 파라미터입니다.
 
-| 파라미터 | 초기값 | 최종값 | 변경 이유 |
-|---------|-------|-------|----------|
-| `N_SCAN` | 64 | 64 | OS1-64 채널 수 고정 |
-| `Horizon_SCAN` | 1024 | 1024 | 수평 해상도 고정 |
-| `edgeThreshold` | 1.0 | 0.1 | 특징점 품질 강화 |
-| `surfThreshold` | 0.1 | 0.1 | 변경 없음 |
-| `odometrySurfLeafSize`| 0.4 | 0.4 | 다운샘플링 해상도 유지 |
-| 섹터당 Edge 수 | 20 | 2 | 최적화 속도 및 품질 균형 |
-| 섹터당 Surface 수 | 무제한 | 4 | 최적화 속도 및 품질 균형 |
+| 파라미터 | Phase 5 값 | Phase 7 최적값 | 변경 이유 |
+|---------|-----------|-------------|----------|
+| edgeThreshold | 0.1 | 1.0 | LIO-SAM 원본 기본값이 최적 (24% T 개선) |
+| surfThreshold | 0.1 | 0.1 | 변경 시 효과 미미 |
+| odometrySurfLeafSize | 0.4 | 0.4 | 변경 시 효과 없음 |
+| Edge/sector | 2 | 20 | LIO-SAM 원본값, R 15% 개선 |
+| Surface/sector | 4 | 4 | 20으로 변경 시 악화 |
 
 ---
 
@@ -166,3 +194,5 @@ docker exec bottom-lidar bash -c "cd /root/workdir/build && ./lidar_registration
 3.  Surface 포인트를 수집할 때 `<=` 조건을 사용하면 노이즈를 포함한 거의 모든 점이 선택되므로, 명확하게 라벨링된 점(`== -1`)만 골라내야 합니다.
 4.  추출된 특징점의 수는 백엔드 최적화 성능에 직접적인 영향을 미치므로, 섹터별 최대 추출 개수를 엄격히 제한하는 것이 성능 유지의 핵심입니다.
 5.  포인트가 각도 순으로 정렬되지 않으면 곡률 계산이 무의미해져 시스템 전반의 정확도가 크게 떨어집니다.
+6.  LIO-SAM 원본 파라미터가 커스텀 튜닝보다 우수함 — 원본 알고리즘이 이미 최적화됨
+7.  Edge 특징점 품질(threshold)과 수량(per sector)은 모두 중요하며, 둘 다 LIO-SAM 원본값이 최적

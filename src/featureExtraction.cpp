@@ -316,14 +316,14 @@ void FeatureExtraction::extractFeatures()
                 if (cloudNeighborPicked[ind] == 0 && cloudCurvature[ind] > params.edgeThreshold)
                 {
                     largestPickedNum++;
-                    if (largestPickedNum <= 2) // 최대 2개까지 edge point로 선택 (Ring-based LOAM과 동일)
+                    if (largestPickedNum <= 20) // 최대 20개까지 edge point로 선택 (LIO-SAM 원본)
                     {
                         cloudLabel[ind] = 1;
                         cornerCloud->push_back(extractedCloud->points[ind]);    // edge point 저장
                     } 
                     else 
                     {
-                        break;  // 2개 넘으면 종료
+                        break;  // 20개 넘으면 종료
                     }
                     // 선택된 point 양옆5개 이웃점들은 제외시키기 위해 마킹
                     cloudNeighborPicked[ind] = 1;
@@ -345,7 +345,7 @@ void FeatureExtraction::extractFeatures()
                     }
                 }
             }
-            // 곡률이 작은 점들은 surface points 후보로 마킹 (최대 4개, Ring-based LOAM과 동일)
+            // 곡률이 작은 점들은 surface points 후보로 마킹 (최대 4개)
             int surfPickedNum = 0;
             for (int k = sp; k <= ep; k++) // 앞에서 부터 (곡률 작은 순서)
             {
@@ -354,7 +354,7 @@ void FeatureExtraction::extractFeatures()
                 if (cloudNeighborPicked[ind] == 0 && cloudCurvature[ind] < params.surfThreshold)
                 {
                     surfPickedNum++;
-                    if (surfPickedNum > 4) // 최대 4개까지 surface point로 선택
+                    if (surfPickedNum > 4) // 최대 4개까지 surface point로 선택 (최적값)
                         break;
                     cloudLabel[ind] = -1;   // surface point 라벨링
                     cloudNeighborPicked[ind] = 1;
@@ -388,9 +388,12 @@ void FeatureExtraction::extractFeatures()
         }
 
         surfaceCloudScanDS->clear();
-        downSizeFilter.setInputCloud(surfaceCloudScan);
-        downSizeFilter.filter(*surfaceCloudScanDS);
-
-        *surfaceCloud += *surfaceCloudScanDS;
+        if (params.odometrySurfLeafSize > 0.0f) {
+            downSizeFilter.setInputCloud(surfaceCloudScan);
+            downSizeFilter.filter(*surfaceCloudScanDS);
+            *surfaceCloud += *surfaceCloudScanDS;
+        } else {
+            *surfaceCloud += *surfaceCloudScan;
+        }
     }
 }

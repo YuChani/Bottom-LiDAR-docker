@@ -10,9 +10,9 @@ struct LIOSAMParams
 {
     int N_SCAN = 64;                    // LiDAR 채널 수 (Ouster OS1-64)
     int Horizon_SCAN = 1024;            // 수평 해상도
-    float edgeThreshold = 0.1;          // Edge 특징점 threshold (Ring-based LOAM과 동일)
-    float surfThreshold = 0.1;          // Surface 특징점 threshold
-    float odometrySurfLeafSize = 0.4;   // Downsampling leaf size
+    float edgeThreshold = 1.0;          // Edge 특징점 threshold (LIO-SAM 원본 기본값, 최적)
+    float surfThreshold = 0.1;          // Surface 특징점 threshold (원본)
+    float odometrySurfLeafSize = 0.4;   // Downsampling leaf size (LIO-SAM 원본)
 };
 
 // Cloud Info 구조체 (ROS 메시지 대체)

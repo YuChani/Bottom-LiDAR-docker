@@ -248,11 +248,11 @@ public:
       frame->add_normals(gtsam_points::estimate_normals(frame->points, frame->size()));
       frames[i] = frame;
 
-      // yuchan_step : LOAM 특징점 추출 (Ring 기반)
-      spdlog::info("  Extracting LOAM features (Ring-based)...");
-      auto features = extract_loam_features_ring_based(points_with_ring);
-      loam_features.push_back(features);
-      spdlog::info("Edge points: {}, Planar points: {}", features.edge_points->size(), features.planar_points->size());
+      // yuchan_step : LOAM 특징점 추출 (Ring 기반) — 비활성화 (LIO-SAM 디버깅 중)
+      // spdlog::info("  Extracting LOAM features (Ring-based)...");
+      // auto features = extract_loam_features_ring_based(points_with_ring);
+      // loam_features.push_back(features);
+      // spdlog::info("Edge points: {}, Planar points: {}", features.edge_points->size(), features.planar_points->size());
       // yuchan_step : LIO-SAM 기반 LOAM 특징점 추출
       spdlog::info("  Extracting LOAM features (LIO-SAM)...");
       auto features_liosam = feature_extractor.process(points_with_ring);
@@ -277,7 +277,8 @@ public:
         viewer->update_drawable(
           "frame_" + std::to_string(i), 
           std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size()), 
-          guik::Rainbow().add("model_matrix", Eigen::Isometry3f(relative_pose.matrix().cast<float>())));
+          // 포인트클라우드 색상(회색)
+          guik::FlatColor(0.7f, 0.7f, 0.7f, 1.0f).add("model_matrix", Eigen::Isometry3f(relative_pose.matrix().cast<float>())));
       }
     }
 
@@ -335,6 +336,15 @@ public:
         ImGui::DragFloat("corr update tolerance rot", &correspondence_update_tolerance_rot, 0.001f, 0.0f, 0.1f);
         ImGui::DragFloat("corr update tolerance trans", &correspondence_update_tolerance_trans, 0.01f, 0.0f, 1.0f);
 
+
+        ImGui::Separator();
+        ImGui::Checkbox("Show LIO-SAM Features", &show_liosam_features);
+        if (show_liosam_features) {
+          ImGui::TextColored(ImVec4(1,0,0,1), "Red = Edge");
+          ImGui::SameLine();
+          ImGui::TextColored(ImVec4(0,0,1,1), "Blue = Planar");
+        }
+
         if (ImGui::Button("optimize"))
         {
           if (optimization_thread.joinable())
@@ -391,6 +401,35 @@ public:
       }
 
       viewer->update_drawable("factors", std::make_shared<glk::ThinLines>(factor_lines), guik::FlatColor(0.0f, 1.0f, 0.0f, 1.0f));
+
+      // LIO-SAM feature 시각화 (edge=빨강, planar=파랑)
+      if (show_liosam_features) {
+        for (int i = 0; i < num_frames; i++) {
+          Eigen::Isometry3f pose(values.at<gtsam::Pose3>(i).matrix().cast<float>());
+
+          // Edge features (빨간색 포인트)
+          if (i < (int)loam_features_liosam.size() && loam_features_liosam[i].edge_points && loam_features_liosam[i].edge_points->size() > 0) {
+            auto edge_pcb = std::make_shared<glk::PointCloudBuffer>(loam_features_liosam[i].edge_points->points, loam_features_liosam[i].edge_points->size());
+            viewer->update_drawable(
+              "liosam_edge_" + std::to_string(i), edge_pcb,
+              guik::FlatColor(1.0f, 0.0f, 0.0f, 1.0f).set_point_size(0.2f).set_point_shape_circle().add("model_matrix", pose));
+          }
+
+          // Planar features (파란색 포인트)
+          if (i < (int)loam_features_liosam.size() && loam_features_liosam[i].planar_points && loam_features_liosam[i].planar_points->size() > 0) {
+            auto planar_pcb = std::make_shared<glk::PointCloudBuffer>(loam_features_liosam[i].planar_points->points, loam_features_liosam[i].planar_points->size());
+            viewer->update_drawable(
+              "liosam_planar_" + std::to_string(i), planar_pcb,
+              guik::FlatColor(0.0f, 0.0f, 1.0f, 1.0f).set_point_size(0.2f).set_point_shape_circle().add("model_matrix", pose));
+          }
+        }
+      } else {
+        // feature 시각화 제거
+        for (int i = 0; i < num_frames; i++) {
+          viewer->remove_drawable("liosam_edge_" + std::to_string(i));
+          viewer->remove_drawable("liosam_planar_" + std::to_string(i));
+        }
+      }
     });
   }
 
@@ -440,23 +479,19 @@ public:
       factor->set_num_threads(num_threads);
       return factor;
     }
-    // yuchan : LOAM 팩터 생성
-    // LOAM 특징점(Edge, Planar points) 기반의 팩터 생성
-    // Edge : Point-to-line distance 최소화 / Planar : Point-to-plane distance 최소화
-    else if (factor_types[factor_type] == std::string("LOAM"))
-    {
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedLOAMFactor>(
-        target_key, source_key, 
-        loam_features[target_key].edge_points, loam_features[target_key].planar_points,
-        loam_features[source_key].edge_points, loam_features[source_key].planar_points);
-      
-      factor->set_enable_correspondence_validation(true);
-      factor->set_max_correspondence_distance(2.0, 2.0);
-      // LOAM-specific tolerance to prevent cost oscillation from correspondence switching
-      factor->set_correspondence_update_tolerance(0.005, 0.02);
-      factor->set_num_threads(num_threads);
-      return factor;
-    }
+    // yuchan : LOAM 팩터 생성 — 비활성화 (Ring-based feature 추출 비활성화됨)
+    // else if (factor_types[factor_type] == std::string("LOAM"))
+    // {
+    //   auto factor = gtsam::make_shared<gtsam_points::IntegratedLOAMFactor>(
+    //     target_key, source_key, 
+    //     loam_features[target_key].edge_points, loam_features[target_key].planar_points,
+    //     loam_features[source_key].edge_points, loam_features[source_key].planar_points);
+    //   factor->set_enable_correspondence_validation(true);
+    //   factor->set_max_correspondence_distance(2.0, 2.0);
+    //   factor->set_correspondence_update_tolerance(0.005, 0.02);
+    //   factor->set_num_threads(num_threads);
+    //   return factor;
+    // }
     // yuchan : LOAM_LIOSAM 팩터 생성 (LIO-SAM 방식의 특징점 사용)
     else if (factor_types[factor_type] == std::string("LOAM_LIOSAM"))
     {
@@ -633,6 +668,7 @@ public:
 
 private:
   bool headless;
+  bool show_liosam_features = true;  // LIO-SAM feature 시각화 토글
   float pose_noise_scale;
 
   std::vector<const char*> factor_types;
@@ -668,13 +704,13 @@ private:
   double last_total_ms = 0.0;
 
 public:
-  void run_all_factors_headless()
+  void run_all_factors_headless()   // 시각화 없이 모든 팩터 타입 최적화 실행해서 결과 비교하는 함수 -> ./lidar_registration_demo --headless 옵션으로 실행
   {
     int num_frames = frames.size();
 
     spdlog::info("\n");
     spdlog::info("╔══════════════════════════════════════════════════════════╗");
-    spdlog::info("║       Headless 6-Factor Registration Benchmark          ║");
+    spdlog::info("║       Headless 6-Factor Registration Benchmark           ║");
     spdlog::info("╚══════════════════════════════════════════════════════════╝");
 
     gtsam::Values poses_noisy;
