@@ -31,6 +31,9 @@ void IntegratedMatchingCostFactor::print(const std::string& s, const gtsam::KeyF
 
 double IntegratedMatchingCostFactor::error(const gtsam::Values& values) const {
   Eigen::Isometry3d delta = calc_delta(values);
+  // Fix: update correspondences so that LM's tryLambda() evaluates error
+  // with correct correspondences for the new pose (not stale ones from linearize())
+  update_correspondences(delta);
   return evaluate(delta);
 }
 

@@ -70,6 +70,13 @@ public:
   ///       and setting n>1 can rather affect the processing speed.
   void set_num_threads(int n) { num_threads = n; }
 
+  /// @brief Correspondences are updated only when the displacement from the last update point is larger than these threshold values.
+  /// @note  Default values are angle=trans=0 and correspondences are updated every linearization call.
+  void set_correspondence_update_tolerance(double angle, double trans) {
+    correspondence_update_tolerance_rot = angle;
+    correspondence_update_tolerance_trans = trans;
+  }
+
   /// @brief Set the cache mode for fused covariance matrices (i.e., mahalanobis).
   void set_fused_cov_cache_mode(FusedCovCacheMode mode) { mahalanobis_cache_mode = mode; }
 
@@ -89,6 +96,13 @@ public:
 
   gtsam::NonlinearFactor::shared_ptr clone() const override { return gtsam::NonlinearFactor::shared_ptr(new IntegratedVGICPFactor_(*this)); }
 
+  /// @brief Override error() to avoid re-doing voxel lookup during LM's tryLambda().
+  /// VGICP's voxel-based correspondences are discontinuous across voxel boundaries,
+  /// so re-looking up correspondences at a trial pose causes cost discontinuities
+  /// that make LM reject every step. Instead, we freeze voxel correspondences from
+  /// linearize() and only recompute Mahalanobis matrices at the trial pose.
+  virtual double error(const gtsam::Values& values) const override;
+
 private:
   virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
 
@@ -100,12 +114,19 @@ private:
     Eigen::Matrix<double, 6, 1>* b_target = nullptr,
     Eigen::Matrix<double, 6, 1>* b_source = nullptr) const override;
 
+  /// @brief Recompute only Mahalanobis matrices using existing (frozen) correspondences.
+  /// Unlike update_correspondences(), this does NOT re-lookup voxels.
+  void update_mahalanobis(const Eigen::Isometry3d& delta) const;
+
 private:
   int num_threads;
   FusedCovCacheMode mahalanobis_cache_mode;
 
   // I'm unhappy to have mutable members...
   mutable Eigen::Isometry3d linearization_point;
+  double correspondence_update_tolerance_rot;
+  double correspondence_update_tolerance_trans;
+  mutable Eigen::Isometry3d last_correspondence_point;
   mutable std::vector<const GaussianVoxel*> correspondences;
   mutable std::vector<Eigen::Matrix4d> mahalanobis_full;
   mutable std::vector<Eigen::Matrix<float, 6, 1>> mahalanobis_compact;

@@ -26,6 +26,8 @@ IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   mahalanobis_cache_mode(FusedCovCacheMode::FULL),
+  correspondence_update_tolerance_rot(0.0),
+  correspondence_update_tolerance_trans(0.0),
   target_voxels(std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(target_voxels)),
   source(source) {
   //
@@ -54,6 +56,8 @@ IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
 : gtsam_points::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
   mahalanobis_cache_mode(FusedCovCacheMode::FULL),
+  correspondence_update_tolerance_rot(0.0),
+  correspondence_update_tolerance_trans(0.0),
   target_voxels(std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(target_voxels)),
   source(source) {
   //
@@ -97,6 +101,20 @@ size_t IntegratedVGICPFactor_<SourceFrame>::memory_usage() const {
 
 template <typename SourceFrame>
 void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+  bool do_update = true;
+  if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
+    Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
+    double diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
+    double diff_trans = diff.translation().norm();
+    if (diff_rot < correspondence_update_tolerance_rot && diff_trans < correspondence_update_tolerance_trans) {
+      do_update = false;
+    }
+  }
+
+  if (do_update) {
+    last_correspondence_point = delta;
+  }
+
   linearization_point = delta;
   correspondences.resize(frame::size(*source));
 
@@ -112,43 +130,106 @@ void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Is
   }
 
   const auto perpoint_task = [&](int i) {
-    Eigen::Vector4d pt = delta * frame::point(*source, i);
-    Eigen::Vector3i coord = target_voxels->voxel_coord(pt);
-    const auto voxel_id = target_voxels->lookup_voxel_index(coord);
+    if (do_update) {
+      Eigen::Vector4d pt = delta * frame::point(*source, i);
+      Eigen::Vector3i coord = target_voxels->voxel_coord(pt);
+      const auto voxel_id = target_voxels->lookup_voxel_index(coord);
 
-    if (voxel_id < 0) {
-      correspondences[i] = nullptr;
-
-      switch (mahalanobis_cache_mode) {
-        case FusedCovCacheMode::FULL:
-          mahalanobis_full[i].setZero();
-          break;
-        case FusedCovCacheMode::COMPACT:
-          mahalanobis_compact[i].setZero();
-          break;
-        case FusedCovCacheMode::NONE:
-          break;
+      if (voxel_id < 0) {
+        correspondences[i] = nullptr;
+      } else {
+        correspondences[i] = &target_voxels->lookup_voxel(voxel_id);
       }
-    } else {
-      const auto voxel = &target_voxels->lookup_voxel(voxel_id);
-      correspondences[i] = voxel;
+    }
 
-      switch (mahalanobis_cache_mode) {
-        case FusedCovCacheMode::FULL: {
-          const Eigen::Matrix4d RCR = (voxel->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
+    switch (mahalanobis_cache_mode) {
+      case FusedCovCacheMode::FULL:
+        if (correspondences[i] == nullptr) {
+          mahalanobis_full[i].setZero();
+        } else {
+          const Eigen::Matrix4d RCR = (correspondences[i]->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
           mahalanobis_full[i].setZero();
           mahalanobis_full[i].topLeftCorner<3, 3>() = RCR.topLeftCorner<3, 3>().inverse();
-          break;
         }
-        case FusedCovCacheMode::COMPACT: {
-          const Eigen::Matrix4d RCR = (voxel->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
+        break;
+      case FusedCovCacheMode::COMPACT:
+        if (correspondences[i] == nullptr) {
+          mahalanobis_compact[i].setZero();
+        } else {
+          const Eigen::Matrix4d RCR = (correspondences[i]->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
           const Eigen::Matrix3d maha = RCR.topLeftCorner<3, 3>().inverse();
           mahalanobis_compact[i] = compact_cov(maha);
-          break;
         }
-        case FusedCovCacheMode::NONE:
-          break;
+        break;
+      case FusedCovCacheMode::NONE:
+        break;
+    }
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame::size(*source); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
       }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
+  }
+}
+
+template <typename SourceFrame>
+double IntegratedVGICPFactor_<SourceFrame>::error(const gtsam::Values& values) const {
+  Eigen::Isometry3d delta = calc_delta(values);
+  // Unlike the base class error() which calls update_correspondences(),
+  // VGICP freezes voxel correspondences from linearize() and only recomputes
+  // Mahalanobis matrices. This avoids cost discontinuities from voxel boundary jumps
+  // that would cause LM to reject every trial step.
+  if (correspondences.size() == frame::size(*source)) {
+    update_mahalanobis(delta);
+  } else {
+    // First call before any linearize() — do full update
+    update_correspondences(delta);
+  }
+  return evaluate(delta);
+}
+
+template <typename SourceFrame>
+void IntegratedVGICPFactor_<SourceFrame>::update_mahalanobis(const Eigen::Isometry3d& delta) const {
+  // Recompute Mahalanobis matrices using existing (frozen) correspondences but with
+  // the new delta. This updates the fused covariance R*Cov_A*R^T + Cov_B without
+  // changing which voxel each source point corresponds to.
+  linearization_point = delta;
+
+  const auto perpoint_task = [&](int i) {
+    switch (mahalanobis_cache_mode) {
+      case FusedCovCacheMode::FULL:
+        if (correspondences[i] == nullptr) {
+          mahalanobis_full[i].setZero();
+        } else {
+          const Eigen::Matrix4d RCR = (correspondences[i]->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
+          mahalanobis_full[i].setZero();
+          mahalanobis_full[i].topLeftCorner<3, 3>() = RCR.topLeftCorner<3, 3>().inverse();
+        }
+        break;
+      case FusedCovCacheMode::COMPACT:
+        if (correspondences[i] == nullptr) {
+          mahalanobis_compact[i].setZero();
+        } else {
+          const Eigen::Matrix4d RCR = (correspondences[i]->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
+          const Eigen::Matrix3d maha = RCR.topLeftCorner<3, 3>().inverse();
+          mahalanobis_compact[i] = compact_cov(maha);
+        }
+        break;
+      case FusedCovCacheMode::NONE:
+        break;
     }
   };
 

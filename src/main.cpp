@@ -259,14 +259,15 @@ public:
       loam_features_liosam.push_back(features_liosam);
       spdlog::info("LIO-SAM Edge points: {}, Planar points: {}", features_liosam.edge_points->size(), features_liosam.planar_points->size());
 
-      // yuchan_step : 가우시안 복셀맵 생성 (resolution = 0.5m)
+      // yuchan_step : 가우시안 복셀맵 생성 (resolution = 1.0m)
       // VG-ICP에서 사용하는 r값을 설정하는 부분
-      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(0.5);
+      // Koide fast_gicp 기본값: 1.0m, small_gicp 벤치마크: 2.0m (outdoor)
+      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(1.0);
       voxelmap->insert(*frame);
       voxelmaps[i] = voxelmap;
 
 #ifdef GTSAM_POINTS_USE_CUDA
-      auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(0.5);
+      auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
       voxelmap_gpu->insert(*frame);
       voxelmaps_gpu[i] = voxelmap_gpu;
 #endif
@@ -476,6 +477,7 @@ public:
     else if (factor_types[factor_type] == std::string("VGICP"))
     {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
+      factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       factor->set_num_threads(num_threads);
       return factor;
     }
@@ -558,6 +560,7 @@ public:
       lm_params.maxIterations = 100;
       lm_params.relativeErrorTol = 1e-5;
       lm_params.absoluteErrorTol = 1e-5;
+      lm_params.lambdaLowerBound = 1e-6;  // lambda가 0으로 수렴하여 undamped GN으로 퇴화하는 것을 방지
       
       lm_params.callback = [this](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values)
       {
@@ -740,6 +743,12 @@ public:
 
     for (int fi = 0; fi < num_factors; fi++)
     {
+      // LOAM (Ring-based)은 비활성화 상태이므로 스킵
+      if (std::string(factor_types[fi]) == "LOAM") {
+        spdlog::info("Skipping {} (disabled)", factor_types[fi]);
+        continue;
+      }
+
       factor_type = fi;
       spdlog::info("────────────────────────────────────────");
       spdlog::info("Running: {}", factor_types[fi]);
