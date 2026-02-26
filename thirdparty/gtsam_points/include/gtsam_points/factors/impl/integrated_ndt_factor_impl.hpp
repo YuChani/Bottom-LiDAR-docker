@@ -240,47 +240,60 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     // Mahalanobis 거리(4x4행렬)
     double mahalanobis_dist = residual.transpose() * inv_cov_B * residual;
 
-    // NDT cost: E_i = d1 * exp(-d2/2 * mahal_dist)  (Magnusson 2009 Eq. 6.9)
+    // ========== Magnusson 2009, Eq. 6.9: NDT Score Function ==========
+    // s_k = -d1 * exp(-d2/2 * q^T * Σ^{-1} * q)
+    //   d1 < 0 이므로 -d1 > 0, 정렬이 좋을수록 score가 크다 (최대화 문제).
     double exponent = -gauss_d2 * mahalanobis_dist / 2.0;
     if (exponent < -700.0) {
+      return 0.0;  // underflow 방지
+    }
+    double e_term = std::exp(exponent);  // exp(-d2/2 * m), 범위: (0, 1]
+    if (std::isnan(e_term)) {
       return 0.0;
     }
 
-    double e_term = std::exp(exponent); // exp(-gauss_d2 * mahalanobis_dist / 2.0) [POSITIVE scalar]
-    double e_scaled = gauss_d2 * e_term;
-    if (e_scaled > 1.0 || e_scaled < 0.0 || std::isnan(e_scaled)) {
-      return 0.0;
-    }
+    // Magnusson Eq. 6.9 원본 score function
+    const double score_function = -gauss_d1 * e_term;  // = |d1| * exp(...), 양수
 
-    // Non-negative reformulation: E_new = -d1*(1 - exp(s)) = |d1|*(1 - exp(s))
-    // At perfect alignment (s=0): E_new = 0. At poor alignment: E_new = |d1|.
-    // Gradient and Hessian are identical to original formulation.
-    // gtsam 라이브러리는 비선형최소제곱법을 플도록 설계되어있음. 에러는 음수가 될수없음. 정답일때 에러는 0이다.
-    // 따라서, 에러가 음수가 되는 원래의 NDT cost formulation은 gtsam의 최적화 framework와 맞지 않음. 
-    // 대신, non-negative reformulation을 사용하여 최적화가 안정적으로 수렴하도록 함.
-    // ndt의 cost를 그대로 넣으면 정답일때 에러는 음수(-d1)이 되고, 틀릴수록 0에 가까워짐. 
-    // LM optimizer는 에러가 음수인 경우 수렴하지 않을 수 있음. 따라서, 에러가 0이상인 non-negative reformulation을 사용함. 최적화는 여전히 원래의 NDT cost와 동일한 해를 찾게 됨.
-    const double error = -gauss_d1 * (1.0 - e_term);  // gtsam의 프레임워크에 맞추기 위한 adapter 역할
+    // GTSAM 호환 cost: GTSAM LM은 cost가 감소해야 step을 accept한다.
+    // score_function은 정렬이 좋을수록 증가하므로, 부호를 반전해야 한다.
+    // cost = -d1 - score_function = -d1 * (1 - e_term)
+    //   정렬 좋음 (m=0): cost = 0      (최소)
+    //   정렬 나쁨 (m≫0): cost = -d1    (최대, 양수)
+    // 상수 -d1을 빼는 것이므로 gradient/Hessian은 score_function과 동일하다.
+    const double cost = -gauss_d1 - score_function;  // = -d1 * (1 - e_term)
 
     if (!H_target) {
-      return error;
+      return cost;
     }
 
-    // target 포즈에 대한 residual의 미분(자코비안) 4x6 행렬
+    // ========== Magnusson 2009, Eq. 6.12: Score Function의 1차 미분 (Gradient) ==========
+    // ∂s/∂p = (-d1 * d2 * e_term) * q^T * Σ^{-1} * J
+    //          ^^^^^^^^^^^^^^^^
+    //          weight (양수 스칼라: d1 < 0이므로 -d1 > 0, d2 > 0, e_term > 0)
+    //
+    // 이 weight가 각 포인트의 기여도를 자동 조절한다:
+    //   정렬 좋음 (m≈0): weight ≈ -d1*d2  (최대 기여)
+    //   정렬 나쁨 (m≫0): weight ≈ 0       (자동 하향 가중 → robust M-estimator 효과)
+
+    // 변환 포즈에 대한 residual의 자코비안 (4x6, SE(3) Lie algebra 기반)
     Eigen::Matrix<double, 4, 6> J_target = Eigen::Matrix<double, 4, 6>::Zero();
     J_target.block<3, 3>(0, 0) = -gtsam::SO3::Hat(transed_mean_A.head<3>());  // rotation
-    J_target.block<3, 3>(0, 3) = Eigen::Matrix3d::Identity(); // translation
+    J_target.block<3, 3>(0, 3) = Eigen::Matrix3d::Identity();                 // translation
 
-    // source 포즈에 대한 residual의 미분(자코비안) 4x6 행렬
     Eigen::Matrix<double, 4, 6> J_source = Eigen::Matrix<double, 4, 6>::Zero();
-    J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.template head<3>());  // rotation
-    J_source.block<3, 3>(0, 3) = -delta.linear(); // translation
+    J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.template head<3>());
+    J_source.block<3, 3>(0, 3) = -delta.linear();
 
-    // derivative_scale = -d1*d2*exp(s) [POSITIVE scalar -> PSD Hessian]
-    double derivative_scale = -gauss_d1 * gauss_d2 * e_term;
+    // Score function의 1차 미분에서 나오는 weight (= derivative_scale)
+    const double weight = -gauss_d1 * gauss_d2 * e_term;  // 양수 스칼라
 
-    Eigen::Matrix<double, 6, 4> J_target_weighted = derivative_scale * J_target.transpose() * inv_cov_B;
-    Eigen::Matrix<double, 6, 4> J_source_weighted = derivative_scale * J_source.transpose() * inv_cov_B;
+    // ========== Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) ==========
+    // H ≈ weight * J^T * Σ^{-1} * J   (H2, H3 항 생략 → PSD 보장)
+    // b = weight * J^T * Σ^{-1} * q    (= gradient)
+    // 이 H, b로 GTSAM LM 시스템을 구성: (H + λI)δ = -b
+    Eigen::Matrix<double, 6, 4> J_target_weighted = weight * J_target.transpose() * inv_cov_B;
+    Eigen::Matrix<double, 6, 4> J_source_weighted = weight * J_source.transpose() * inv_cov_B;
 
     *H_target += J_target_weighted * J_target;
     *H_source += J_source_weighted * J_source;
@@ -288,7 +301,7 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     *b_target += J_target_weighted * residual;
     *b_source += J_source_weighted * residual;
 
-    return error;
+    return cost;
   };
 
   if (is_omp_default() || num_threads == 1) {
