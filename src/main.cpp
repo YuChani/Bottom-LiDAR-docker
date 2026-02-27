@@ -275,11 +275,63 @@ public:
       // 시각화 업데이트 (GUI 모드에서만)
       if (!headless && viewer)
       {
+        // ============================================================
+        // [일반 포인트 클라우드 시각화 설정]
+        // ============================================================
+        // ● 색상 모드 (아래 중 택1):
+        //   guik::VertexColor()                        — 포인트별 개별 색상 (add_color 필요)
+        //   guik::Rainbow()                             — Z축 높이 기반 무지개 색상 (자동)
+        //   guik::FlatColor(r, g, b, a)                 — 단색 (0.0~1.0, a=투명도)
+        //     예: FlatColor(0.7, 0.7, 0.7, 1.0)        — 회색
+        //     예: FlatColor(1.0, 0.0, 0.0, 0.5)        — 반투명 빨강
+        //
+        // ● 포인트 크기:
+        //   .set_point_size(float)                      — 미터 단위 크기 (기본: metric 모드)
+        //     예: 0.02f(매우 작음), 0.05f(작음), 0.1f(중간), 0.2f(큼)
+        //
+        // ● 포인트 모양:
+        //   .set_point_shape_circle()                   — 원형 (기본값)
+        //   .set_point_shape_rectangle()                — 사각형
+        //
+        // ● 크기 모드:
+        //   .set_point_scale_metric()                   — 미터 단위 (3D 공간 크기, 기본값)
+        //   .set_point_scale_screenspace()               — 픽셀 단위 (화면 크기 고정)
+        //
+        // ● Z축 회색 그라데이션 파라미터 (현재 사용 중):
+        //   gray = GRAY_MIN + GRAY_RANGE * t  (t: 0~1 정규화된 높이)
+        //   GRAY_MIN: 가장 낮은 포인트의 밝기 (0.0=검정, 1.0=흰색)
+        //   GRAY_RANGE: 밝기 변화폭 (GRAY_MIN + GRAY_RANGE = 가장 높은 포인트 밝기)
+        // ============================================================
+        constexpr float GRAY_MIN = 0.3f;    // 가장 낮은 포인트 밝기 (어두움)
+        constexpr float GRAY_RANGE = 0.7f;   // 밝기 변화폭 (0.3~1.0)
+        constexpr float POINT_SIZE = 0.1f;  // 일반 포인트 크기 (미터)
+        
+        // Z축 높이 기반 회색 그라데이션 색상 생성
+        auto pcb = std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size());
+        float z_min = std::numeric_limits<float>::max();
+        float z_max = std::numeric_limits<float>::lowest();
+
+        for (int p = 0; p < frame->size(); p++) 
+        {
+          float z = frame->points[p].z();
+          z_min = std::min(z_min, z);
+          z_max = std::max(z_max, z);
+        }
+
+        float z_range = (z_max - z_min > 1e-6f) ? (z_max - z_min) : 1.0f;
+        std::vector<Eigen::Vector4f> colors(frame->size());
+
+        for (int p = 0; p < frame->size(); p++) 
+        {
+          float t = (frame->points[p].z() - z_min) / z_range;
+          float gray = GRAY_MIN + GRAY_RANGE * t;
+          colors[p] = Eigen::Vector4f(gray, gray, gray, 1.0f);
+        }
+
+        pcb->add_color(colors);
         viewer->update_drawable(
-          "frame_" + std::to_string(i), 
-          std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size()), 
-          // 포인트클라우드 색상(회색)
-          guik::FlatColor(0.7f, 0.7f, 0.7f, 1.0f).add("model_matrix", Eigen::Isometry3f(relative_pose.matrix().cast<float>())));
+          "frame_" + std::to_string(i), pcb,
+          guik::VertexColor().set_point_size(POINT_SIZE).add("model_matrix", Eigen::Isometry3f(relative_pose.matrix().cast<float>())));
       }
     }
 
@@ -401,32 +453,48 @@ public:
         }
       }
 
+      // 프레임 연결선 색상: FlatColor(R, G, B, Alpha(투명도)) — 현재 초록색
       viewer->update_drawable("factors", std::make_shared<glk::ThinLines>(factor_lines), guik::FlatColor(0.0f, 1.0f, 0.0f, 1.0f));
 
       // LIO-SAM feature 시각화 (edge=빨강, planar=파랑)
-      if (show_liosam_features) {
-        for (int i = 0; i < num_frames; i++) {
+      if (show_liosam_features) 
+      {
+        for (int i = 0; i < num_frames; i++) 
+        {
           Eigen::Isometry3f pose(values.at<gtsam::Pose3>(i).matrix().cast<float>());
 
-          // Edge features (빨간색 포인트)
-          if (i < (int)loam_features_liosam.size() && loam_features_liosam[i].edge_points && loam_features_liosam[i].edge_points->size() > 0) {
+          // 포인트 시각화 설정
+          // 색상: FlatColor(R, G, B, Alpha(투명도)) 
+          // 크기: set_point_size(float)
+          // 모양: set_point_shape_rectangle() 또는 set_point_shape_circle()
+          constexpr float EDGE_R = 1.0f, EDGE_G = 0.0f, EDGE_B = 0.0f, EDGE_A = 1.0f;  // 빨강
+          constexpr float EDGE_POINT_SIZE = 0.15f;  // Edge 포인트 크기 (미터)
+          // EDGE_SHAPE: rectangle(사각형) 또는 circle(원형)
+          if (i < (int)loam_features_liosam.size() && loam_features_liosam[i].edge_points && loam_features_liosam[i].edge_points->size() > 0) 
+          {
             auto edge_pcb = std::make_shared<glk::PointCloudBuffer>(loam_features_liosam[i].edge_points->points, loam_features_liosam[i].edge_points->size());
             viewer->update_drawable(
               "liosam_edge_" + std::to_string(i), edge_pcb,
-              guik::FlatColor(1.0f, 0.0f, 0.0f, 1.0f).set_point_size(0.2f).set_point_shape_circle().add("model_matrix", pose));
+              guik::FlatColor(EDGE_R, EDGE_G, EDGE_B, EDGE_A).set_point_size(EDGE_POINT_SIZE).set_point_shape_rectangle().add("model_matrix", pose));
           }
 
-          // Planar features (파란색 포인트)
-          if (i < (int)loam_features_liosam.size() && loam_features_liosam[i].planar_points && loam_features_liosam[i].planar_points->size() > 0) {
+          constexpr float PLANAR_R = 0.0f, PLANAR_G = 0.5f, PLANAR_B = 1.0f, PLANAR_A = 1.0f;  // 하늘색
+          constexpr float PLANAR_POINT_SIZE = 0.15f;  // Planar 포인트 크기 (미터)
+          // PLANAR_SHAPE: circle(원형) 또는 rectangle(사각형)
+          if (i < (int)loam_features_liosam.size() && loam_features_liosam[i].planar_points && loam_features_liosam[i].planar_points->size() > 0) 
+          {
             auto planar_pcb = std::make_shared<glk::PointCloudBuffer>(loam_features_liosam[i].planar_points->points, loam_features_liosam[i].planar_points->size());
             viewer->update_drawable(
               "liosam_planar_" + std::to_string(i), planar_pcb,
-              guik::FlatColor(0.0f, 0.0f, 1.0f, 1.0f).set_point_size(0.2f).set_point_shape_circle().add("model_matrix", pose));
+              guik::FlatColor(PLANAR_R, PLANAR_G, PLANAR_B, PLANAR_A).set_point_size(PLANAR_POINT_SIZE).set_point_shape_circle().add("model_matrix", pose));
           }
         }
-      } else {
+      } 
+      else 
+      {
         // feature 시각화 제거
-        for (int i = 0; i < num_frames; i++) {
+        for (int i = 0; i < num_frames; i++) 
+        {
           viewer->remove_drawable("liosam_edge_" + std::to_string(i));
           viewer->remove_drawable("liosam_planar_" + std::to_string(i));
         }
