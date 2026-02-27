@@ -297,7 +297,7 @@ public:
     factor_types.push_back("Point-to-Plane"); // 1 : Point-to-plane ICP
     factor_types.push_back("GICP"); // 2 : GICP
     factor_types.push_back("VGICP"); // 3 : VG-ICP
-    factor_types.push_back("LOAM"); // 4 : LOAM
+    // factor_types.push_back("LOAM"); // 4 : LOAM
     factor_types.push_back("NDT"); // 5 : NDT
     factor_types.push_back("LOAM_LIOSAM"); // 6 : LOAM (LIO-SAM feature extraction)
 
@@ -514,7 +514,7 @@ public:
         target_key, source_key, target_voxelmap, source);
       factor->set_num_threads(num_threads);
       factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
-      factor->set_outlier_ratio(0.1);
+      factor->set_outlier_ratio(0.01);  // 0.1→0.01: d2 감소로 gradient 감쇠 더 완화
       factor->set_regularization_epsilon(1e-3);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
@@ -769,7 +769,7 @@ public:
 
     spdlog::info("\n");
     spdlog::info("╔══════════════════════════════════════════════════════════════════════════════════════╗");
-    spdlog::info("║                        Final Comparison Table                                       ║");
+    spdlog::info("║                        Final Comparison Table                                        ║");
     spdlog::info("╠════════════════╦═══════════════╦═══════════════╦═══════════════╦═══════════════╦═════╣");
     spdlog::info("║ Factor         ║ Mean T (m)    ║ Mean R (deg)  ║ Max T (m)     ║ Max R (deg)   ║ ms  ║");
     spdlog::info("╠════════════════╬═══════════════╬═══════════════╬═══════════════╬═══════════════╬═════╣");

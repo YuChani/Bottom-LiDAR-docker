@@ -25,7 +25,7 @@ IntegratedNDTFactor_<SourceFrame>::IntegratedNDTFactor_(
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   resolution(1.0),    // NDT에서 사용하는 voxel의 해상도. 0.5m ~ 1.0m 사이로 설정
-  outlier_ratio(0.55),  // oulier 비율. 55% 정도로 설정. 너무 낮게 설정하면 outlier에 민감해지고, 너무 높게 설정하면 최적화가 수렴하지 않을 수 있음
+  outlier_ratio(0.1),  // outlier 비율. 낮을수록 gradient가 커져 수렴 속도 향상. 0.1 = 10% outlier 가정
   regularization_epsilon(1e-3),
   search_mode(NDTSearchMode::DIRECT7),
   correspondence_update_tolerance_rot(0.0),
@@ -54,7 +54,7 @@ IntegratedNDTFactor_<SourceFrame>::IntegratedNDTFactor_(
 : gtsam_points::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
   resolution(1.0),
-  outlier_ratio(0.55),
+  outlier_ratio(0.1),
   regularization_epsilon(1e-3),
   search_mode(NDTSearchMode::DIRECT7),
   correspondence_update_tolerance_rot(0.0),
@@ -224,7 +224,8 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
                                 Eigen::Matrix<double, 6, 1>* b_target,
                                 Eigen::Matrix<double, 6, 1>* b_source) {
     const auto& corr = correspondences[i];
-    if (!corr.valid) {
+    if (!corr.valid) 
+    {
       return 0.0;
     }
 
@@ -244,11 +245,13 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     // s_k = -d1 * exp(-d2/2 * q^T * Σ^{-1} * q)
     //   d1 < 0 이므로 -d1 > 0, 정렬이 좋을수록 score가 크다 (최대화 문제).
     double exponent = -gauss_d2 * mahalanobis_dist / 2.0;
-    if (exponent < -700.0) {
+    if (exponent < -700.0) 
+    {
       return 0.0;  // underflow 방지
     }
     double e_term = std::exp(exponent);  // exp(-d2/2 * m), 범위: (0, 1]
-    if (std::isnan(e_term)) {
+    if (std::isnan(e_term)) 
+    {
       return 0.0;
     }
 
@@ -263,7 +266,8 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     // 상수 -d1을 빼는 것이므로 gradient/Hessian은 score_function과 동일하다.
     const double cost = -gauss_d1 - score_function;  // = -d1 * (1 - e_term)
 
-    if (!H_target) {
+    if (!H_target) 
+    {
       return cost;
     }
 
@@ -286,7 +290,9 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     J_source.block<3, 3>(0, 3) = -delta.linear();
 
     // Score function의 1차 미분에서 나오는 weight (= derivative_scale)
-    const double weight = -gauss_d1 * gauss_d2 * e_term;  // 양수 스칼라
+    // 4제곱근을 적용하여 지수 감쇠를 1/4로 완화 → 먼 점에서도 gradient 유지 → 수렴 속도 개선
+    const double raw_weight = -gauss_d1 * gauss_d2 * e_term;  // 원래 weight (양수 스칼라)
+    const double weight = std::sqrt(std::sqrt(raw_weight));  // weight^0.25 변환: 감쇠율 1/4
 
     // ========== Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) ==========
     // H ≈ weight * J^T * Σ^{-1} * J   (H2, H3 항 생략 → PSD 보장)
@@ -304,9 +310,12 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     return cost;
   };
 
-  if (is_omp_default() || num_threads == 1) {
+  if (is_omp_default() || num_threads == 1) 
+  {
     return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
-  } else {
+  } 
+  else 
+  {
     return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);
   }
 }
