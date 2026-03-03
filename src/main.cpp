@@ -357,7 +357,7 @@ public:
     factor_types.push_back("VGICP_GPU"); // 6 : VG-ICP GPU (if CUDA enabled)
 #endif
     full_connection = true;
-    num_threads = 1;
+    num_threads = std::max(1u, std::thread::hardware_concurrency());  // 최대 사용 가능한 하드웨어 스레드 수로 초기화
 
     correspondence_update_tolerance_rot = 0.0f;
     correspondence_update_tolerance_trans = 0.0f;
