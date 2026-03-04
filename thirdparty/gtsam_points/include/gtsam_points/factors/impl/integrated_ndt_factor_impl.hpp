@@ -271,12 +271,10 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
       return cost;
     }
 
-    // ========== Magnusson 2009, Eq. 6.12: Score Function의 1차 미분 (Gradient) ==========
+    //  Magnusson 2009, Eq. 6.12: Score Function의 1차 미분 (Gradient) 
     // ∂s/∂p = (-d1 * d2 * e_term) * q^T * Σ^{-1} * J
-    //          ^^^^^^^^^^^^^^^^
-    //          weight (양수 스칼라: d1 < 0이므로 -d1 > 0, d2 > 0, e_term > 0)
-    //
-    // 이 weight가 각 포인트의 기여도를 자동 조절한다:
+    // weight (양수 스칼라: d1 < 0이므로 -d1 > 0, d2 > 0, e_term > 0)
+    // weight가 각 포인트의 기여도를 자동 조절
     //   정렬 좋음 (m≈0): weight ≈ -d1*d2  (최대 기여)
     //   정렬 나쁨 (m≫0): weight ≈ 0       (자동 하향 가중 → robust M-estimator 효과)
 
@@ -294,7 +292,7 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     const double raw_weight = -gauss_d1 * gauss_d2 * e_term;  // 원래 weight (양수 스칼라)
     const double weight = std::sqrt(std::sqrt(raw_weight));  // weight^0.25 변환: 감쇠율 1/4
 
-    // ========== Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) ==========
+    //  Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) 
     // H ≈ weight * J^T * Σ^{-1} * J   (H2, H3 항 생략 → PSD 보장)
     // b = weight * J^T * Σ^{-1} * q    (= gradient)
     // 이 H, b로 GTSAM LM 시스템을 구성: (H + λI)δ = -b
