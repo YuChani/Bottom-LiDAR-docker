@@ -258,12 +258,12 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     // Magnusson Eq. 6.9 원본 score function
     const double score_function = -gauss_d1 * e_term;  // = |d1| * exp(...), 양수
 
-    // GTSAM 호환 cost: GTSAM LM은 cost가 감소해야 step을 accept한다.
-    // score_function은 정렬이 좋을수록 증가하므로, 부호를 반전해야 한다.
+    // GTSAM LM objective (minimization):
     // cost = -d1 - score_function = -d1 * (1 - e_term)
     //   정렬 좋음 (m=0): cost = 0      (최소)
     //   정렬 나쁨 (m≫0): cost = -d1    (최대, 양수)
-    // 상수 -d1을 빼는 것이므로 gradient/Hessian은 score_function과 동일하다.
+    // cost and (-score_function) differ by constant (-d1), so they share
+    // the same optimum and the same gradient/Hessian.
     const double cost = -gauss_d1 - score_function;  // = -d1 * (1 - e_term)
 
     if (!H_target) 
