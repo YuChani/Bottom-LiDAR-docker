@@ -48,6 +48,7 @@
 #include <gtsam_points/factors/integrated_loam_factor.hpp>
 // NDT factor from gtsam_points library
 #include <gtsam_points/factors/integrated_ndt_factor.hpp>
+#include <gtsam_points/factors/integrated_light_ndt_factor.hpp>
 
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
@@ -351,6 +352,7 @@ public:
     factor_types.push_back("VGICP"); // 3 : VG-ICP
     // factor_types.push_back("LOAM"); // 4 : LOAM
     factor_types.push_back("NDT"); // 5 : NDT
+    factor_types.push_back("LightNDT");
     factor_types.push_back("LOAM_LIOSAM"); // 6 : LOAM (LIO-SAM feature extraction)
 
 #ifdef GTSAM_POINTS_USE_CUDA
@@ -587,6 +589,16 @@ public:
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     }
+    else if (factor_types[factor_type] == std::string("LightNDT"))
+    {
+      auto factor = gtsam::make_shared<gtsam_points::IntegratedLightNDTFactor_<gtsam_points::PointCloud>>(
+        target_key, source_key, target_voxelmap, source);
+      factor->set_num_threads(num_threads);
+      factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
+      factor->set_regularization_epsilon(1e-3);
+      factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      return factor;
+    }
 
     spdlog::error("Unknown factor type: {}", factor_types[factor_type]);
     return nullptr;
@@ -781,7 +793,7 @@ public:
 
     spdlog::info("\n");
     spdlog::info("╔══════════════════════════════════════════════════════════╗");
-    spdlog::info("║       Headless 6-Factor Registration Benchmark           ║");
+    spdlog::info("║       Headless Multi-Factor Registration Benchmark       ║");
     spdlog::info("╚══════════════════════════════════════════════════════════╝");
 
     gtsam::Values poses_noisy;
@@ -805,14 +817,11 @@ public:
     std::vector<Result> results;
 
     int num_factors = static_cast<int>(factor_types.size());
-    #ifdef GTSAM_POINTS_USE_CUDA
-    num_factors = std::min(num_factors, 6);
-    #endif
 
     for (int fi = 0; fi < num_factors; fi++)
     {
       // LOAM (Ring-based)은 비활성화 상태이므로 스킵
-      if (std::string(factor_types[fi]) == "LOAM") {
+      if (std::string(factor_types[fi]) == "LOAM" || std::string(factor_types[fi]) == "VGICP_GPU") {
         spdlog::info("Skipping {} (disabled)", factor_types[fi]);
         continue;
       }
