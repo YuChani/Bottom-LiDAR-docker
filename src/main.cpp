@@ -18,6 +18,8 @@
 #include <map>
 #include <cmath>
 #include <cstring>
+#include <cstdlib>
+#include <string>
 #include <boost/format.hpp>
 
 #include <spdlog/spdlog.h>
@@ -54,15 +56,19 @@
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_points/optimizers/linearization_hook.hpp>
 
+#if __has_include(<glk/thin_lines.hpp>) && __has_include(<glk/pointcloud_buffer.hpp>) && __has_include(<glk/primitives/primitives.hpp>) && __has_include(<guik/viewer/light_viewer.hpp>)
+#define HAVE_GUI_VIEWER 1
 #include <glk/thin_lines.hpp>
 #include <glk/pointcloud_buffer.hpp>
 #include <glk/primitives/primitives.hpp>
 #include <guik/viewer/light_viewer.hpp>
+#else
+#define HAVE_GUI_VIEWER 0
+#endif
 
 // LOAM Feature Extraction (Ring 기반 / KNN 기반)
 #include "loam_feature.hpp"
 #include "featureExtraction.hpp"
-
 
 class MatchingCostFactorDemo
 {
@@ -70,21 +76,33 @@ public:
   MatchingCostFactorDemo(bool headless_mode = false) : headless(headless_mode)
   {
     // Logging 초기화
-    auto console = spdlog::stdout_color_mt("demo");
+    auto console = spdlog::default_logger();
     spdlog::set_default_logger(console);
     spdlog::set_level(spdlog::level::info);
     spdlog::set_pattern("[%^%l%$] %v");
     
     // 3D Viewer 초기화 (GUI 모드에서만)
+#if HAVE_GUI_VIEWER
     guik::LightViewer* viewer = nullptr;
     if (!headless)
     {
       viewer = guik::LightViewer::instance();
       viewer->enable_vsync();
     }
+#else
+    if (!headless) {
+      spdlog::warn("GUI dependencies are unavailable; switching to headless mode.");
+      headless = true;
+    }
+#endif
 
     // yuchan_step data loader(pcd데이터파일 경로)
-    const std::string data_path = "/root/workdir/data/pcd";
+    std::string data_path = "/root/workdir/data/pcd";
+    std::error_code fs_error;
+    const bool has_default_data = std::filesystem::exists(data_path + "/gt-tum.txt", fs_error);
+    if (fs_error || !has_default_data) {
+      data_path = (std::filesystem::current_path() / "data" / "pcd").string();
+    }
 
     // yuchan_step : Extrinsic: Base ← LiDAR (t = [0, 0, 0.124], R = I)
     // Base에서 LiDAR로 포즈를 변환시키는 부분 (sensor.yaml에서 값을 가져옴. 하드코딩임)
@@ -274,6 +292,7 @@ public:
 #endif
 
       // 시각화 업데이트 (GUI 모드에서만)
+#if HAVE_GUI_VIEWER
       if (!headless && viewer)
       {
         // ============================================================
@@ -334,6 +353,7 @@ public:
           "frame_" + std::to_string(i), pcb,
           guik::VertexColor().set_point_size(POINT_SIZE).add("model_matrix", Eigen::Isometry3f(relative_pose.matrix().cast<float>())));
       }
+#endif
     }
 
     if (!headless) update_viewer(poses);
@@ -361,10 +381,11 @@ public:
     full_connection = true;
     num_threads = std::max(1u, std::thread::hardware_concurrency());  // 최대 사용 가능한 하드웨어 스레드 수로 초기화
 
-    correspondence_update_tolerance_rot = 0.0f;
-    correspondence_update_tolerance_trans = 0.0f;
+    correspondence_update_tolerance_rot = 0.005f;
+    correspondence_update_tolerance_trans = 0.02f;
 
     // UI 콜백 등록
+#if HAVE_GUI_VIEWER
     if (!headless && viewer)
     {
       viewer->register_ui_callback("control", [this]
@@ -413,6 +434,7 @@ public:
         }
       });
     }
+#endif
   }
 
   ~MatchingCostFactorDemo()
@@ -423,9 +445,25 @@ public:
     }
   }
 
+  void set_headless_factor_filter(const std::string& factor_name) {
+    headless_factor_filter = factor_name;
+  }
+
+  void set_num_threads_override(int threads) {
+    if (threads > 0) {
+      num_threads = threads;
+    }
+  }
+
+  void set_correspondence_update_tolerance_override(double rot, double trans) {
+    correspondence_update_tolerance_rot = static_cast<float>(std::max(0.0, rot));
+    correspondence_update_tolerance_trans = static_cast<float>(std::max(0.0, trans));
+  }
+
   // yuchan_step : 뷰어 업데이트 함수(ImGui)
   void update_viewer(const gtsam::Values& values)
   {
+#if HAVE_GUI_VIEWER
     if (headless) return;
 
     guik::LightViewer::instance()->invoke([=]
@@ -502,6 +540,9 @@ public:
         }
       }
     });
+#else
+    (void)values;
+#endif
   }
 
   // yuchan_step : 팩터 생성 함수
@@ -584,7 +625,7 @@ public:
         target_key, source_key, target_voxelmap, source);
       factor->set_num_threads(num_threads);
       factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
-      factor->set_outlier_ratio(0.01);  // 0.1→0.01: d2 감소로 gradient 감쇠 더 완화
+      factor->set_outlier_ratio(0.01);
       factor->set_regularization_epsilon(1e-3);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
@@ -628,6 +669,13 @@ public:
     spdlog::info("Frames: {}", num_frames);
     spdlog::info("Factor Type: {}", factor_types[factor_type]);
     spdlog::info("Optimizer: {}", optimizer_types[optimizer_type]);
+    spdlog::info("Threads: {}", num_threads);
+    if (factor_types[factor_type] == std::string("NDT")) {
+      spdlog::info("NDT Search Mode: DIRECT7 (fixed)");
+      spdlog::info("NDT Outlier Ratio: 0.010000 (fixed)");
+    } else if (factor_types[factor_type] == std::string("LightNDT")) {
+      spdlog::info("LightNDT Search Mode: DIRECT7 (fixed)");
+    }
     spdlog::info("========================================");
 
     gtsam::Values optimized_values;
@@ -647,8 +695,10 @@ public:
         spdlog::info("{}", status.to_string());
         if (!headless)
         {
+#if HAVE_GUI_VIEWER
           guik::LightViewer::instance()->append_text(status.to_string());
           update_viewer(values);
+#endif
         }
       };
 
@@ -667,8 +717,10 @@ public:
       auto status = isam2.update(graph, poses);
       if (!headless)
       {
+#if HAVE_GUI_VIEWER
         update_viewer(isam2.calculateEstimate());
         guik::LightViewer::instance()->append_text(status.to_string());
+#endif
       }
 
       for (int i = 0; i < 5; i++)
@@ -676,8 +728,10 @@ public:
         auto status = isam2.update();
         if (!headless)
         {
+#if HAVE_GUI_VIEWER
           update_viewer(isam2.calculateEstimate());
           guik::LightViewer::instance()->append_text(status.to_string());
+#endif
         }
       }
 
@@ -686,7 +740,9 @@ public:
       spdlog::info("ISAM2 total: {:.3f} ms", msec);
       if (!headless)
       {
+#if HAVE_GUI_VIEWER
         guik::LightViewer::instance()->append_text((boost::format("total:%.3f[msec]") % msec).str());
+#endif
       }
       
       optimized_values = isam2.calculateEstimate();
@@ -758,6 +814,7 @@ private:
   int factor_type;
   bool full_connection;
   int num_threads;
+  std::string headless_factor_filter;
 
   std::vector<const char*> optimizer_types;
   int optimizer_type;
@@ -820,6 +877,10 @@ public:
 
     for (int fi = 0; fi < num_factors; fi++)
     {
+      if (!headless_factor_filter.empty() && std::string(factor_types[fi]) != headless_factor_filter) {
+        continue;
+      }
+
       // LOAM (Ring-based)은 비활성화 상태이므로 스킵
       if (std::string(factor_types[fi]) == "LOAM" || std::string(factor_types[fi]) == "VGICP_GPU") {
         spdlog::info("Skipping {} (disabled)", factor_types[fi]);
@@ -844,6 +905,11 @@ public:
                           last_max_trans_error, last_max_rot_error, last_total_ms});
     }
 
+    if (results.empty()) {
+      spdlog::error("No factor was executed. Check --factor option value.");
+      return;
+    }
+
     spdlog::info("\n");
     spdlog::info("╔══════════════════════════════════════════════════════════════════════════════════════╗");
     spdlog::info("║                        Final Comparison Table                                        ║");
@@ -863,12 +929,35 @@ public:
 int main(int argc, char** argv)
 {
   bool headless_mode = false;
+  int threads_override = -1;
+  std::string factor_filter;
+  double corr_rot_override = 0.0;
+  double corr_trans_override = 0.0;
+  bool has_corr_override = false;
+
   for (int i = 1; i < argc; i++)
   {
     if (std::strcmp(argv[i], "--headless") == 0) headless_mode = true;
+    else if (std::strcmp(argv[i], "--factor") == 0 && i + 1 < argc) factor_filter = argv[++i];
+    else if (std::strcmp(argv[i], "--threads") == 0 && i + 1 < argc) threads_override = std::stoi(argv[++i]);
+    else if (std::strcmp(argv[i], "--corr-rot") == 0 && i + 1 < argc) {
+      corr_rot_override = std::stod(argv[++i]);
+      has_corr_override = true;
+    } else if (std::strcmp(argv[i], "--corr-trans") == 0 && i + 1 < argc) {
+      corr_trans_override = std::stod(argv[++i]);
+      has_corr_override = true;
+    } else if (std::strcmp(argv[i], "--help") == 0) {
+      std::cout << "Usage: ./lidar_registration_benchmark [--headless] [--factor <name>]"
+                << " [--threads <n>] [--corr-rot <rad>] [--corr-trans <m>]"
+                << std::endl;
+      return 0;
+    }
   }
 
   MatchingCostFactorDemo demo(headless_mode);
+  if (!factor_filter.empty()) demo.set_headless_factor_filter(factor_filter);
+  if (threads_override > 0) demo.set_num_threads_override(threads_override);
+  if (has_corr_override) demo.set_correspondence_update_tolerance_override(corr_rot_override, corr_trans_override);
 
   if (headless_mode)
   {
@@ -876,7 +965,17 @@ int main(int argc, char** argv)
   }
   else
   {
+#if HAVE_GUI_VIEWER
     guik::LightViewer::instance()->spin();
+#else
+    spdlog::error("GUI mode is unavailable in this build. Run with --headless.");
+    return 1;
+#endif
   }
+  if (headless_mode) {
+    std::fflush(nullptr);
+    std::_Exit(0);
+  }
+
   return 0;
 }

@@ -44,8 +44,11 @@ target_link_libraries(lidar_registration_benchmark
     gtsam
     gtsam_points   
     OpenMP::OpenMP_CXX
-    Iridescence::Iridescence
 )
+
+if(TARGET Iridescence::Iridescence)
+  target_link_libraries(lidar_registration_benchmark Iridescence::Iridescence)
+endif()
 
 
 # test_all_factors는 사용하지 않으므로 빌드 제외
