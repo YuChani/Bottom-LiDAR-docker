@@ -113,6 +113,9 @@ void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isom
   }
 
   correspondences.resize(frame::size(*source));
+  // compute_ndt_params : intergrated_ndt_factor.hpp에서 선언됨
+  // c1 : 인라이어 Gaussian 스케일상수 / c2 : 아웃라이어 분포항 
+  // d1 : 최종 score 진폭 / d2 : Mahalanobis 거리 감소기울기 
   compute_ndt_params(resolution, outlier_ratio, gauss_d1, gauss_d2);
 
   std::vector<Eigen::Vector3i> neighbor_offsets;
@@ -241,14 +244,13 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     // Mahalanobis 거리(4x4행렬)
     double mahalanobis_dist = residual.transpose() * inv_cov_B * residual;
 
-    // ========== Magnusson 2009, Eq. 6.9: NDT Score Function ==========
-    // s_k = -d1 * exp(-d2/2 * q^T * Σ^{-1} * q)
     //   d1 < 0 이므로 -d1 > 0, 정렬이 좋을수록 score가 크다 (최대화 문제).
     double exponent = -gauss_d2 * mahalanobis_dist / 2.0;
     if (exponent < -700.0) 
     {
       return 0.0;  // underflow 방지
     }
+    
     double e_term = std::exp(exponent);  // exp(-d2/2 * m), 범위: (0, 1]
     if (std::isnan(e_term)) 
     {
@@ -257,26 +259,14 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
 
     // Magnusson Eq. 6.9 원본 score function
     const double score_function = -gauss_d1 * e_term;  // = |d1| * exp(...), 양수
-
-    // GTSAM LM objective (minimization):
-    // cost = -d1 - score_function = -d1 * (1 - e_term)
-    //   정렬 좋음 (m=0): cost = 0      (최소)
-    //   정렬 나쁨 (m≫0): cost = -d1    (최대, 양수)
-    // cost and (-score_function) differ by constant (-d1), so they share
-    // the same optimum and the same gradient/Hessian.
-    const double cost = -gauss_d1 - score_function;  // = -d1 * (1 - e_term)
+    // gauss_d1을 묶어서 정리하면 (-gauss_d1)(1 - e_term) 형태가 됨.
+    // e_term = 1일때 cost = 0(정합 잘됨) / e_term = 0일때 cost = gauss_d1값으로 최대값 (정합 안됨)
+    const double cost = -gauss_d1 - score_function;  // gauss_d1 약 -6.9
 
     if (!H_target) 
     {
       return cost;
     }
-
-    //  Magnusson 2009, Eq. 6.12: Score Function의 1차 미분 (Gradient) 
-    // ∂s/∂p = (-d1 * d2 * e_term) * q^T * Σ^{-1} * J
-    // weight (양수 스칼라: d1 < 0이므로 -d1 > 0, d2 > 0, e_term > 0)
-    // weight가 각 포인트의 기여도를 자동 조절
-    //   정렬 좋음 (m≈0): weight ≈ -d1*d2  (최대 기여)
-    //   정렬 나쁨 (m≫0): weight ≈ 0       (자동 하향 가중 → robust M-estimator 효과)
 
     // 변환 포즈에 대한 residual의 자코비안 (4x6, SE(3) Lie algebra 기반)
     Eigen::Matrix<double, 4, 6> J_target = Eigen::Matrix<double, 4, 6>::Zero();
@@ -287,23 +277,16 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.template head<3>());
     J_source.block<3, 3>(0, 3) = -delta.linear();
 
-    // Score function의 1차 미분에서 나오는 weight (= derivative_scale)
-    // 4제곱근을 적용하여 지수 감쇠를 1/4로 완화 → 먼 점에서도 gradient 유지 → 수렴 속도 개선
-    const double raw_weight = -gauss_d1 * gauss_d2 * e_term;  // 원래 weight (양수 스칼라)
-    const double weight = std::sqrt(std::sqrt(raw_weight));  // weight^0.25 변환: 감쇠율 1/4
+    const double weight = -gauss_d1 * gauss_d2 * e_term;
 
     //  Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) 
     // H ≈ weight * J^T * Σ^{-1} * J   (H2, H3 항 생략 → PSD 보장)
+    *H_target += weight * J_target.transpose() * inv_cov_B * J_target;
+    *H_source += weight * J_source.transpose() * inv_cov_B * J_source;
+    *H_target_source += weight * J_target.transpose() * inv_cov_B * J_source;
     // b = weight * J^T * Σ^{-1} * q    (= gradient)
-    // 이 H, b로 GTSAM LM 시스템을 구성: (H + λI)δ = -b
-    Eigen::Matrix<double, 6, 4> J_target_weighted = weight * J_target.transpose() * inv_cov_B;
-    Eigen::Matrix<double, 6, 4> J_source_weighted = weight * J_source.transpose() * inv_cov_B;
-
-    *H_target += J_target_weighted * J_target;
-    *H_source += J_source_weighted * J_source;
-    *H_target_source += J_target_weighted * J_source;
-    *b_target += J_target_weighted * residual;
-    *b_source += J_source_weighted * residual;
+    *b_target += weight * J_target.transpose() * inv_cov_B * residual;
+    *b_source += weight * J_source.transpose() * inv_cov_B * residual;
 
     return cost;
   };

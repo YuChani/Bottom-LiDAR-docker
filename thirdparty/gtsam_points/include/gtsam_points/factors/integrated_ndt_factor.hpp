@@ -140,7 +140,7 @@ public:
   void set_resolution(double res) { resolution = res; }
 
   /// @brief Set the outlier ratio for computing NDT Gaussian parameters (d1, d2).
-  /// @note Default is 0.55 (55% outliers assumed)
+  /// @note Library default is 0.1 (10% outliers assumed).
   void set_outlier_ratio(double ratio) { outlier_ratio = ratio; }
 
   /// @brief Set the regularization epsilon for covariance matrix regularization.
