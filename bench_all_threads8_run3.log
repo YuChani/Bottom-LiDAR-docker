@@ -1,0 +1,830 @@
+[info] T_base_lidar translation: [0.000, 0.000, 0.124]
+[info] T_base_lidar rotation (ypr): [3.142, -0.000, 0.000]
+[info] Loaded 12270 poses from gt-tum.txt
+[info] Found 7 PCD files, loading 7 frames
+[info] Loading /root/workdir/data/pcd/1710406871.842252000.pcd
+[info]   Matched timestamp: 1710406871.842252
+[info]   Relative pose (L0_T_Li): [0.000, 0.000, 0.000]
+[info] PCL: Read 52158 points with ring info from /root/workdir/data/pcd/1710406871.842252000.pcd
+[info]   Loaded 52158 points
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 52158 points to PCL format
+[info] Built CloudInfo for 64 rings (angle-sorted)
+[info] LIO-SAM features: 1166 edge, 1112 planar
+[info] LIO-SAM Edge points: 1166, Planar points: 1112
+[info] Loading /root/workdir/data/pcd/1710406873.040731000.pcd
+[info]   Matched timestamp: 1710406873.040731
+[info]   Relative pose (L0_T_Li): [-1.426, -0.002, 0.065]
+[info] PCL: Read 51759 points with ring info from /root/workdir/data/pcd/1710406873.040731000.pcd
+[info]   Loaded 51759 points
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 51759 points to PCL format
+[info] Built CloudInfo for 64 rings (angle-sorted)
+[info] LIO-SAM features: 1174 edge, 1072 planar
+[info] LIO-SAM Edge points: 1174, Planar points: 1072
+[info] Loading /root/workdir/data/pcd/1710406875.138717000.pcd
+[info]   Matched timestamp: 1710406875.138717
+[info]   Relative pose (L0_T_Li): [-3.991, -0.201, 0.210]
+[info] PCL: Read 50993 points with ring info from /root/workdir/data/pcd/1710406875.138717000.pcd
+[info]   Loaded 50993 points
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 50993 points to PCL format
+[info] Built CloudInfo for 64 rings (angle-sorted)
+[info] LIO-SAM features: 1198 edge, 1092 planar
+[info] LIO-SAM Edge points: 1198, Planar points: 1092
+[info] Loading /root/workdir/data/pcd/1710406878.434653000.pcd
+[info]   Matched timestamp: 1710406878.434653
+[info]   Relative pose (L0_T_Li): [-8.006, -0.711, 0.390]
+[info] PCL: Read 49617 points with ring info from /root/workdir/data/pcd/1710406878.434653000.pcd
+[info]   Loaded 49617 points
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 49617 points to PCL format
+[info] Built CloudInfo for 64 rings (angle-sorted)
+[info] LIO-SAM features: 1145 edge, 1081 planar
+[info] LIO-SAM Edge points: 1145, Planar points: 1081
+[info] Loading /root/workdir/data/pcd/1710406880.032087000.pcd
+[info]   Matched timestamp: 1710406880.032087
+[info]   Relative pose (L0_T_Li): [-9.936, -0.704, 0.508]
+[info] PCL: Read 49412 points with ring info from /root/workdir/data/pcd/1710406880.032087000.pcd
+[info]   Loaded 49412 points
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 49412 points to PCL format
+[info] Built CloudInfo for 64 rings (angle-sorted)
+[pcl::VoxelGrid::applyFilter] Leaf size is too small for the input dataset. Integer indices would overflow.
+[info] LIO-SAM features: 1136 edge, 1082 planar
+[info] LIO-SAM Edge points: 1136, Planar points: 1082
+[info] Loading /root/workdir/data/pcd/1710406882.729361000.pcd
+[info]   Matched timestamp: 1710406882.729361
+[info]   Relative pose (L0_T_Li): [-13.261, -0.216, 0.708]
+[info] PCL: Read 49431 points with ring info from /root/workdir/data/pcd/1710406882.729361000.pcd
+[info]   Loaded 49431 points
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 49431 points to PCL format
+[info] Built CloudInfo for 64 rings (angle-sorted)
+[info] LIO-SAM features: 1130 edge, 1044 planar
+[info] LIO-SAM Edge points: 1130, Planar points: 1044
+[info] Loading /root/workdir/data/pcd/1710406884.925416000.pcd
+[info]   Matched timestamp: 1710406884.925416
+[info]   Relative pose (L0_T_Li): [-15.762, 1.021, 0.869]
+[info] PCL: Read 49743 points with ring info from /root/workdir/data/pcd/1710406884.925416000.pcd
+[info]   Loaded 49743 points
+[info]   Extracting LOAM features (LIO-SAM)...
+[info] Converted 49743 points to PCL format
+[info] Built CloudInfo for 64 rings (angle-sorted)
+[info] LIO-SAM features: 942 edge, 1156 planar
+[info] LIO-SAM Edge points: 942, Planar points: 1156
+[info] 
+
+[info] ╔══════════════════════════════════════════════════════════╗
+[info] ║       Headless Multi-Factor Registration Benchmark       ║
+[info] ╚══════════════════════════════════════════════════════════╝
+[info] Noise scale: 0.100
+[info] Frames: 7
+[info] Optimizer: LM
+[info] Full connection: true
+[info] 
+[info] ────────────────────────────────────────
+[info] Running: Point-to-Point
+[info] ────────────────────────────────────────
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0          192499           17283      1e-05     x     x    78.3366   0.101589    30.9078    110.668
+[info]     1     1          175216         7771.63      1e-06     x     x    46.2905   0.061559    32.8018    191.278
+[info]     2     2          167445         6387.43      1e-06     x     x    48.6516   0.062519    28.7091    270.182
+[info]     3     3          161057         6746.16      1e-06     x     x    46.4222    0.05893    27.9857    346.157
+[info]     4     4          154311         6030.02      1e-06     x     x    47.7025   0.064379    26.2529    421.585
+[info]     5     5          148281         5000.76      1e-06     x     x    52.0225   0.062079    26.3277    501.599
+[info]     6     6          143280         4363.98      1e-06     x     x    50.2493   0.065569    23.9712    577.411
+[info]     7     7          138917          3381.1      1e-06     x     x    51.6635   0.061609    21.5298    652.148
+[info]     8     8          135535          2613.2      1e-06     x     x    53.0564   0.065909    21.4254     728.26
+[info]     9     9          132922         3436.24      1e-06     x     x     48.818   0.069629     20.163    798.899
+[info]    10    10          129486         3466.24      1e-06     x     x    60.9863    0.05816    21.8651    883.363
+[info]    11    11          126020         4300.45      1e-06     x     x    62.0864   0.064619    18.9791    966.348
+[info]    12    12          121719         3568.38      1e-06     x     x     56.533   0.063199    19.0455    1043.43
+[info]    13    13          118151         3805.85      1e-06     x     x     52.816   0.064239    14.6088    1112.51
+[info]    14    14          114345         3496.75      1e-06     x     x    52.1693   0.090699    14.8186    1181.12
+[info]    15    15          110848         2738.01      1e-06     x     x    51.4582   0.062609    11.3715    1245.52
+[info]    16    16          108110         2384.45      1e-06     x     x    55.1357   0.061419    9.17939     1311.3
+[info]    17    17          105726         1357.04      1e-06     x     x     50.322   0.065669    10.3403    1373.42
+[info]    18    18          104369         1592.88      1e-06     x     x     47.144   0.057559    5.75099    1427.77
+[info]    19    19          102776          464.16      1e-06     x     x    50.6734   0.071359    3.47038    1483.54
+[info]    20    20          102312         662.452      1e-06     x     x    50.0263    0.05844    4.46548    1539.49
+[info]    21    21          101649         390.805      1e-06     x     x     49.489   0.072649    4.51562    1595.09
+[info]    22    22          101259         416.937      1e-06     x     x    53.0048   0.063279    5.01293    1654.81
+[info]    23    23          100842         575.672      1e-06     x     x    50.9172   0.072359    5.84075    1713.28
+[info]    24    24          100266         263.808      1e-06     x     x    52.3423   0.065319    2.77059    1770.03
+[info]    25    25          100002         72.3597      1e-06     x     x    49.1625   0.064069    1.45783    1822.36
+[info]    26    26         99929.7     4.08927e-05      1e-06     x     x    51.0035   0.086639    1.58394     1876.6
+[info] --- Results: Point-to-Point ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, -0.000000, 0.000000]
+[info]               R (ypr): [-0.000, 0.000, -0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.440511, 0.046462, 0.078138]
+[info]               R (ypr): [-1.226, 1.954, 2.492] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.052365 m
+[info]               R: 0.524889 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.978442, -0.248197, 0.216043]
+[info]               R (ypr): [-2.289, -1.453, 0.381] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.048678 m
+[info]               R: 0.231632 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.961658, -0.774159, 0.400751]
+[info]               R (ypr): [-2.561, -0.535, 1.978] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.078100 m
+[info]               R: 0.687970 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.864844, -0.849518, 0.504306]
+[info]               R (ypr): [-6.089, 0.878, -0.517] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.162033 m
+[info]               R: 0.275731 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.124812, -0.302348, 0.713486]
+[info]               R (ypr): [-11.382, 0.795, 2.805] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.161041 m
+[info]               R: 0.687595 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.581019, 0.924967, 0.878244]
+[info]               R (ypr): [-40.534, 0.289, -3.945] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.204713 m
+[info]               R: 0.644543 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.100990 m
+[info] Mean Rotation Error: 0.436051 deg
+[info] Max  Translation Error: 0.204713 m
+[info] Max  Rotation Error: 0.687970 deg
+[info] Optimization Time: 1876.733 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: Point-to-Plane
+[info] ────────────────────────────────────────
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0         96892.3         30711.8      1e-05     x     x    85.4982   0.067219    31.4447    118.887
+[info]     1     1         66180.5         14178.2      1e-06     x     x    50.3803   0.067269    29.1815    200.579
+[info]     2     2         52002.3          9279.1      1e-06     x     x    56.5888   0.067319    27.5466    286.648
+[info]     3     3         42723.2         5033.42      1e-06     x     x    51.2617   0.066799    26.3539    366.264
+[info]     4     4         37689.8         5624.57      1e-06     x     x    54.3948   0.066359      25.09    447.857
+[info]     5     5         32065.2            6941      1e-06     x     x    60.2052   0.065649    23.9782    534.165
+[info]     6     6         25124.2          5191.6      1e-06     x     x    53.9121   0.064099    22.2472    612.355
+[info]     7     7         19932.6         2125.98      1e-06     x     x    53.6659   0.067969    16.6994    684.796
+[info]     8     8         17806.6         736.133      1e-06     x     x    56.3041   0.066109    16.8528    759.981
+[info]     9     9         17070.5         153.135      1e-06     x     x    51.9034   0.066949    5.70025    819.543
+[info]    10    10         16917.3         28.6988      1e-06     x     x    50.3684   0.067469    4.61447    876.871
+[info]    11    11         16888.6         21.0901      1e-06     x     x    65.3554   0.068619    2.82529    947.259
+[info]    12    12         16867.5         9.33841      1e-06     x     x    66.2024   0.085048    2.94894    1018.58
+[info]    13    13         16858.2         21.4143      1e-06     x     x    64.7712   0.062969    2.84757    1088.26
+[info]    14    14         16836.8         3.52019      1e-06     x     x    68.1405   0.065249    1.93921    1160.52
+[info]    15    15         16833.3      2.4043e-06      1e-06     x     x    51.5782   0.066469    1.95605     1216.3
+[info] --- Results: Point-to-Plane ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, -0.000000, 0.000000]
+[info]               R (ypr): [-0.000, 0.000, 0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.421798, 0.032468, 0.080203]
+[info]               R (ypr): [-1.303, 1.909, 2.488] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.038088 m
+[info]               R: 0.551401 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.986047, -0.222773, 0.216570]
+[info]               R (ypr): [-2.049, -1.555, 0.375] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.022837 m
+[info]               R: 0.159041 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-8.014026, -0.782214, 0.402980]
+[info]               R (ypr): [-2.925, -0.510, 2.037] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.072874 m
+[info]               R: 0.410555 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.972487, -0.825554, 0.503361]
+[info]               R (ypr): [-5.487, 0.909, -0.586] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.127270 m
+[info]               R: 0.612867 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.239277, -0.270569, 0.713087]
+[info]               R (ypr): [-11.070, 0.906, 2.805] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.058742 m
+[info]               R: 0.428909 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.708404, 0.921382, 0.867733]
+[info]               R (ypr): [-40.718, 0.192, -4.050] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.112780 m
+[info]               R: 0.852305 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.061799 m
+[info] Mean Rotation Error: 0.430725 deg
+[info] Max  Translation Error: 0.127270 m
+[info] Max  Rotation Error: 0.852305 deg
+[info] Optimization Time: 1216.379 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: GICP
+[info] ────────────────────────────────────────
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0     3.97065e+06          219004      1e-05     x     x    81.2362   0.074469    41.0405    134.881
+[info]     1     1     3.75165e+06          587620      1e-06     x     x    71.8383   0.072139    42.1537    264.398
+[info]     2     2     3.16403e+06          647625      1e-06     x     x    67.7954   0.072399    35.9155    380.839
+[info]     3     3      2.5164e+06          982622      1e-06     x     x    73.2466   0.093058    34.0451    501.026
+[info]     4     4     1.53378e+06          388807      1e-06     x     x    73.3611   0.071399    33.2914     621.62
+[info]     5     5     1.14497e+06         96489.6      1e-06     x     x    60.5294   0.075719    27.2446    723.491
+[info]     6     6     1.04848e+06         25723.5      1e-06     x     x     64.343   0.111578    26.4609    833.236
+[info]     7     7     1.02276e+06         5756.07      1e-06     x     x    59.5695   0.077069    15.7928    922.677
+[info]     8     8       1.017e+06           882.2      1e-06     x     x    61.4388   0.071168    14.3052    1012.66
+[info]     9     9     1.01612e+06        0.464848      1e-06     x     x    59.7771   0.075269     13.766    1103.81
+[info] --- Results: GICP ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, -0.000000, -0.000000]
+[info]               R (ypr): [-0.000, -0.000, -0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.391806, -0.011354, 0.087892]
+[info]               R (ypr): [-1.438, 1.802, 2.576] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.042379 m
+[info]               R: 0.652776 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.973091, -0.242186, 0.186173]
+[info]               R (ypr): [-2.099, -1.544, 0.362] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.050117 m
+[info]               R: 0.158790 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-8.000564, -0.815169, 0.355023]
+[info]               R (ypr): [-3.079, -0.653, 2.036] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.110207 m
+[info]               R: 0.413312 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.974916, -0.843002, 0.422246]
+[info]               R (ypr): [-5.456, 0.856, -0.730] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.168046 m
+[info]               R: 0.691309 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.244628, -0.275991, 0.618499]
+[info]               R (ypr): [-11.122, 0.802, 2.837] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.108495 m
+[info]               R: 0.532427 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.685747, 0.991677, 0.782920]
+[info]               R (ypr): [-40.930, 0.412, -3.756] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.118551 m
+[info]               R: 1.047266 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.085399 m
+[info] Mean Rotation Error: 0.499411 deg
+[info] Max  Translation Error: 0.168046 m
+[info] Max  Rotation Error: 1.047266 deg
+[info] Optimization Time: 1103.908 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: VGICP
+[info] ────────────────────────────────────────
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0     1.69637e+06          509074      1e-05     x     x    54.6102   0.072849    13.2361    81.1185
+[info]     1     1     1.65702e+06          424764      1e-06     x     x    54.3557   0.098679    13.9895    164.045
+[info]     2     2     1.46873e+06          304744      1e-06     x     x    50.7363   0.071999    14.1062     243.01
+[info]     3     3     1.30619e+06          188960      1e-06     x     x    49.6386   0.076759     14.376    321.356
+[info]     4     4      1.2338e+06          147558      1e-06     x     x    46.8618   0.075499    15.0261    397.876
+[info]     5     5     1.21481e+06          127894      1e-06     x     x     47.538   0.108328    17.1454    477.422
+[info]     6     6     1.18136e+06         87058.6      1e-06     x     x    50.3717   0.073549    15.0684    557.741
+[info]     7     7     1.10302e+06         23374.9      1e-06     x     x    54.3776   0.071069    14.6003    641.366
+[info]     8     8     1.07005e+06         5649.45      1e-06     x     x    58.4247   0.072019    15.0937    731.294
+[info]     9     9     1.05284e+06          1466.7      1e-06     x     x    56.8188   0.074049    15.0442    818.106
+[info]    10    10     1.04849e+06          1104.7      1e-06     x     x    61.1089   0.073239    15.0843    909.302
+[info]    11    11     1.04307e+06         203.379      1e-06     x     x    64.8647   0.075229    14.6247    1003.99
+[info]    12    12      1.0423e+06        -41.1296      1e-06     x          53.9794   0.077368    15.1194    1087.59
+[info]    12    13      1.0423e+06        -41.1296      1e-05     x                0   0.088559    15.1891    1102.86
+[info]    12    14      1.0423e+06        -41.1296     0.0001     x                0   0.068359     15.141    1118.06
+[info]    12    15      1.0423e+06        -41.1296      0.001     x                0   0.067329    15.0282    1133.15
+[info]    12    16      1.0423e+06        -41.1296       0.01     x                0   0.068699    14.7807       1148
+[info]    12    17      1.0423e+06        -41.1296        0.1     x                0   0.068849     14.741     1162.8
+[info]    12    18      1.0423e+06        -41.1296          1     x                0   0.064659    14.8863    1177.76
+[info]    12    19      1.0423e+06        -41.1296         10     x                0   0.064529    14.7505    1192.57
+[info]    12    20      1.0423e+06        -41.1296        100     x                0   0.066529    14.5641     1207.2
+[info]    12    21      1.0423e+06        -41.1302       1000     x                0   0.064879    17.0572    1224.32
+[info]    12    22      1.0423e+06        -41.1513      10000     x                0   0.068419    15.0114     1239.4
+[info]    12    23      1.0423e+06        -41.3742     100000     x          51.8597   0.077498    14.6983    1320.44
+[info] --- Results: VGICP ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, -0.000000, -0.000000]
+[info]               R (ypr): [0.000, -0.000, -0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.360925, 0.011326, 0.077195]
+[info]               R (ypr): [-1.422, 1.738, 2.417] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.067751 m
+[info]               R: 0.570857 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.941869, -0.231481, 0.182999]
+[info]               R (ypr): [-2.096, -1.798, 0.266] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.063054 m
+[info]               R: 0.420112 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.990847, -0.829115, 0.323222]
+[info]               R (ypr): [-3.089, -0.911, 1.864] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.136761 m
+[info]               R: 0.563036 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.937590, -0.855080, 0.408111]
+[info]               R (ypr): [-5.515, 0.582, -0.708] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.181187 m
+[info]               R: 0.799858 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.203164, -0.283423, 0.562380]
+[info]               R (ypr): [-11.179, 0.492, 2.556] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.170044 m
+[info]               R: 0.917676 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.639022, 0.981088, 0.712462]
+[info]               R (ypr): [-41.006, -0.055, -3.797] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.202933 m
+[info]               R: 1.177762 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.117390 m
+[info] Mean Rotation Error: 0.635614 deg
+[info] Max  Translation Error: 0.202933 m
+[info] Max  Rotation Error: 1.177762 deg
+[info] Optimization Time: 1320.552 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: NDT
+[info] ────────────────────────────────────────
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0     1.60294e+06         21828.3      1e-05     x     x    151.749   0.071539    17.7218    174.434
+[info]     1     1     1.58111e+06         19517.2      1e-06     x     x    55.1346   0.068779    18.2596    252.802
+[info]     2     2     1.56159e+06         18873.8      1e-06     x     x    57.2188   0.069809    16.3633    331.333
+[info]     3     3     1.54272e+06         16727.1      1e-06     x     x    58.2597   0.069009     19.045    413.875
+[info]     4     4     1.52599e+06         15557.8      1e-06     x     x    57.3923   0.070029    15.6867    491.898
+[info]     5     5     1.51043e+06         13373.5      1e-06     x     x    47.3557   0.069719    16.4619    565.991
+[info]     6     6     1.49706e+06         13989.2      1e-06     x     x    49.6185   0.090809    16.8678     637.15
+[info]     7     7     1.48307e+06         13264.8      1e-06     x     x    49.1676   0.072129     12.164    703.312
+[info]     8     8      1.4698e+06         12328.4      1e-06     x     x    49.0344   0.074968    17.1451    774.515
+[info]     9     9     1.45748e+06         13272.8      1e-06     x     x    60.3522   0.081249    12.1594    852.042
+[info]    10    10      1.4442e+06         12081.2      1e-06     x     x    57.4225   0.070599    15.3825    929.852
+[info]    11    11     1.43212e+06         14395.3      1e-06     x     x    65.0214   0.075649    13.2012    1013.07
+[info]    12    12     1.41773e+06         12212.5      1e-06     x     x    69.2035   0.067649    15.3506    1102.43
+[info]    13    13     1.40551e+06           11978      1e-06     x     x    66.1554   0.068069    11.2406    1184.86
+[info]    14    14     1.39354e+06         10731.3      1e-06     x     x    67.2064   0.067149    12.9499    1270.06
+[info]    15    15      1.3828e+06         13141.9      1e-06     x     x    70.2221   0.067879    13.1523    1358.57
+[info]    16    16     1.36966e+06         11911.1      1e-06     x     x    57.8967   0.071879    12.7672    1434.75
+[info]    17    17     1.35775e+06         14091.4      1e-06     x     x    52.7841   0.070849    13.4478       1506
+[info]    18    18     1.34366e+06         9865.96      1e-06     x     x    50.7915   0.074769    12.8549     1574.7
+[info]    19    19     1.33379e+06         9491.53      1e-06     x     x    48.9119   0.084758    13.5485    1642.07
+[info]    20    20      1.3243e+06         11536.4      1e-06     x     x      51.84   0.076909    16.4369    1715.29
+[info]    21    21     1.31277e+06         10396.7      1e-06     x     x    65.3733   0.069799    13.0008    1798.73
+[info]    22    22     1.30237e+06         9394.74      1e-06     x     x    57.0609   0.068179    12.2653    1872.94
+[info]    23    23     1.29297e+06         11796.4      1e-06     x     x    58.5604   0.073639    15.0161     1951.6
+[info]    24    24     1.28118e+06         11530.3      1e-06     x     x    64.1896   0.071969    14.4833    2035.24
+[info]    25    25     1.26965e+06         11225.7      1e-06     x     x    63.9276   0.070749    13.8926    2118.15
+[info]    26    26     1.25842e+06         14400.5      1e-06     x     x    62.0477   0.068509    13.9988    2199.21
+[info]    27    27     1.24402e+06         13608.4      1e-06     x     x    62.7514   0.065979    14.4738    2281.73
+[info]    28    28     1.23041e+06         13527.7      1e-06     x     x    61.6704   0.062529      11.43    2359.75
+[info]    29    29     1.21689e+06           11937      1e-06     x     x    62.8369   0.067199    16.1874    2443.92
+[info]    30    30     1.20495e+06         12815.4      1e-06     x     x     63.348   0.067139    12.3586    2524.75
+[info]    31    31     1.19213e+06         10113.2      1e-06     x     x    60.5076   0.064869    13.8517     2604.5
+[info]    32    32     1.18202e+06         14057.2      1e-06     x     x    61.8971   0.067199    14.7697    2686.61
+[info]    33    33     1.16796e+06         11518.7      1e-06     x     x    62.4654   0.066859    12.2631    2766.55
+[info]    34    34     1.15644e+06         11736.3      1e-06     x     x    60.6804   0.072279    14.1076    2846.48
+[info]    35    35     1.14471e+06         10618.5      1e-06     x     x    62.7608   0.070449    12.3268    2926.97
+[info]    36    36     1.13409e+06         10082.3      1e-06     x     x     65.559   0.067889    12.4863     3010.5
+[info]    37    37     1.12401e+06         10284.6      1e-06     x     x    67.1669   0.071779    11.7558    3094.66
+[info]    38    38     1.11372e+06         8536.67      1e-06     x     x    66.3335   0.069809    10.6702    3177.09
+[info]    39    39     1.10519e+06         8830.98      1e-06     x     x    64.8986   0.066399     11.848    3259.15
+[info]    40    40     1.09636e+06          7172.1      1e-06     x     x    65.1041   0.069839    9.19094     3338.9
+[info]    41    41     1.08918e+06         6945.53      1e-06     x     x    66.4685   0.070139    9.41092    3420.11
+[info]    42    42     1.08224e+06         7685.87      1e-06     x     x    65.1751   0.066539    11.7274    3502.45
+[info]    43    43     1.07455e+06         7509.95      1e-06     x     x      64.91   0.063579    10.8241    3583.54
+[info]    44    44     1.06704e+06         5724.59      1e-06     x     x    63.8068   0.068159    6.86847    3659.42
+[info]    45    45     1.06132e+06          6009.8      1e-06     x     x    64.5652   0.064589    11.0684    3740.22
+[info]    46    46     1.05531e+06         6811.82      1e-06     x     x    64.6396   0.066049    12.0138    3822.19
+[info]    47    47      1.0485e+06         6451.62      1e-06     x     x    65.5349   0.076199    7.78569    3900.66
+[info]    48    48     1.04204e+06         4089.59      1e-06     x     x     66.692   0.061459    8.55844    3981.31
+[info]    49    49     1.03795e+06         5652.92      1e-06     x     x    63.7273    0.06449    11.0794    4061.45
+[info]    50    50      1.0323e+06         4470.37      1e-06     x     x    62.8101   0.061739    9.58777       4139
+[info]    51    51     1.02783e+06         3865.23      1e-06     x     x    64.0953   0.071119    7.70448    4216.16
+[info]    52    52     1.02397e+06         1875.93      1e-06     x     x    62.8686   0.067569    6.09381    4290.35
+[info]    53    53     1.02209e+06         1566.24      1e-06     x     x    64.7276   0.064459    6.96003    4367.22
+[info]    54    54     1.02052e+06            1707      1e-06     x     x    63.2921   0.072378    7.92597    4443.39
+[info]    55    55     1.01882e+06         1715.98      1e-06     x     x    60.7972   0.065649    5.81985    4515.09
+[info]    56    56      1.0171e+06         2478.67      1e-06     x     x    62.4365   0.066959    6.96053    4589.42
+[info]    57    57     1.01462e+06         1117.79      1e-06     x     x    63.7238   0.071289    6.12268    4664.56
+[info]    58    58      1.0135e+06         1408.73      1e-06     x     x    59.7631   0.067029    6.89435    4736.29
+[info]    59    59      1.0121e+06          1058.4      1e-06     x     x    56.1822   0.069908     6.0331    4803.78
+[info]    60    60     1.01104e+06          1286.8      1e-06     x     x    64.9988   0.073689    7.92115    4881.71
+[info]    61    61     1.00975e+06         2146.21      1e-06     x     x    66.0752   0.071609    6.92115    4960.03
+[info]    62    62      1.0076e+06         1696.98      1e-06     x     x    62.7931   0.062799    7.58826    5035.65
+[info]    63    63     1.00591e+06         1251.72      1e-06     x     x    63.1816   0.068289    6.99391     5111.2
+[info]    64    64     1.00466e+06         477.604      1e-06     x     x    65.4127   0.067359    5.08902    5186.87
+[info]    65    65     1.00418e+06          143.58      1e-06     x     x    65.2038   0.064649    5.18494    5262.44
+[info]    66    66     1.00403e+06         352.476      1e-06     x     x    66.0384   0.064429    6.14996    5340.12
+[info]    67    67     1.00368e+06         384.783      1e-06     x     x    65.8282   0.069929    6.02766    5417.27
+[info]    68    68      1.0033e+06         103.564      1e-06     x     x    66.4569   0.066319     5.2468    5494.26
+[info]    69    69     1.00319e+06         28.7198      1e-06     x     x    65.1368   0.065909     5.2842    5570.04
+[info]    70    70     1.00316e+06         9.34557      1e-06     x     x     66.661   0.071679    5.14131    5647.14
+[info] --- Results: NDT ---
+[info] Frame 0:
+[info]   [Optimized] t: [0.000000, 0.000000, -0.000000]
+[info]               R (ypr): [-0.000, -0.000, -0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.378309, 0.066999, 0.095270]
+[info]               R (ypr): [-1.218, 1.834, 2.818] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.089404 m
+[info]               R: 0.652126 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-4.012965, -0.248294, 0.263481]
+[info]               R (ypr): [-2.058, -1.443, -0.014] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.074801 m
+[info]               R: 0.487560 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.971152, -0.780996, 0.425438]
+[info]               R (ypr): [-2.698, -0.765, 1.810] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.085932 m
+[info]               R: 0.635175 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.906865, -0.891459, 0.533148]
+[info]               R (ypr): [-5.930, 0.750, -1.423] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.191520 m
+[info]               R: 0.982687 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.176665, -0.329402, 0.733602]
+[info]               R (ypr): [-11.248, 0.388, 2.029] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.143412 m
+[info]               R: 1.320227 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.631292, 0.938251, 0.877176]
+[info]               R (ypr): [-40.918, 0.433, -4.015] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.154533 m
+[info]               R: 1.037881 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.105657 m
+[info] Mean Rotation Error: 0.730808 deg
+[info] Max  Translation Error: 0.191520 m
+[info] Max  Rotation Error: 1.320227 deg
+[info] Optimization Time: 5647.229 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: LightNDT
+[info] ────────────────────────────────────────
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0     6.14689e+07     2.69157e+07      1e-05     x     x    149.769   0.080729    20.3491    174.535
+[info]     1     1     3.45532e+07     9.08262e+06      1e-06     x     x    57.2337   0.073678    20.4052    256.797
+[info]     2     2     2.54706e+07     6.58856e+06      1e-06     x     x    57.7487   0.069829     20.346    338.992
+[info]     3     3      1.8882e+07     5.76302e+06      1e-06     x     x     57.699   0.068079    20.1708    421.099
+[info]     4     4      1.3119e+07     1.89062e+06      1e-06     x     x    59.0496   0.073239    19.3575    504.411
+[info]     5     5     1.12284e+07          590550      1e-06     x     x    49.1888   0.070079    20.1905    578.008
+[info]     6     6     1.06378e+07        -10580.9      1e-06     x          48.5416   0.091149    18.9196    649.713
+[info]     6     7     1.06378e+07        -10580.9      1e-05     x                0   0.064619    5.08675    654.858
+[info]     6     8     1.06378e+07        -10580.9     0.0001     x                0   0.063889     3.8358    658.738
+[info]     6     9     1.06378e+07        -10580.9      0.001     x                0   0.043069    3.47036    662.234
+[info]     6    10     1.06378e+07        -10580.9       0.01     x                0   0.036799     3.4214    665.678
+[info]     6    11     1.06378e+07        -10580.9        0.1     x                0   0.036739    3.38755    669.089
+[info]     6    12     1.06378e+07        -10580.9          1     x                0   0.036209    3.58903      672.7
+[info]     6    13     1.06378e+07        -10581.2         10     x                0    0.04495    3.43236    676.161
+[info]     6    14     1.06378e+07          -10584        100     x                0   0.036499     3.4263    679.609
+[info]     6    15     1.06378e+07          -10606       1000     x                0   0.033679    3.33996    682.968
+[info]     6    16     1.06378e+07        -10735.1      10000     x                0   0.036449     3.3598    686.349
+[info] --- Results: LightNDT ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, 0.000000, -0.000000]
+[info]               R (ypr): [-0.000, 0.000, -0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.477338, 0.093332, 0.098047]
+[info]               R (ypr): [-1.130, 1.904, 2.753] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.113270 m
+[info]               R: 0.587420 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-4.038371, -0.247910, 0.256934]
+[info]               R (ypr): [-1.985, -1.520, 0.279] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.081756 m
+[info]               R: 0.231658 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-8.133494, -0.798081, 0.393604]
+[info]               R (ypr): [-2.398, -0.683, 2.080] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.154311 m
+[info]               R: 0.913097 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-10.023525, -1.028853, 0.484276]
+[info]               R (ypr): [-5.488, 0.749, -1.001] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.337532 m
+[info]               R: 0.836829 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.231929, -0.396907, 0.692472]
+[info]               R (ypr): [-11.125, 0.510, 2.421] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.183647 m
+[info]               R: 0.954833 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.756588, 0.779384, 0.844609]
+[info]               R (ypr): [-40.827, 0.110, -3.959] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.242676 m
+[info]               R: 0.960458 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.159027 m
+[info] Mean Rotation Error: 0.640614 deg
+[info] Max  Translation Error: 0.337532 m
+[info] Max  Rotation Error: 0.960458 deg
+[info] Optimization Time: 686.393 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: GMM_NDT
+[info] ────────────────────────────────────────
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0     1.66753e+06         19829.5      1e-05     x     x    218.183   0.092259    28.9568    254.743
+[info]     1     1      1.6477e+06         16641.1      1e-06     x     x    110.749   0.085329    33.8388    406.671
+[info]     2     2     1.63106e+06         17995.8      1e-06     x     x    112.122   0.109458    26.5069    552.543
+[info]     3     3     1.61306e+06         13384.2      1e-06     x     x    101.815   0.103819    33.4694    695.732
+[info]     4     4     1.59968e+06           14280      1e-06     x     x    130.092   0.098578    26.3569    860.038
+[info]     5     5      1.5854e+06         10595.5      1e-06     x     x    114.017   0.093149    30.6808    1012.38
+[info]     6     6      1.5748e+06         11714.4      1e-06     x     x    114.821   0.094378    24.4671    1159.38
+[info]     7     7     1.56309e+06         11925.3      1e-06     x     x    138.669   0.107588    22.5327    1328.85
+[info]     8     8     1.55117e+06         9456.56      1e-06     x     x    158.404   0.102528    26.7634    1522.05
+[info]     9     9     1.54171e+06         12706.3      1e-06     x     x    154.225   0.093089    22.4569    1706.89
+[info]    10    10       1.529e+06         9004.29      1e-06     x     x    111.883   0.109088    26.1996     1852.8
+[info]    11    11        1.52e+06         11638.4      1e-06     x     x    121.082   0.094889    22.9403    2005.31
+[info]    12    12     1.50836e+06            9998      1e-06     x     x    125.671   0.102498    26.7765    2165.85
+[info]    13    13     1.49836e+06         11069.6      1e-06     x     x    117.612   0.101358    18.2246    2310.35
+[info]    14    14     1.48729e+06         8692.54      1e-06     x     x    96.7279   0.103969    23.8514    2438.93
+[info]    15    15      1.4786e+06         11616.9      1e-06     x     x    99.8331   0.099339     22.937    2570.11
+[info]    16    16     1.46698e+06         8806.91      1e-06     x     x    114.673   0.105459     23.036    2716.28
+[info]    17    17     1.45818e+06         11161.6      1e-06     x     x     125.08   0.100668    22.6233     2872.7
+[info]    18    18     1.44701e+06         8204.73      1e-06     x     x    126.077   0.099819    23.7844    3031.06
+[info]    19    19     1.43881e+06         11553.6      1e-06     x     x     107.54   0.111319    21.5784    3168.82
+[info]    20    20     1.42726e+06         7778.99      1e-06     x     x    124.869   0.106849    23.9075    3326.64
+[info]    21    21     1.41948e+06         9808.86      1e-06     x     x    123.009   0.098368    23.4316     3481.8
+[info]    22    22     1.40967e+06         8402.09      1e-06     x     x    132.701   0.100769    21.8534    3645.59
+[info]    23    23     1.40127e+06         7271.18      1e-06     x     x    132.514   0.101969    17.7807    3807.92
+[info]    24    24     1.39399e+06         7035.37      1e-06     x     x    120.892   0.107868    31.1035    3969.04
+[info]    25    25     1.38696e+06           10808      1e-06     x     x    112.181   0.105718    19.9467    4110.13
+[info]    26    26     1.37615e+06         9934.54      1e-06     x     x    129.396   0.103799    25.7449    4274.37
+[info]    27    27     1.36622e+06         7567.92      1e-06     x     x    121.935   0.104608     22.216    4427.54
+[info]    28    28     1.35865e+06         9061.96      1e-06     x     x    108.042   0.098838    25.2642     4571.3
+[info]    29    29     1.34959e+06         11326.4      1e-06     x     x     101.83   0.103589    26.7595     4709.2
+[info]    30    30     1.33826e+06         12382.5      1e-06     x     x    110.872   0.101679    25.7536    4855.08
+[info]    31    31     1.32588e+06         12922.9      1e-06     x     x    105.557   0.107878    23.9334    4993.85
+[info]    32    32     1.31296e+06         11713.9      1e-06     x     x    99.3875   0.110758    25.2685    5127.94
+[info]    33    33     1.30124e+06         12165.6      1e-06     x     x    137.144   0.113278    26.1049    5300.74
+[info]    34    34     1.28908e+06         12410.2      1e-06     x     x    136.619   0.104498    25.7888    5472.54
+[info]    35    35     1.27667e+06         10952.9      1e-06     x     x    135.619   0.097069    23.2822    5640.96
+[info]    36    36     1.26571e+06          9480.4      1e-06     x     x    120.428   0.102989    29.1494    5800.18
+[info]    37    37     1.25623e+06         8416.69      1e-06     x     x    123.004   0.116328    22.0871    5955.47
+[info]    38    38     1.24782e+06         8781.58      1e-06     x     x    110.138   0.120528    21.6419    6097.48
+[info]    39    39     1.23903e+06         8065.07      1e-06     x     x    110.454   0.120318    24.5315    6242.59
+[info]    40    40     1.23097e+06         8985.14      1e-06     x     x    109.354   0.112438    22.2667    6384.46
+[info]    41    41     1.22198e+06         9307.88      1e-06     x     x    113.083   0.115968    24.8972    6532.56
+[info]    42    42     1.21268e+06         8287.64      1e-06     x     x    110.025   0.118798    18.9447    6671.27
+[info]    43    43     1.20439e+06         5465.22      1e-06     x     x    114.794   0.107998    16.3758    6812.83
+[info]    44    44     1.19892e+06         6606.68      1e-06     x     x    113.527   0.103968    21.4463    6957.64
+[info]    45    45     1.19232e+06         7181.26      1e-06     x     x    116.135   0.112218    21.0932    7104.87
+[info]    46    46     1.18513e+06         6011.03      1e-06     x     x    115.177   0.116779    16.2567    7246.21
+[info]    47    47     1.17912e+06         6031.15      1e-06     x     x    119.746   0.115808    19.6783    7395.68
+[info]    48    48     1.17309e+06         6539.06      1e-06     x     x    118.404   0.111228    22.3171    7546.41
+[info]    49    49     1.16655e+06          5774.5      1e-06     x     x    119.725   0.116078    17.8826    7693.97
+[info]    50    50     1.16078e+06         3564.77      1e-06     x     x    120.088   0.109549    15.0705    7839.11
+[info]    51    51     1.15721e+06         4192.66      1e-06     x     x    105.023   0.097469    16.4148    7970.23
+[info]    52    52     1.15302e+06         5693.47      1e-06     x     x    95.6814   0.120608    17.8217    8093.82
+[info]    53    53     1.14733e+06         3403.15      1e-06     x     x    88.2808   0.106039    16.2025    8208.26
+[info]    54    54     1.14393e+06         1888.45      1e-06     x     x    101.657   0.110069     13.233     8333.1
+[info]    55    55     1.14204e+06          4619.3      1e-06     x     x     130.71   0.121168     16.659    8490.36
+[info]    56    56     1.13742e+06         2073.11      1e-06     x     x    131.088   0.103589    11.5167    8642.83
+[info]    57    57     1.13534e+06         2192.85      1e-06     x     x    119.042   0.090159     16.084    8787.69
+[info]    58    58     1.13315e+06         2662.02      1e-06     x     x    112.595   0.103059    16.2307    8926.37
+[info]    59    59     1.13049e+06         2030.99      1e-06     x     x    133.416   0.123338     13.772    9083.85
+[info]    60    60     1.12846e+06         1451.47      1e-06     x     x    143.012   0.098029     11.687    9248.67
+[info]    61    61     1.12701e+06         1755.65      1e-06     x     x    108.399   0.096499    13.5201    9380.93
+[info]    62    62     1.12525e+06         696.443      1e-06     x     x    94.3936   0.091658    10.1537    9495.72
+[info]    63    63     1.12455e+06         220.947      1e-06     x     x    94.6011   0.091938    10.3146    9610.84
+[info]    64    64     1.12433e+06         75.4017      1e-06     x     x    149.612   0.083829    9.90348    9780.54
+[info]    65    65     1.12426e+06         26.7908      1e-06     x     x    155.584   0.086628    10.0638    9956.33
+[info]    66    66     1.12423e+06         9.75325      1e-06     x     x    157.048   0.090268    10.7564    10134.5
+[info] --- Results: GMM_NDT ---
+[info] Frame 0:
+[info]   [Optimized] t: [0.000000, -0.000000, 0.000000]
+[info]               R (ypr): [0.000, 0.000, 0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.383296, 0.056558, 0.103316]
+[info]               R (ypr): [-1.219, 1.788, 2.920] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.082218 m
+[info]               R: 0.721439 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-4.007847, -0.248191, 0.245332]
+[info]               R (ypr): [-2.061, -1.309, -0.073] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.061294 m
+[info]               R: 0.560880 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.973811, -0.768879, 0.419685]
+[info]               R (ypr): [-2.598, -0.720, 1.725] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.072669 m
+[info]               R: 0.689288 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.900792, -0.873756, 0.528817]
+[info]               R (ypr): [-5.983, 0.876, -1.539] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.174744 m
+[info]               R: 1.043536 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-13.169881, -0.326071, 0.726017]
+[info]               R (ypr): [-11.236, 0.442, 1.907] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.143780 m
+[info]               R: 1.370901 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.621623, 0.937514, 0.877807]
+[info]               R (ypr): [-40.854, 0.575, -4.087] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.163182 m
+[info]               R: 1.011889 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.099698 m
+[info] Mean Rotation Error: 0.771133 deg
+[info] Max  Translation Error: 0.174744 m
+[info] Max  Rotation Error: 1.370901 deg
+[info] Optimization Time: 10134.643 ms
+[info] ========================================
+[info] ────────────────────────────────────────
+[info] Running: LOAM_LIOSAM
+[info] ────────────────────────────────────────
+[info]  iter    lm           error          cost_d     lambda  ldec   dec   lin_msec  solv_msec    lm_msec  time_msec
+    0     0         14029.6         1953.69      1e-05     x     x    4.39182   0.061989    2.40738    7.87798
+[info]     1     1         12075.9         1623.74      1e-06     x     x    2.71735   0.037759    2.42558    14.1388
+[info]     2     2         10452.2         1744.89      1e-06     x     x    2.78013    0.03517    2.54566    20.5675
+[info]     3     3         8707.28         1673.05      1e-06     x     x    2.88319   0.034309    2.56225    27.1418
+[info]     4     4         7034.22         1219.92      1e-06     x     x    2.86611   0.035239    2.43635    33.5858
+[info]     5     5         5814.31         322.571      1e-06     x     x    2.88687   0.034039    2.30996    39.9199
+[info]     6     6         5491.74         61.6933      1e-06     x     x    2.86983   0.034549    1.62731    45.5564
+[info]     7     7         5430.04         2.87879      1e-06     x     x    2.98956    0.03413    1.16068    50.8443
+[info]     8     8         5427.16     0.000137859      1e-06     x     x    2.94827    0.03202    1.16393     56.095
+[info] --- Results: LOAM_LIOSAM ---
+[info] Frame 0:
+[info]   [Optimized] t: [-0.000000, -0.000000, 0.000000]
+[info]               R (ypr): [0.000, 0.000, 0.000] deg
+[info]   [GT]        t: [0.000000, 0.000000, 0.000000]
+[info]               R (ypr): [-0.000, -0.000, 0.000] deg
+[info]   [Error]     t: 0.000000 m
+[info]               R: 0.000000 deg
+[info] Frame 1:
+[info]   [Optimized] t: [-1.386000, 0.054515, 0.071235]
+[info]               R (ypr): [-1.404, 1.807, 2.498] deg
+[info]   [GT]        t: [-1.426175, -0.002126, 0.064880]
+[info]               R (ypr): [-0.878, 1.606, 2.321] deg
+[info]   [Error]     t: 0.069732 m
+[info]               R: 0.594154 deg
+[info] Frame 2:
+[info]   [Optimized] t: [-3.907478, -0.243763, 0.174338]
+[info]               R (ypr): [-2.168, -1.774, 0.268] deg
+[info]   [GT]        t: [-3.990504, -0.201473, 0.209644]
+[info]               R (ypr): [-2.080, -1.433, 0.474] deg
+[info]   [Error]     t: 0.099641 m
+[info]               R: 0.408706 deg
+[info] Frame 3:
+[info]   [Optimized] t: [-7.835676, -0.803594, 0.325919]
+[info]               R (ypr): [-2.991, -1.140, 2.053] deg
+[info]   [GT]        t: [-8.006222, -0.710890, 0.390231]
+[info]               R (ypr): [-3.190, -0.367, 1.759] deg
+[info]   [Error]     t: 0.204490 m
+[info]               R: 0.850722 deg
+[info] Frame 4:
+[info]   [Optimized] t: [-9.768299, -0.858562, 0.404480]
+[info]               R (ypr): [-5.571, 0.193, -0.373] deg
+[info]   [GT]        t: [-9.935644, -0.703814, 0.507828]
+[info]               R (ypr): [-6.047, 1.150, -0.535] deg
+[info]   [Error]     t: 0.250264 m
+[info]               R: 1.080208 deg
+[info] Frame 5:
+[info]   [Optimized] t: [-12.960105, -0.280064, 0.568740]
+[info]               R (ypr): [-10.997, 0.239, 3.116] deg
+[info]   [GT]        t: [-13.260720, -0.216160, 0.707563]
+[info]               R (ypr): [-10.914, 1.280, 2.948] deg
+[info]   [Error]     t: 0.337231 m
+[info]               R: 1.058748 deg
+[info] Frame 6:
+[info]   [Optimized] t: [-15.177914, 0.987302, 0.673756]
+[info]               R (ypr): [-40.744, -0.649, -3.263] deg
+[info]   [GT]        t: [-15.761708, 1.020760, 0.869166]
+[info]               R (ypr): [-39.894, 0.326, -3.875] deg
+[info]   [Error]     t: 0.616540 m
+[info]               R: 1.429813 deg
+[info] --- Summary ---
+[info] Mean Translation Error: 0.225414 m
+[info] Mean Rotation Error: 0.774622 deg
+[info] Max  Translation Error: 0.616540 m
+[info] Max  Rotation Error: 1.429813 deg
+[info] Optimization Time: 56.129 ms
+[info] ========================================
+[info] 
+
+[info] ╔══════════════════════════════════════════════════════════════════════════════════════╗
+[info] ║                        Final Comparison Table                                        ║
+[info] ╠════════════════╦═══════════════╦═══════════════╦═══════════════╦═══════════════╦═════╣
+[info] ║ Factor         ║ Mean T (m)    ║ Mean R (deg)  ║ Max T (m)     ║ Max R (deg)   ║ ms  ║
+[info] ╠════════════════╬═══════════════╬═══════════════╬═══════════════╬═══════════════╬═════╣
+[info] ║ Point-to-Point ║      0.100990 ║      0.436051 ║      0.204713 ║      0.687970 ║ 1877║
+[info] ║ Point-to-Plane ║      0.061799 ║      0.430725 ║      0.127270 ║      0.852305 ║ 1216║
+[info] ║ GICP           ║      0.085399 ║      0.499411 ║      0.168046 ║      1.047266 ║ 1104║
+[info] ║ VGICP          ║      0.117390 ║      0.635614 ║      0.202933 ║      1.177762 ║ 1321║
+[info] ║ NDT            ║      0.105657 ║      0.730808 ║      0.191520 ║      1.320227 ║ 5647║
+[info] ║ LightNDT       ║      0.159027 ║      0.640614 ║      0.337532 ║      0.960458 ║  686║
+[info] ║ GMM_NDT        ║      0.099698 ║      0.771133 ║      0.174744 ║      1.370901 ║10135║
+[info] ║ LOAM_LIOSAM    ║      0.225414 ║      0.774622 ║      0.616540 ║      1.429813 ║   56║
+[info] ╚════════════════╩═══════════════╩═══════════════╩═══════════════╩═══════════════╩═════╝
