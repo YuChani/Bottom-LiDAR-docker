@@ -1,185 +1,128 @@
 # Documentation
 
-Bottom-LiDAR-Docker 프로젝트 문서입니다.
+Bottom-LiDAR-Docker 문서를 주제별로 재정리한 인덱스입니다.
 
 ---
 
-## 문서 구조
+## 문서 구조 (주제 기준)
 
-```
+```text
 docs/
-├── README.md                          # 이 파일
-├── benchmark/                         # 벤치마크 결과 및 분석
-│   ├── BENCHMARK_ANALYSIS.md          # Multi-Factor 심층 분석
-│   ├── BENCHMARK_REPORT.md            # 벤치마크 + 버그 수정 결과
-│   └── benchmark_results.md           # NDT 해상도 실험 결과
-├── changelog/                         # 변경내역 (날짜순)
-│   ├── 변경내역_light_ndt_통합_및_문서업데이트_2026-03-04.md  # LightNDT 통합 + 전체 변경 파일 정리
-│   ├── 변경내역_ndt_score_cost_동등성주석_2026-03-04.md      # score/cost 동등성 주석 정리
-│   ├── 변경내역_thread_default_자동설정_2026-03-03.md        # thread 기본값 자동 설정
-│   ├── 변경내역_headless_benchmark.md  # Headless 모드 + NDT 통합
-│   ├── 변경내역_ndt_magnusson_refactoring.md  # NDT Magnusson 리팩토링
-│   └── 변경내역_NDT_VGICP_개선_2026-02-26.md  # NDT/VGICP 수렴 개선
-├── loam/                              # LOAM / LIO-SAM 관련
-│   └── liosam_feature_extraction_integration.md  # LIO-SAM 통합 및 7-Factor 분석
-├── ndt/                               # NDT Factor 문서
-│   ├── README.md                      # NDT 파일 위치 및 구현 설명
-│   ├── uml.md                         # UML 다이어그램 (PlantUML 6종)
-│   ├── usage_guide.md                 # NDT 사용 가이드
-│   ├── omp_comparison.md              # NDT vs ndt_omp 비교
-│   ├── magnusson_implementation_comparison_ko.md  # Magnusson 논문 구현 비교
-│   ├── weighted_gauss_newton_feasibility_ko.md    # Weighted Gauss-Newton 타당성
-│   ├── NDT_CODE_MATH_MAPPING.md       # NDT 코드↔수식 1:1 매핑
-│   ├── NDT_LM_INCOMPATIBILITY_ANALYSIS.md  # NDT vs LM 비호환성 분석
-│   ├── scoreless_weight_only_method_ko.md  # scoreless(weight-only) 방식 설명
-│   └── light_ndt_vs_ndt_구현_수학_비교_정리.md  # LightNDT vs NDT 구현/수학 상세 비교
-└── archive/                           # 과거 문서 아카이브
-    ├── ARCHIVE_STRUCTURE.md           # 아카이브 구조 설명
-    ├── 2026-01/                       # 2026년 1월 (3개)
-    └── 2026-02/                       # 2026년 2월 (17개)
+├── README.md
+├── benchmark/                         # 벤치마크 결과/분석
+├── ndt/                               # NDT 핵심 문서 + 세부 주제 폴더
+│   ├── analysis/                      # 원인 분석/수학 해설
+│   ├── comparison/                    # NDT vs LightNDT/GICP 비교
+│   ├── experiments/                   # 실험 결과 보고서
+│   └── checklists/                    # 실행 체크리스트
+├── gmm/                               # GMM-NDT 연구/작업지시
+├── loam/                              # LOAM/LIO-SAM 관련
+├── changelog/                         # 변경 이력
+└── archive/                           # 월별 아카이브
 ```
 
 ---
 
-## 벤치마크 (`docs/benchmark/`)
-
-Factor별 정합 성능을 측정하고 분석한 결과물입니다.
-
-| 문서 | 설명 | 대상 독자 |
-|------|------|-----------|
-| **[BENCHMARK_ANALYSIS.md](./benchmark/BENCHMARK_ANALYSIS.md)** | Multi-Factor 심층 비교 분석 (Translation/Rotation 오차, 수렴 속도) | 분석가 |
-| **[BENCHMARK_REPORT.md](./benchmark/BENCHMARK_REPORT.md)** | 벤치마크 결과 요약 + 버그 수정 전후 비교 | 개발자 |
-| **[benchmark_results.md](./benchmark/benchmark_results.md)** | NDT 해상도별 실험 결과 (ndt_resolution 파라미터 스터디) | 개발자 |
-
----
-
-## 변경내역 (`docs/changelog/`)
-
-코드 변경 사항을 날짜순으로 기록합니다.
-
-| 문서 | 날짜 | 주요 내용 |
-|------|------|-----------|
-| **[변경내역_light_ndt_통합_및_문서업데이트_2026-03-04.md](./changelog/변경내역_light_ndt_통합_및_문서업데이트_2026-03-04.md)** | 2026-03-04 | LightNDT 구현/벤치마크 통합, 전체 변경 파일 목록 정리 |
-| **[변경내역_ndt_score_cost_동등성주석_2026-03-04.md](./changelog/변경내역_ndt_score_cost_동등성주석_2026-03-04.md)** | 2026-03-04 | NDT score/cost 동등성 주석 명확화 |
-| **[변경내역_thread_default_자동설정_2026-03-03.md](./changelog/변경내역_thread_default_자동설정_2026-03-03.md)** | 2026-03-03 | thread 기본값 자동 설정 및 성능 비교 |
-| **[변경내역_NDT_VGICP_개선_2026-02-26.md](./changelog/변경내역_NDT_VGICP_개선_2026-02-26.md)** | 2026-02-26 | NDT score_function 리팩토링, VGICP error() 오버라이드, Voxel 해상도 1.0m |
-| **[변경내역_ndt_magnusson_refactoring.md](./changelog/변경내역_ndt_magnusson_refactoring.md)** | 2026-02-25 | NDT Magnusson 논문 기반 리팩토링 |
-| **[변경내역_headless_benchmark.md](./changelog/변경내역_headless_benchmark.md)** | 2026-02-23 | Headless 벤치마크 모드 추가, NDT Factor 통합 |
-
----
-
-## LOAM / LIO-SAM (`docs/loam/`)
-
-| 문서 | 설명 | 대상 독자 |
-|------|------|-----------|
-| **[liosam_feature_extraction_integration.md](./loam/liosam_feature_extraction_integration.md)** | LIO-SAM FeatureExtraction 이식, 코드 변경점, 7-Factor 벤치마크 | 개발자, 분석가 |
-
----
-
-## NDT Factor (`docs/ndt/`)
-
-NDT(Normal Distributions Transform) Factor를 gtsam_points 라이브러리 내부에 구현한 내용을 정리한 문서입니다.
-
-| 문서 | 설명 | 대상 독자 |
-|------|------|-----------|
-| **[README.md](./ndt/README.md)** | NDT 소스 파일 위치, 구현 설명, 수학적 배경, 버그 수정 이력 | 개발자 (심화) |
-| **[uml.md](./ndt/uml.md)** | 클래스 계층, 데이터 구조, 실행 시퀀스 등 PlantUML 6종 | 개발자 (아키텍처) |
-| **[usage_guide.md](./ndt/usage_guide.md)** | NDT Factor 사용법, 파라미터 설명, main.cpp 적용 예시 | 사용자 (시작하기) |
-| **[omp_comparison.md](./ndt/omp_comparison.md)** | gtsam_points NDT vs pcl_ndt_omp 비교 분석 | 개발자 (참고) |
-| **[magnusson_implementation_comparison_ko.md](./ndt/magnusson_implementation_comparison_ko.md)** | Magnusson 논문 vs 구현 코드 비교 분석 | 연구자 |
-| **[weighted_gauss_newton_feasibility_ko.md](./ndt/weighted_gauss_newton_feasibility_ko.md)** | Weighted Gauss-Newton 방법 gtsam_points 적용 타당성 | 연구자 |
-| **[NDT_CODE_MATH_MAPPING.md](./ndt/NDT_CODE_MATH_MAPPING.md)** | NDT 코드 변수 ↔ Magnusson 수식 1:1 매핑 (796줄) | 연구자 (심화) |
-| **[NDT_LM_INCOMPATIBILITY_ANALYSIS.md](./ndt/NDT_LM_INCOMPATIBILITY_ANALYSIS.md)** | NDT Score Function과 LM 옵티마이저 비호환성 분석 | 연구자 (심화) |
-| **[scoreless_weight_only_method_ko.md](./ndt/scoreless_weight_only_method_ko.md)** | score 없이 weight(`J^TΣ^{-1}J`) 중심으로 푸는 방식 설명 | 연구자 |
-| **[light_ndt_vs_ndt_구현_수학_비교_정리.md](./ndt/light_ndt_vs_ndt_구현_수학_비교_정리.md)** | LightNDT와 NDT의 구현/수학 차이 상세 비교 | 연구자, 개발자 |
-
-**읽기 순서 추천**:
-1. `ndt/usage_guide.md` — 빠른 시작 및 파라미터 설명
-2. `ndt/README.md` — 파일 위치, 구현 상세, 수학적 배경
-3. `ndt/uml.md` — 구조 시각화 (6개 다이어그램)
-4. `ndt/magnusson_implementation_comparison_ko.md` — 논문 vs 코드 비교
-5. `ndt/NDT_CODE_MATH_MAPPING.md` — 수식 1:1 매핑 (심화)
-
----
-
-## 아카이브 (`docs/archive/`)
-
-과거 작업 결과물을 날짜별로 보관합니다. 자세한 내용은 [ARCHIVE_STRUCTURE.md](./archive/ARCHIVE_STRUCTURE.md) 참조.
-
-### 2026년 1월 (archive/2026-01/) — 3개
+## 1) 벤치마크 (`docs/benchmark/`)
 
 | 문서 | 설명 |
-|------|------|
-| hyperparameters_tutorial.md | 하이퍼파라미터 튜토리얼 |
-| quick_reference.md | 빠른 참조 가이드 |
-| demo_matching_cost_factors_report.md | Matching Cost Factor 데모 리포트 |
-
-### 2026년 2월 (archive/2026-02/) — 17개
-
-| 주제 | 파일 수 | 설명 |
-|------|---------|------|
-| LOAM Curvature 버그 수정 | 5개 | LOAM 곡률 계산 버그 분석 및 수정 |
-| Scan-to-Map 구현 | 3개 | Scan-to-Map 방식 구현 및 통합 |
-| NDT Factor 이전 버전 | 9개 | NDT 초기 구현, 분석, 변경 이력 (→ `docs/ndt/`로 대체됨) |
+|---|---|
+| [BENCHMARK_ANALYSIS.md](./benchmark/BENCHMARK_ANALYSIS.md) | Multi-Factor 심층 분석 |
+| [BENCHMARK_REPORT.md](./benchmark/BENCHMARK_REPORT.md) | 벤치마크 요약 + 수정 결과 |
+| [benchmark_results.md](./benchmark/benchmark_results.md) | NDT 해상도별 결과 |
+| [main_정합알고리즘_수학검증_및_headless결과_2026-03-04.md](./benchmark/main_정합알고리즘_수학검증_및_headless결과_2026-03-04.md) | main 경로 중심 검증/결과 |
 
 ---
 
-## 프로젝트 파일 구조 (핵심)
+## 2) NDT (`docs/ndt/`)
 
-```
-/root/workdir/
-├── src/
-│   └── main.cpp                                           # 메인 코드 (NDT/GICP/VGICP 사용)
-├── thirdparty/gtsam_points/
-│   ├── include/gtsam_points/factors/
-│   │   ├── integrated_ndt_factor.hpp                      # NDT Factor 헤더
-│   │   ├── integrated_light_ndt_factor.hpp                # LightNDT Factor 헤더
-│   │   ├── integrated_vgicp_factor.hpp                    # VGICP Factor 헤더
-│   │   └── impl/
-│   │       ├── integrated_ndt_factor_impl.hpp             # NDT Factor 템플릿 구현
-│   │       ├── integrated_light_ndt_factor_impl.hpp       # LightNDT Factor 템플릿 구현
-│   │       └── integrated_vgicp_factor_impl.hpp           # VGICP Factor 템플릿 구현
-│   └── src/gtsam_points/factors/
-│       ├── integrated_light_ndt_factor.cpp                # LightNDT 템플릿 인스턴스
-│       └── integrated_matching_cost_factor.cpp            # 공통 Matching Cost Factor
-├── data/pcd/                                              # 점군 데이터 + Ground Truth
-├── build/                                                 # 빌드 디렉토리
-└── docs/                                                  # 문서 (이 폴더)
-```
+### 2.1 핵심 구현/가이드
 
----
+| 문서 | 설명 |
+|---|---|
+| [README.md](./ndt/README.md) | NDT 구현 개요/파일 역할 |
+| [usage_guide.md](./ndt/usage_guide.md) | 사용 가이드 |
+| [uml.md](./ndt/uml.md) | 구조 다이어그램 |
+| [NDT_CODE_MATH_MAPPING.md](./ndt/NDT_CODE_MATH_MAPPING.md) | 코드-수식 1:1 매핑 |
+| [NDT_LM_INCOMPATIBILITY_ANALYSIS.md](./ndt/NDT_LM_INCOMPATIBILITY_ANALYSIS.md) | NDT-LM 상호작용 분석 |
+| [magnusson_implementation_comparison_ko.md](./ndt/magnusson_implementation_comparison_ko.md) | 논문 대비 구현 비교 |
+| [weighted_gauss_newton_feasibility_ko.md](./ndt/weighted_gauss_newton_feasibility_ko.md) | WGN 적용 타당성 |
+| [scoreless_weight_only_method_ko.md](./ndt/scoreless_weight_only_method_ko.md) | scoreless 방식 정리 |
+| [omp_comparison.md](./ndt/omp_comparison.md) | ndt_omp 비교 |
 
-## 실행 방법
+### 2.2 분석 문서 (`docs/ndt/analysis/`)
 
-```bash
-# Docker 컨테이너 내부에서
-cd /root/workdir/build
-make -j$(nproc)
+| 문서 | 설명 |
+|---|---|
+| [NDT_성능분석_보고서.md](./ndt/analysis/NDT_성능분석_보고서.md) | NDT 성능 분석 |
+| [why_ndt_is_slow_in_gtsam_lm_h1only_상세분석_ko.md](./ndt/analysis/why_ndt_is_slow_in_gtsam_lm_h1only_상세분석_ko.md) | NDT 저속 원인 상세 |
+| [why_lightndt_is_fast_수학구조_상세분석_ko.md](./ndt/analysis/why_lightndt_is_fast_수학구조_상세분석_ko.md) | LightNDT 고속 원인 상세 |
+| [ndt_수렴속도_재검증_원인분석_2026-03-04.md](./ndt/analysis/ndt_수렴속도_재검증_원인분석_2026-03-04.md) | 수렴속도 재검증 |
+| [ndt_weight_sign_및_수렴속도_상세해설_ko.md](./ndt/analysis/ndt_weight_sign_및_수렴속도_상세해설_ko.md) | weight/sign 해설 |
+| [ndt_hessian_weight_only_analysis_ko.md](./ndt/analysis/ndt_hessian_weight_only_analysis_ko.md) | Hessian weight-only 분석 |
+| [J_target_J_source_수학_상세해설_2026-03-05.md](./ndt/analysis/J_target_J_source_수학_상세해설_2026-03-05.md) | Jacobian 블록 해설 |
+| [NDT_수학_코드_7문항_상세분석_2026-03-09.md](./ndt/analysis/NDT_수학_코드_7문항_상세분석_2026-03-09.md) | d1/d2/d3, Jacobian 4×6, weight, LM 불일치 등 7문항 상세 분석 |
+| [NDT_Hessian_H1_H2_H3_수학_분석_2026-03-09.md](./ndt/analysis/NDT_Hessian_H1_H2_H3_수학_분석_2026-03-09.md) | **H1/H2/H3 Hessian 수학적 분해** — PSD 조건, 수렴 효과, GTSAM 호환성, 달팽이 수렴 원인 |
 
-# GUI 모드 (기본)
-./lidar_registration_benchmark
+### 2.3 비교 문서 (`docs/ndt/comparison/`)
 
-# Headless 모드 (GUI 없이 Multi-Factor 벤치마크)
-./lidar_registration_benchmark --headless
-```
+| 문서 | 설명 |
+|---|---|
+| [light_ndt_vs_ndt_구현_수학_비교_정리.md](./ndt/comparison/light_ndt_vs_ndt_구현_수학_비교_정리.md) | LightNDT vs NDT 비교 |
+| [NDT_vs_LightNDT_코드구조_수학차이_상세분석_2026-03-06.md](./ndt/comparison/NDT_vs_LightNDT_코드구조_수학차이_상세분석_2026-03-06.md) | 코드구조/수학 차이 |
+| [ndt_lightndt_gicp_수학_컨셉_비교.md](./ndt/comparison/ndt_lightndt_gicp_수학_컨셉_비교.md) | NDT/LightNDT/GICP 컨셉 비교 |
+| [why_ndt_vs_lightndt_운영의사결정_가이드_ko.md](./ndt/comparison/why_ndt_vs_lightndt_운영의사결정_가이드_ko.md) | 운영 의사결정 가이드 |
 
-**UI 사용법** (GUI 모드):
-- `factor type`: Point-to-Point / Point-to-Plane / GICP / VGICP / NDT / LightNDT / LOAM_LIOSAM 선택
-- `optimizer type`: LM / ISAM2 선택
-- `optimize`: 최적화 실행
-- `noise_scale` / `add noise`: 초기 포즈 노이즈 조정
-- `full connection`: 전체/인접 프레임 연결 선택
+### 2.4 실험/체크리스트
 
----
-
-## 참고 자료
-
-- **gtsam_points**: https://github.com/koide3/gtsam_points
-- **GTSAM**: https://gtsam.org/
-- **Iridescence**: https://github.com/koide3/iridescence
-- **spdlog**: https://github.com/gabime/spdlog
+| 문서 | 설명 |
+|---|---|
+| [full_project_factor_실험_수학코드_종합보고서_2026-03-06.md](./ndt/experiments/full_project_factor_실험_수학코드_종합보고서_2026-03-06.md) | 전체 factor 종합 실험/코드 분석 |
+| [NDT_Conditional_H2_최종보고서_2026-03-09.md](./ndt/experiments/NDT_Conditional_H2_최종보고서_2026-03-09.md) | **NDT H2 Hessian 최적화 최종 보고서** (iter 67.6%↓) |
+| [NDT_P0_3패치_적용결과_보고서_2026-03-06.md](./ndt/experiments/NDT_P0_3패치_적용결과_보고서_2026-03-06.md) | P0 패치 3개 적용 결과 |
+| [ndt_속도개선_매트릭스_실험_2026-03-05.md](./ndt/experiments/ndt_속도개선_매트릭스_실험_2026-03-05.md) | NDT 매트릭스 실험 |
+| [factor_개선_실행체크리스트_2026-03-06.md](./ndt/checklists/factor_개선_실행체크리스트_2026-03-06.md) | 실행 체크리스트 |
 
 ---
 
-생성일: 2026-01-26  
-최종 수정: 2026-03-04
+## 3) GMM (`docs/gmm/`)
+
+| 문서 | 설명 |
+|---|---|
+| [NDT_GMM_연구보고서_방향_TODO_2026-03-06.md](./gmm/NDT_GMM_연구보고서_방향_TODO_2026-03-06.md) | GMM-NDT 연구 방향/TODO |
+| [GMM_NDT_구현_작업지시서.md](./gmm/GMM_NDT_구현_작업지시서.md) | 구현 작업지시서 |
+
+---
+
+## 4) LOAM (`docs/loam/`)
+
+| 문서 | 설명 |
+|---|---|
+| [liosam_feature_extraction_integration.md](./loam/liosam_feature_extraction_integration.md) | LIO-SAM feature 통합/분석 |
+
+---
+
+## 5) 변경이력 (`docs/changelog/`)
+
+날짜별 코드/문서 변경 기록을 보관합니다.
+
+---
+
+## 6) 아카이브 (`docs/archive/`)
+
+이전 버전 문서는 월별(`2026-01`, `2026-02`)로 보관합니다.
+
+---
+
+## 문서 추가 규칙
+
+- NDT 분석 문서 -> `docs/ndt/analysis/`
+- NDT 비교 문서 -> `docs/ndt/comparison/`
+- NDT 실험 결과 -> `docs/ndt/experiments/`
+- 실행 체크리스트 -> `docs/ndt/checklists/`
+- GMM 관련 문서 -> `docs/gmm/`
+- 변경 내역 -> `docs/changelog/`
+
+---
+
+최종 수정: 2026-03-09

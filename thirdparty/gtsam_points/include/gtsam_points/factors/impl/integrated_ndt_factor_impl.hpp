@@ -98,19 +98,33 @@ template <typename SourceFrame>
 void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   linearization_point = delta;
 
+  const bool has_correspondences = correspondences.size() == frame::size(*source);
+  double diff_rot = std::numeric_limits<double>::infinity();
+  double diff_trans = std::numeric_limits<double>::infinity();
+  if (has_correspondences) {
+    const Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
+    diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
+    diff_trans = diff.translation().norm();
+
+    constexpr double kSamePoseRotEps = 1e-12;
+    constexpr double kSamePoseTransEps = 1e-12;
+    if (diff_rot < kSamePoseRotEps && diff_trans < kSamePoseTransEps) {
+      return;
+    }
+  }
+
   bool do_update = true;
-  if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
-    Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
-    double diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
-    double diff_trans = diff.translation().norm();
+  if (has_correspondences && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     if (diff_rot < correspondence_update_tolerance_rot && diff_trans < correspondence_update_tolerance_trans) {
       do_update = false;
     }
   }
 
-  if (do_update) {
-    last_correspondence_point = delta;
+  if (!do_update) {
+    return;
   }
+
+  last_correspondence_point = delta;
 
   correspondences.resize(frame::size(*source));
   // compute_ndt_params : intergrated_ndt_factor.hpp에서 선언됨
@@ -276,7 +290,7 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     Eigen::Matrix<double, 4, 6> J_source = Eigen::Matrix<double, 4, 6>::Zero();
     J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.template head<3>());
     J_source.block<3, 3>(0, 3) = -delta.linear();
-
+    // weight는 정합잘된점 = w가 큼, 정합안된점 = w가 작음 -> robust하게함
     const double weight = -gauss_d1 * gauss_d2 * e_term;
 
     //  Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) 
@@ -285,9 +299,8 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     *H_source += weight * J_source.transpose() * inv_cov_B * J_source;
     *H_target_source += weight * J_target.transpose() * inv_cov_B * J_source;
     // b = weight * J^T * Σ^{-1} * q    (= gradient)
-    *b_target += weight * J_target.transpose() * inv_cov_B * residual;
+    *b_target += weight * J_target.transpose() * inv_cov_B * residual;  // gradient 역할 벡터
     *b_source += weight * J_source.transpose() * inv_cov_B * residual;
-
     return cost;
   };
 

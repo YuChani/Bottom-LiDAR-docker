@@ -625,7 +625,6 @@ public:
         target_key, source_key, target_voxelmap, source);
       factor->set_num_threads(num_threads);
       factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
-      factor->set_outlier_ratio(0.01);
       factor->set_regularization_epsilon(1e-3);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
@@ -665,18 +664,6 @@ public:
       }
     }
 
-    spdlog::info("========================================");
-    spdlog::info("Frames: {}", num_frames);
-    spdlog::info("Factor Type: {}", factor_types[factor_type]);
-    spdlog::info("Optimizer: {}", optimizer_types[optimizer_type]);
-    spdlog::info("Threads: {}", num_threads);
-    if (factor_types[factor_type] == std::string("NDT")) {
-      spdlog::info("NDT Search Mode: DIRECT7 (fixed)");
-      spdlog::info("NDT Outlier Ratio: 0.010000 (fixed)");
-    } else if (factor_types[factor_type] == std::string("LightNDT")) {
-      spdlog::info("LightNDT Search Mode: DIRECT7 (fixed)");
-    }
-    spdlog::info("========================================");
 
     gtsam::Values optimized_values;
     auto bench_start = std::chrono::high_resolution_clock::now();
