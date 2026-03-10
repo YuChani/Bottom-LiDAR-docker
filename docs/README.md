@@ -29,6 +29,7 @@ docs/
 |---|---|
 | [BENCHMARK_ANALYSIS.md](./benchmark/BENCHMARK_ANALYSIS.md) | Multi-Factor 심층 분석 |
 | [BENCHMARK_REPORT.md](./benchmark/BENCHMARK_REPORT.md) | 벤치마크 요약 + 수정 결과 |
+| [factor_5run_threads8_상세분석_2026-03-10.md](./benchmark/factor_5run_threads8_상세분석_2026-03-10.md) | **5회 반복(threads=8) factor별 원인/문제/개선 상세 분석** |
 | [benchmark_results.md](./benchmark/benchmark_results.md) | NDT 해상도별 결과 |
 | [main_정합알고리즘_수학검증_및_headless결과_2026-03-04.md](./benchmark/main_정합알고리즘_수학검증_및_headless결과_2026-03-04.md) | main 경로 중심 검증/결과 |
 
