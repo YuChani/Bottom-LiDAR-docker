@@ -32,7 +32,10 @@ docs/
 | [factor_5run_threads8_상세분석_2026-03-10.md](./benchmark/factor_5run_threads8_상세분석_2026-03-10.md) | **5회 반복(threads=8) factor별 원인/문제/개선 상세 분석** |
 | [benchmark_results.md](./benchmark/benchmark_results.md) | NDT 해상도별 결과 |
 | [main_정합알고리즘_수학검증_및_headless결과_2026-03-04.md](./benchmark/main_정합알고리즘_수학검증_및_headless결과_2026-03-04.md) | main 경로 중심 검증/결과 |
-
+| [full_connection_true_vs_false_벤치마크_비교_2026-03-12.md](./benchmark/full_connection_true_vs_false_벤치마크_비교_2026-03-12.md) | full_connection 플래그 on/off 2종 비교 |
+| [graphmode_3way_비교_벤치마크_2026-03-12.md](./benchmark/graphmode_3way_비교_벤치마크_2026-03-12.md) | **그래프 모드 3종(full_connection / pure_chain / sparse_chain) Factor별 정확도·속도 비교** |
+| [window_sweep_최적window_분석_2026-03-12.md](./benchmark/window_sweep_최적window_분석_2026-03-12.md) | **sparse_connection_window 2~8 sweep — Factor별 최적값 탐색 및 권장 window 분석** |
+| [graphmode_5run_평균_벤치마크_2026-03-12.md](./benchmark/graphmode_5run_평균_벤치마크_2026-03-12.md) | **그래프 모드 3종 5회 반복 평균 — full_connection / pure_chain / sparse_chain Factor별 정확도·속도 평균 비교** |
 ---
 
 ## 2) NDT (`docs/ndt/`)
@@ -126,4 +129,4 @@ docs/
 
 ---
 
-최종 수정: 2026-03-09
+최종 수정: 2026-03-12
