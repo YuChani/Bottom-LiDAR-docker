@@ -281,12 +281,12 @@ public:
       // yuchan_step : 가우시안 복셀맵 생성 (resolution = 1.0m)
       // VG-ICP에서 사용하는 r값을 설정하는 부분
       // Koide fast_gicp 기본값: 1.0m, small_gicp 벤치마크: 2.0m (outdoor)
-      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(1.0);
+      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(ndt_fine_resolution);
       voxelmap->insert(*frame);
       voxelmaps[i] = voxelmap;
 
 #ifdef GTSAM_POINTS_USE_CUDA
-      auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
+      auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(ndt_fine_resolution);
       voxelmap_gpu->insert(*frame);
       voxelmaps_gpu[i] = voxelmap_gpu;
 #endif
@@ -378,7 +378,12 @@ public:
 #ifdef GTSAM_POINTS_USE_CUDA
     factor_types.push_back("VGICP_GPU"); // 6 : VG-ICP GPU (if CUDA enabled)
 #endif
-    full_connection = true;
+    // Graph mode default edit point:
+    // - full_connection=true  -> full all-pairs graph
+    // - full_connection=false -> sparse/chain graph
+    // - sparse_connection_window controls sparse graph density when full_connection=false
+    full_connection = false;
+    sparse_connection_window = 4;
     num_threads = 8;
 
     correspondence_update_tolerance_rot = 0.005f;
@@ -404,7 +409,12 @@ public:
         }
 
         ImGui::Separator();
+        // Graph mode runtime edit point (GUI):
+        // Toggle full_connection here, and tune sparse_connection_window below.
         ImGui::Checkbox("full connection", &full_connection);
+        if (!full_connection) {
+          ImGui::DragInt("sparse connection window", &sparse_connection_window, 1, 2, 32);
+        }
         ImGui::DragInt("num threads", &num_threads, 1, 1, 128);
         ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
         ImGui::Combo("optimizer type", &optimizer_type, optimizer_types.data(), optimizer_types.size());
@@ -460,6 +470,16 @@ public:
     correspondence_update_tolerance_trans = static_cast<float>(std::max(0.0, trans));
   }
 
+  // Graph mode headless edit point:
+  // `--window <n>` forces sparse mode and overrides sparse_connection_window.
+  void set_window_override(int window) {
+    if (window >= 2) {
+      full_connection = false;
+      sparse_connection_window = window;
+    }
+  }
+
+
   // yuchan_step : 뷰어 업데이트 함수(ImGui)
   void update_viewer(const gtsam::Values& values)
   {
@@ -484,8 +504,8 @@ public:
           glk::Primitives::coordinate_system(),
           guik::VertexColor(pose * Eigen::UniformScaling<float>(5.0f)));
         
-        // 프레임끼리 연결 되어있는지 초록선으로 그림. full_connection이면 모든 프레임과 연결, 아니면 인접한 프레임과만 연결
-        int j_end = full_connection ? num_frames : std::min(i + 2, num_frames);
+        int sparse_j_end = i + std::max(2, sparse_connection_window);
+        int j_end = full_connection ? num_frames : std::min(sparse_j_end, num_frames);
         for (int j = i + 1; j < j_end; j++)
         {
           factor_lines.push_back(values.at<gtsam::Pose3>(i).translation().cast<float>());
@@ -644,114 +664,141 @@ public:
     return nullptr;
   }
 
-  void run_optimization()
+  gtsam::NonlinearFactorGraph build_registration_graph(
+    const std::vector<gtsam_points::GaussianVoxelMap::Ptr>& active_voxelmaps)
   {
     int num_frames = frames.size();
-    
+
     gtsam::NonlinearFactorGraph graph;
-    
-    // Prior Factor: 첫 번째 포즈 고정
     graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, poses.at<gtsam::Pose3>(0), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
 
-    // Registration Factors 추가
     for (int i = 0; i < num_frames; i++)
     {
-      int j_end = full_connection ? num_frames : std::min(i + 2, num_frames);
+      // Graph edge construction edit point:
+      // Change this branch if you want to modify how full/sparse graph connectivity is built.
+      int sparse_j_end = i + std::max(2, sparse_connection_window);
+      int j_end = full_connection ? num_frames : std::min(sparse_j_end, num_frames);
       for (int j = i + 1; j < j_end; j++)
       {
-        auto factor = create_factor(i, j, frames[i], voxelmaps[i], nullptr, frames[j]);
+        auto factor = create_factor(i, j, frames[i], active_voxelmaps[i], nullptr, frames[j]);
         graph.add(factor);
       }
     }
 
+    return graph;
+  }
 
-    gtsam::Values optimized_values;
+  gtsam::Values optimize_with_lm(
+    const gtsam::NonlinearFactorGraph& graph,
+    const gtsam::Values& initial_values,
+    int max_iterations,
+    const std::string& stage_label,
+    double* elapsed_msec)
+  {
     auto bench_start = std::chrono::high_resolution_clock::now();
 
-    // optmizer 선택 및 실행(LM or ISAM2)
-    if (optimizer_types[optimizer_type] == std::string("LM"))
+    gtsam_points::LevenbergMarquardtExtParams lm_params;
+    lm_params.maxIterations = max_iterations;
+    lm_params.relativeErrorTol = 1e-5;
+    lm_params.absoluteErrorTol = 1e-5;
+    lm_params.lambdaLowerBound = 1e-6;
+
+    int iter_count = 0;
+    iter_count = 0;
+    lm_params.callback = [this, stage_label, &iter_count](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values)
     {
-      gtsam_points::LevenbergMarquardtExtParams lm_params;
-      lm_params.maxIterations = 100;
-      lm_params.relativeErrorTol = 1e-5;
-      lm_params.absoluteErrorTol = 1e-5;
-      lm_params.lambdaLowerBound = 1e-6;  // lambda가 0으로 수렴하여 undamped GN으로 퇴화하는 것을 방지
-      
-      lm_params.callback = [this](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values)
+      iter_count++;
+
+      spdlog::info("[{}] {}", stage_label, status.to_string());
+      if (!headless)
       {
-        spdlog::info("{}", status.to_string());
-        if (!headless)
-        {
 #if HAVE_GUI_VIEWER
-          guik::LightViewer::instance()->append_text(status.to_string());
-          update_viewer(values);
+        guik::LightViewer::instance()->append_text((boost::format("[%s] %s") % stage_label % status.to_string()).str());
+        update_viewer(values);
 #endif
-        }
-      };
+      }
+    };
 
-      gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, poses, lm_params);
-      optimized_values = optimizer.optimize();
+    gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, initial_values, lm_params);
+    gtsam::Values optimized_values = optimizer.optimize();
+
+    auto bench_end = std::chrono::high_resolution_clock::now();
+    if (elapsed_msec) {
+      *elapsed_msec = std::chrono::duration_cast<std::chrono::nanoseconds>(bench_end - bench_start).count() / 1e6;
     }
-    else if (optimizer_types[optimizer_type] == std::string("ISAM2"))
-    {
-      gtsam::ISAM2Params isam2_params;
-      isam2_params.relinearizeSkip = 1;
-      isam2_params.setRelinearizeThreshold(0.0);
-      gtsam_points::ISAM2Ext isam2(isam2_params);
 
-      auto t1 = std::chrono::high_resolution_clock::now();
-      
-      auto status = isam2.update(graph, poses);
+    last_iteration = optimizer.iterations();
+    if(last_iteration == 0)
+    {
+      last_iteration = iter_count; // 콜백이 호출되지 않은 경우에도 반복 횟수 기록
+    }
+
+    return optimized_values;
+  }
+
+  gtsam::Values optimize_with_isam2(
+    const gtsam::NonlinearFactorGraph& graph,
+    const gtsam::Values& initial_values,
+    double* elapsed_msec)
+  {
+    gtsam::ISAM2Params isam2_params;
+    isam2_params.relinearizeSkip = 1;
+    isam2_params.setRelinearizeThreshold(0.0);
+    gtsam_points::ISAM2Ext isam2(isam2_params);
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    last_iteration = 0;
+    auto status = isam2.update(graph, initial_values);
+    last_iteration++;
+    if (!headless)
+    {
+#if HAVE_GUI_VIEWER
+      update_viewer(isam2.calculateEstimate());
+      guik::LightViewer::instance()->append_text(status.to_string());
+#endif
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+      auto inner_status = isam2.update();
+      last_iteration++;
       if (!headless)
       {
 #if HAVE_GUI_VIEWER
         update_viewer(isam2.calculateEstimate());
-        guik::LightViewer::instance()->append_text(status.to_string());
+        guik::LightViewer::instance()->append_text(inner_status.to_string());
 #endif
       }
-
-      for (int i = 0; i < 5; i++)
-      {
-        auto status = isam2.update();
-        if (!headless)
-        {
-#if HAVE_GUI_VIEWER
-          update_viewer(isam2.calculateEstimate());
-          guik::LightViewer::instance()->append_text(status.to_string());
-#endif
-        }
-      }
-
-      auto t2 = std::chrono::high_resolution_clock::now();
-      double msec = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
-      spdlog::info("ISAM2 total: {:.3f} ms", msec);
-      if (!headless)
-      {
-#if HAVE_GUI_VIEWER
-        guik::LightViewer::instance()->append_text((boost::format("total:%.3f[msec]") % msec).str());
-#endif
-      }
-      
-      optimized_values = isam2.calculateEstimate();
     }
 
-    auto bench_end = std::chrono::high_resolution_clock::now();
-    last_total_ms = std::chrono::duration_cast<std::chrono::nanoseconds>(bench_end - bench_start).count() / 1e6;
+    auto t2 = std::chrono::high_resolution_clock::now();
+    if (elapsed_msec) {
+      *elapsed_msec = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
+    }
 
-    // 결과 분석 및 출력
+    return isam2.calculateEstimate();
+  }
+
+  void summarize_results(const gtsam::Values& optimized_values, double total_msec)
+  {
+    int num_frames = frames.size();
+
+    last_total_ms = total_msec;
+
     spdlog::info("--- Results: {} ---", factor_types[factor_type]);
     for (int i = 0; i < num_frames; i++)
     {
       gtsam::Pose3 opt_pose = optimized_values.at<gtsam::Pose3>(i);
       gtsam::Pose3 gt_pose = poses_gt.at<gtsam::Pose3>(i);
-      
+
       gtsam::Pose3 error = gt_pose.inverse() * opt_pose;
-      
+
       auto opt_t = opt_pose.translation();
       auto opt_ypr = opt_pose.rotation().ypr() * 180.0 / M_PI;
       auto gt_t = gt_pose.translation();
       auto gt_ypr = gt_pose.rotation().ypr() * 180.0 / M_PI;
-      
+
       spdlog::info("Frame {}:", i);
       spdlog::info("  [Optimized] t: [{:.6f}, {:.6f}, {:.6f}]", opt_t.x(), opt_t.y(), opt_t.z());
       spdlog::info("              R (ypr): [{:.3f}, {:.3f}, {:.3f}] deg", opt_ypr.x(), opt_ypr.y(), opt_ypr.z());
@@ -760,13 +807,12 @@ public:
       spdlog::info("  [Error]     t: {:.6f} m", error.translation().norm());
       spdlog::info("              R: {:.6f} deg", error.rotation().axisAngle().second * 180.0 / M_PI);
     }
-    
-    // Summary Statistics
+
     double total_trans_error = 0.0;
     double total_rot_error = 0.0;
     double max_trans_error = 0.0;
     double max_rot_error = 0.0;
-    
+
     for (int i = 0; i < num_frames; i++)
     {
       gtsam::Pose3 opt_pose = optimized_values.at<gtsam::Pose3>(i);
@@ -779,27 +825,57 @@ public:
       if (te > max_trans_error) max_trans_error = te;
       if (re > max_rot_error) max_rot_error = re;
     }
+
     last_mean_trans_error = total_trans_error / num_frames;
     last_mean_rot_error = total_rot_error / num_frames;
     last_max_trans_error = max_trans_error;
     last_max_rot_error = max_rot_error;
+
     spdlog::info("--- Summary ---");
     spdlog::info("Mean Translation Error: {:.6f} m", last_mean_trans_error);
     spdlog::info("Mean Rotation Error: {:.6f} deg", last_mean_rot_error);
     spdlog::info("Max  Translation Error: {:.6f} m", last_max_trans_error);
     spdlog::info("Max  Rotation Error: {:.6f} deg", last_max_rot_error);
+    spdlog::info("Iterations: {}", last_iteration);
     spdlog::info("Optimization Time: {:.3f} ms", last_total_ms);
     spdlog::info("========================================");
+  }
+
+  void run_optimization_single_stage(
+    const std::vector<gtsam_points::GaussianVoxelMap::Ptr>& active_voxelmaps,
+    int lm_max_iterations)
+  {
+    gtsam::NonlinearFactorGraph graph = build_registration_graph(active_voxelmaps);
+    gtsam::Values optimized_values;
+    double elapsed_ms = 0.0;
+
+    if (optimizer_types[optimizer_type] == std::string("LM"))
+    {
+      optimized_values = optimize_with_lm(graph, poses, lm_max_iterations, factor_types[factor_type], &elapsed_ms);
+    }
+    else
+    {
+      optimized_values = optimize_with_isam2(graph, poses, &elapsed_ms);
+    }
+
+    summarize_results(optimized_values, elapsed_ms);
+  }
+
+  void run_optimization()
+  {
+    run_optimization_single_stage(voxelmaps, 100);
   }
 
 private:
   bool headless;
   bool show_liosam_features = true;  // LIO-SAM feature 시각화 토글
   float pose_noise_scale;
+  double ndt_fine_resolution = 1.0;
 
   std::vector<const char*> factor_types;
   int factor_type;
   bool full_connection;
+  int sparse_connection_window;
   int num_threads;
   std::string headless_factor_filter;
 
@@ -829,6 +905,7 @@ private:
   double last_max_trans_error = 0.0;
   double last_max_rot_error = 0.0;
   double last_total_ms = 0.0;
+  int last_iteration = 0;
 
 public:
   void run_all_factors_headless()   // 시각화 없이 모든 팩터 타입 최적화 실행해서 결과 비교하는 함수 -> ./lidar_registration_demo --headless 옵션으로 실행
@@ -852,11 +929,15 @@ public:
     spdlog::info("Frames: {}", num_frames);
     spdlog::info("Optimizer: LM");
     spdlog::info("Full connection: {}", full_connection ? "true" : "false");
+    if (!full_connection) {
+      spdlog::info("Sparse connection window: {}", sparse_connection_window);
+    }
     spdlog::info("");
 
     struct Result {
       std::string name;
       double mean_t, mean_r, max_t, max_r, ms;
+      int iterations;
     };
     std::vector<Result> results;
 
@@ -888,8 +969,8 @@ public:
       optimizer_type = 0;
       run_optimization();
 
-      results.push_back({factor_types[fi], last_mean_trans_error, last_mean_rot_error,
-                          last_max_trans_error, last_max_rot_error, last_total_ms});
+  results.push_back({factor_types[fi], last_mean_trans_error, last_mean_rot_error,
+          last_max_trans_error, last_max_rot_error, last_total_ms, last_iteration});
     }
 
     if (results.empty()) {
@@ -898,17 +979,17 @@ public:
     }
 
     spdlog::info("\n");
-    spdlog::info("╔══════════════════════════════════════════════════════════════════════════════════════╗");
-    spdlog::info("║                        Final Comparison Table                                        ║");
-    spdlog::info("╠════════════════╦═══════════════╦═══════════════╦═══════════════╦═══════════════╦═════╣");
-    spdlog::info("║ Factor         ║ Mean T (m)    ║ Mean R (deg)  ║ Max T (m)     ║ Max R (deg)   ║ ms  ║");
-    spdlog::info("╠════════════════╬═══════════════╬═══════════════╬═══════════════╬═══════════════╬═════╣");
+    spdlog::info("╔══════════════════════════════════════════════════════════════════════════════════════════════╗");
+    spdlog::info("║                        Final Comparison Table                                                ║");
+    spdlog::info("╠════════════════╦═══════════════╦═══════════════╦═══════════════╦═══════════════╦═════╦═══════╣");
+    spdlog::info("║ Factor         ║ Mean T (m)    ║ Mean R (deg)  ║ Max T (m)     ║ Max R (deg)   ║ ms  ║ Iters ║");
+    spdlog::info("╠════════════════╬═══════════════╬═══════════════╬═══════════════╬═══════════════╬═════╬═══════╣");
     for (const auto& r : results)
     {
-      spdlog::info("║ {:14s} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║{:5.0f}║",
-                   r.name, r.mean_t, r.mean_r, r.max_t, r.max_r, r.ms);
+      spdlog::info("║ {:14s} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║{:5.0f}║{:7d}║",
+                   r.name, r.mean_t, r.mean_r, r.max_t, r.max_r, r.ms, r.iterations);
     }
-    spdlog::info("╚════════════════╩═══════════════╩═══════════════╩═══════════════╩═══════════════╩═════╝");
+    spdlog::info("╚════════════════╩═══════════════╩═══════════════╩═══════════════╩═══════════════╩═════╩═══════╝");
   }
 };
 
@@ -921,6 +1002,7 @@ int main(int argc, char** argv)
   double corr_rot_override = 0.0;
   double corr_trans_override = 0.0;
   bool has_corr_override = false;
+  int window_override = -1;
 
   for (int i = 1; i < argc; i++)
   {
@@ -933,9 +1015,11 @@ int main(int argc, char** argv)
     } else if (std::strcmp(argv[i], "--corr-trans") == 0 && i + 1 < argc) {
       corr_trans_override = std::stod(argv[++i]);
       has_corr_override = true;
+    } else if (std::strcmp(argv[i], "--window") == 0 && i + 1 < argc) {
+      window_override = std::stoi(argv[++i]);
     } else if (std::strcmp(argv[i], "--help") == 0) {
       std::cout << "Usage: ./lidar_registration_benchmark [--headless] [--factor <name>]"
-                << " [--threads <n>] [--corr-rot <rad>] [--corr-trans <m>]"
+                << " [--threads <n>] [--corr-rot <rad>] [--corr-trans <m>] [--window <n>]"
                 << std::endl;
       return 0;
     }
@@ -945,6 +1029,7 @@ int main(int argc, char** argv)
   if (!factor_filter.empty()) demo.set_headless_factor_filter(factor_filter);
   if (threads_override > 0) demo.set_num_threads_override(threads_override);
   if (has_corr_override) demo.set_correspondence_update_tolerance_override(corr_rot_override, corr_trans_override);
+  if (window_override >= 2) demo.set_window_override(window_override);
 
   if (headless_mode)
   {
