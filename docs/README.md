@@ -11,6 +11,7 @@ docs/
 ├── README.md
 ├── benchmark/                         # 벤치마크 결과/분석
 ├── ndt/                               # NDT 핵심 문서 + 세부 주제 폴더
+├── architecture/                      # main 코드 구조/UML 문서
 │   ├── analysis/                      # 원인 분석/수학 해설
 │   ├── comparison/                    # NDT vs LightNDT/GICP 비교
 │   ├── experiments/                   # 실험 결과 보고서
@@ -38,9 +39,17 @@ docs/
 | [graphmode_5run_평균_벤치마크_2026-03-12.md](./benchmark/graphmode_5run_평균_벤치마크_2026-03-12.md) | **그래프 모드 3종 5회 반복 평균 — full_connection / pure_chain / sparse_chain Factor별 정확도·속도 평균 비교** |
 ---
 
-## 2) NDT (`docs/ndt/`)
+## 2) 아키텍처 (`docs/architecture/`)
 
-### 2.1 핵심 구현/가이드
+| 문서 | 설명 |
+|---|---|
+| [main_현재코드구조_및_UML_2026-03-12.md](./architecture/main_현재코드구조_및_UML_2026-03-12.md) | **현재 `src/main.cpp`의 상태 구조, 데이터 흐름, graph 생성, optimizer 경로를 UML과 함께 정리한 문서** |
+
+---
+
+## 3) NDT (`docs/ndt/`)
+
+### 3.1 핵심 구현/가이드
 
 | 문서 | 설명 |
 |---|---|
@@ -54,7 +63,7 @@ docs/
 | [scoreless_weight_only_method_ko.md](./ndt/scoreless_weight_only_method_ko.md) | scoreless 방식 정리 |
 | [omp_comparison.md](./ndt/omp_comparison.md) | ndt_omp 비교 |
 
-### 2.2 분석 문서 (`docs/ndt/analysis/`)
+### 3.2 분석 문서 (`docs/ndt/analysis/`)
 
 | 문서 | 설명 |
 |---|---|
@@ -68,7 +77,7 @@ docs/
 | [NDT_수학_코드_7문항_상세분석_2026-03-09.md](./ndt/analysis/NDT_수학_코드_7문항_상세분석_2026-03-09.md) | d1/d2/d3, Jacobian 4×6, weight, LM 불일치 등 7문항 상세 분석 |
 | [NDT_Hessian_H1_H2_H3_수학_분석_2026-03-09.md](./ndt/analysis/NDT_Hessian_H1_H2_H3_수학_분석_2026-03-09.md) | **H1/H2/H3 Hessian 수학적 분해** — PSD 조건, 수렴 효과, GTSAM 호환성, 달팽이 수렴 원인 |
 
-### 2.3 비교 문서 (`docs/ndt/comparison/`)
+### 3.3 비교 문서 (`docs/ndt/comparison/`)
 
 | 문서 | 설명 |
 |---|---|
@@ -77,7 +86,7 @@ docs/
 | [ndt_lightndt_gicp_수학_컨셉_비교.md](./ndt/comparison/ndt_lightndt_gicp_수학_컨셉_비교.md) | NDT/LightNDT/GICP 컨셉 비교 |
 | [why_ndt_vs_lightndt_운영의사결정_가이드_ko.md](./ndt/comparison/why_ndt_vs_lightndt_운영의사결정_가이드_ko.md) | 운영 의사결정 가이드 |
 
-### 2.4 실험/체크리스트
+### 3.4 실험/체크리스트
 
 | 문서 | 설명 |
 |---|---|
@@ -89,7 +98,7 @@ docs/
 
 ---
 
-## 3) GMM (`docs/gmm/`)
+## 4) GMM (`docs/gmm/`)
 
 | 문서 | 설명 |
 |---|---|
@@ -98,7 +107,7 @@ docs/
 
 ---
 
-## 4) LOAM (`docs/loam/`)
+## 5) LOAM (`docs/loam/`)
 
 | 문서 | 설명 |
 |---|---|
@@ -106,13 +115,13 @@ docs/
 
 ---
 
-## 5) 변경이력 (`docs/changelog/`)
+## 6) 변경이력 (`docs/changelog/`)
 
 날짜별 코드/문서 변경 기록을 보관합니다.
 
 ---
 
-## 6) 아카이브 (`docs/archive/`)
+## 7) 아카이브 (`docs/archive/`)
 
 이전 버전 문서는 월별(`2026-01`, `2026-02`)로 보관합니다.
 
