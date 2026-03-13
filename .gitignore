@@ -4,3 +4,5 @@ build/
 data/
 
 build-host/
+
+artifacts/logs/
