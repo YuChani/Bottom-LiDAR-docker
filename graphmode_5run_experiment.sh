@@ -4,13 +4,14 @@
 # 결과 로그: graphmode_5run_{mode}_run{N}.log
 #
 # NOTE: full_connection=true 는 GUI 에서만 설정 가능 (CLI 인자 없음).
-#       full_connection 5회 로그는 기존 graphmode_full_connection.log 를 복사해서 사용.
 
 CONTAINER="bottom-lidar"
 BUILD_DIR="/root/workdir/build"
 BINARY="./lidar_registration_benchmark"
-LOG_BASE="/home/chani/personal/Bottom-LiDAR-docker"
+LOG_BASE="/home/chani/personal/Bottom-LiDAR-docker/artifacts/logs/graphmode"
 RUNS=5
+
+mkdir -p "${LOG_BASE}"
 
 echo "=== GraphMode 5-Run Experiment ==="
 echo "Started at: $(date)"
