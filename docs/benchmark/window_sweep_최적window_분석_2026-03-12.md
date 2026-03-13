@@ -11,7 +11,7 @@
 | 프레임 수 | 7 |
 | Window 범위 | 2, 3, 4, 5, 6, 7, 8 |
 | 코드 변경 | `src/main.cpp`에 `--window <n>` CLI 인자 추가 (set_window_override 멤버 함수) |
-| 로그 파일 | `window_sweep_w2.log` ~ `window_sweep_w8.log` |
+| 로그 파일 | `artifacts/logs/window_sweep/window_sweep_w2.log` ~ `artifacts/logs/window_sweep/window_sweep_w8.log` |
 
 > **핵심 발견:** window=7과 window=8의 결과가 완전히 동일 → 총 프레임=7이므로 **window≥7은 full_connection과 동등**
 

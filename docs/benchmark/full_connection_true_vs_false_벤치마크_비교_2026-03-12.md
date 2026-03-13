@@ -58,10 +58,10 @@ for (int j = i + 1; j < j_end; j++) {
 
 1. 현재 사용자 코드 상태 확인: `src/main.cpp:386`은 `false`
 2. `false` 상태에서 Docker 내부 재빌드 및 실행
-3. 로그 저장: `full_connection_false_run.log`
+3. 로그 저장: `artifacts/logs/full_connection/full_connection_false_run.log`
 4. `src/main.cpp:386`을 `true`로 변경
 5. Docker 내부 재빌드 및 실행
-6. 로그 저장: `full_connection_true_run.log`
+6. 로그 저장: `artifacts/logs/full_connection/full_connection_true_run.log`
 7. 실험 종료 후 `src/main.cpp:386`을 다시 `false`로 복원
 8. `false` 상태로 한 번 더 재빌드하여 코드와 실행 파일 상태를 사용자 변경에 맞춤
 
@@ -106,8 +106,8 @@ x0-x1, x1-x2, x2-x3, x3-x4, x4-x5, x5-x6
 
 출처:
 
-- chain 로그: `full_connection_false_run.log:692`
-- full 로그: `full_connection_true_run.log:697`
+- chain 로그: `artifacts/logs/full_connection/full_connection_false_run.log:692`
+- full 로그: `artifacts/logs/full_connection/full_connection_true_run.log:697`
 
 | Factor | Chain(false) Mean T | Chain Mean R | Chain Max T | Chain Max R | Chain ms | Chain Iter |
 |---|---:|---:|---:|---:|---:|---:|
@@ -394,8 +394,8 @@ NDT의 느림을 분석할 때 흔히
 
 ## 11. 재현 로그
 
-- chain 실행 로그: `full_connection_false_run.log`
-- full 실행 로그: `full_connection_true_run.log`
+- chain 실행 로그: `artifacts/logs/full_connection/full_connection_false_run.log`
+- full 실행 로그: `artifacts/logs/full_connection/full_connection_true_run.log`
 - 실험 후 복원 상태: `src/main.cpp:386` → `full_connection = false`
 
 ---

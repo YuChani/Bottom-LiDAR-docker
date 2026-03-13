@@ -9,7 +9,7 @@
 | Optimizer | Levenberg-Marquardt (LM) |
 | Noise scale | 0.100 |
 | 프레임 수 | 7 |
-| 로그 파일 | `graphmode_full_connection.log` / `graphmode_pure_chain.log` / `graphmode_sparse_chain.log` |
+| 로그 파일 | `artifacts/logs/graphmode/graphmode_full_connection.log` / `artifacts/logs/graphmode/graphmode_pure_chain.log` / `artifacts/logs/graphmode/graphmode_sparse_chain.log` |
 
 ---
 

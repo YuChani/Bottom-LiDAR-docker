@@ -10,8 +10,8 @@
 | Noise scale | 0.100 |
 | 프레임 수 | 7 |
 | 반복 횟수 | 5회 (총 15회 실행) |
-| 로그 파일 | `graphmode_5run_{mode}_run{1~5}.log` (15개) |
-| 코드 변경 | 없음 (`full_connection` 모드는 기존 로그 `graphmode_full_connection.log` 재사용) |
+| 로그 파일 | `artifacts/logs/graphmode/graphmode_5run_{mode}_run{1~5}.log` (15개) |
+| 코드 변경 | 없음 (`full_connection` 모드는 기존 로그 `artifacts/logs/graphmode/graphmode_full_connection.log` 재사용) |
 
 > **비고:** 데이터셋과 noise seed가 결정론적(deterministic)으로 고정되어 있어 5회 실행 결과가 완전히 동일했습니다. 5회 평균값 = 단일 실행값이며, 이는 실험 재현성이 완벽함을 의미합니다.
 
@@ -21,7 +21,7 @@
 
 | 모드 | 실행 방법 | full_connection | sparse_window | 엣지 구성 방식 |
 |---|---|:---:|:---:|---|
-| **Full Connection** | 기존 로그 재사용 (`graphmode_full_connection.log`) | `true` | N/A | 모든 프레임 쌍 연결 (최대 제약, 21엣지) |
+| **Full Connection** | 기존 로그 재사용 (`artifacts/logs/graphmode/graphmode_full_connection.log`) | `true` | N/A | 모든 프레임 쌍 연결 (최대 제약, 21엣지) |
 | **Pure Chain** | `--window 2` | `false` | `2` | 인접 1프레임만 연결 (최소 체인, 6엣지) |
 | **Sparse Chain** | `--window 4` | `false` | `4` | 인접 ±2프레임 이내 연결 (중간 밀도) |
 
