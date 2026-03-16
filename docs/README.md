@@ -9,9 +9,10 @@ Bottom-LiDAR-Docker 문서를 주제별로 재정리한 인덱스입니다.
 ```text
 docs/
 ├── README.md
+├── 최종정리/                          # 날짜별 최종 통합 정리
 ├── benchmark/                         # 벤치마크 결과/분석
-├── ndt/                               # NDT 핵심 문서 + 세부 주제 폴더
 ├── architecture/                      # main 코드 구조/UML 문서
+├── ndt/                               # NDT 핵심 문서 + 세부 주제 폴더
 │   ├── analysis/                      # 원인 분석/수학 해설
 │   ├── comparison/                    # NDT vs LightNDT/GICP 비교
 │   ├── experiments/                   # 실험 결과 보고서
@@ -21,6 +22,21 @@ docs/
 ├── changelog/                         # 변경 이력
 └── archive/                           # 월별 아카이브
 ```
+
+---
+
+## 0) 최종 정리 (`docs/최종정리/`)
+
+중복되거나 서로 강하게 겹치는 문서를 날짜별로 재묶은 최종 요약본입니다.
+
+| 날짜 | 문서 | 설명 |
+|---|---|---|
+| `공통` | `docs/최종정리/00_전체정리.md` | 날짜별 최종정리 문서를 다시 묶은 상위 통합 요약 |
+| `2026-03-09` | `01_NDT_저속원인과_수학정리.md` | NDT 저속 원인, weight, Hessian, LM 상호작용 통합 |
+| `2026-03-09` | `02_NDT_vs_LightNDT_비교정리.md` | NDT/LightNDT 수학·구조·운영 비교 통합 |
+| `2026-03-09` | `03_NDT_개선실험_정리.md` | Conditional H2, multi-resolution 등 개선 시도 통합 |
+| `2026-03-10` | `01_GMM_NDT_종합정리.md` | GMM-NDT 연구 방향, 구현 계획, 진행 로그 통합 |
+| `2026-03-10` | `02_factor_5회반복_벤치마크_정리.md` | 5회 반복 벤치마크 최종 요약 |
 
 ---
 
@@ -44,6 +60,7 @@ docs/
 | 문서 | 설명 |
 |---|---|
 | [main_현재코드구조_및_UML_2026-03-12.md](./architecture/main_현재코드구조_및_UML_2026-03-12.md) | **현재 `src/main.cpp`의 상태 구조, 데이터 흐름, graph 생성, optimizer 경로를 UML과 함께 정리한 문서** |
+| [pure_chain_sliding_window_설계_2026-03-13.md](./architecture/pure_chain_sliding_window_설계_2026-03-13.md) | **현재 sparse chain 구조를 pure chain + sliding window local map으로 전환하기 위한 설계 문서** |
 
 ---
 
@@ -104,6 +121,8 @@ docs/
 |---|---|
 | [NDT_GMM_연구보고서_방향_TODO_2026-03-06.md](./gmm/NDT_GMM_연구보고서_방향_TODO_2026-03-06.md) | GMM-NDT 연구 방향/TODO |
 | [GMM_NDT_구현_작업지시서.md](./gmm/GMM_NDT_구현_작업지시서.md) | 구현 작업지시서 |
+| [NDT_vs_NDT+MixtureModel_수학_상세설명_2026-03-16.md](./gmm/NDT_vs_NDT+MixtureModel_수학_상세설명_2026-03-16.md) | **NDT와 NDT+Mixture Model의 확률 해석, 목적함수, soft/hard assignment 차이를 수학과 그림으로 정리한 문서** |
+| [GMM_NDT_벤치마크_결과_2026-03-16.md](./gmm/GMM_NDT_벤치마크_결과_2026-03-16.md) | **GMM-NDT 벤치마크 결과 — AC 4/4 통과, K=1 parity, K=2 Max T -0.7% 개선, 시간 오버헤드 1.215x** |
 
 ---
 
@@ -138,4 +157,4 @@ docs/
 
 ---
 
-최종 수정: 2026-03-12
+최종 수정: 2026-03-16

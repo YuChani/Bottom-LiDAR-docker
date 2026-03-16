@@ -38,6 +38,8 @@ IntegratedGMMNDTFactor_<SourceFrame>::IntegratedGMMNDTFactor_(
   freeze_mixture_in_lm(false),
   use_uniform_outlier(false),
   uniform_outlier_weight(1e-4),
+  mahalanobis_ratio_threshold(5.0),
+  gamma_hessian_threshold(0.05),
   correspondence_update_tolerance_rot(0.0),
   correspondence_update_tolerance_trans(0.0),
   gauss_d1(0.0),
@@ -72,6 +74,8 @@ IntegratedGMMNDTFactor_<SourceFrame>::IntegratedGMMNDTFactor_(
   freeze_mixture_in_lm(false),
   use_uniform_outlier(false),
   uniform_outlier_weight(1e-4),
+  mahalanobis_ratio_threshold(5.0),
+  gamma_hessian_threshold(0.05),
   correspondence_update_tolerance_rot(0.0),
   correspondence_update_tolerance_trans(0.0),
   gauss_d1(0.0),
@@ -266,8 +270,13 @@ void IntegratedGMMNDTFactor_<SourceFrame>::update_correspondences(const Eigen::I
     for (size_t v = 0; v < num_voxels; v++) {
       const auto& voxel = target_voxels->lookup_voxel(v);
       inv_cov_cache[v] = compute_ndt_inverse_covariance(voxel.cov, regularization_epsilon);
-      const double det_inv = std::max(inv_cov_cache[v].determinant(), 1e-300);
-      log_det_cov_cache[v] = -std::log(det_inv) + 4.0 * std::log(2.0 * M_PI);
+
+      // Use 3x3 top-left block for log-determinant (4th dim is homogeneous w=0, not a real DOF)
+      // log_det_cov = log(det(Sigma_reg_3x3)) + 3*log(2*pi)
+      //             = -log(det(inv_cov_3x3)) + 3*log(2*pi)
+      const Eigen::Matrix3d inv_cov_3x3 = inv_cov_cache[v].block<3, 3>(0, 0);
+      const double det_inv_3x3 = std::max(inv_cov_3x3.determinant(), 1e-300);
+      log_det_cov_cache[v] = -std::log(det_inv_3x3) + 3.0 * std::log(2.0 * M_PI);
     }
     inv_cov_cached = true;
   }
@@ -301,12 +310,27 @@ void IntegratedGMMNDTFactor_<SourceFrame>::update_correspondences(const Eigen::I
       return;
     }
 
-    std::sort(candidates.begin(), candidates.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+    // Replace full sort with partial selection (K-best)
+    // For K=2 and max 7 candidates (DIRECT7), nth_element is sufficient
+    if (static_cast<int>(candidates.size()) > k_components) {
+      std::nth_element(candidates.begin(), candidates.begin() + k_components, candidates.end(),
+        [](const auto& a, const auto& b) { return a.first < b.first; });
+    }
+    // Sort only the top-K for deterministic ordering
+    std::sort(candidates.begin(), candidates.begin() + std::min(k_components, static_cast<int>(candidates.size())),
+      [](const auto& a, const auto& b) { return a.first < b.first; });
+
     const int keep_count = std::min(k_components, static_cast<int>(candidates.size()));
     corr.components.reserve(keep_count);
+    const double best_d2 = candidates[0].first;
 
     double prior_sum = 0.0;
     for (int k = 0; k < keep_count; ++k) {
+      // Mahalanobis ratio pruning: skip if 2nd+ candidate is too far from best
+      if (k > 0 && best_d2 > 0.0 && candidates[k].first > mahalanobis_ratio_threshold * best_d2) {
+        break;
+      }
+
       const int voxel_id = candidates[k].second;
       const auto& voxel = target_voxels->lookup_voxel(voxel_id);
 
@@ -396,6 +420,14 @@ double IntegratedGMMNDTFactor_<SourceFrame>::evaluate(
     }
 
     double point_cost = 0.0;
+    // For K>1: use algebraic collapse to accumulate weighted precision matrix
+    // M = sum_k (w_k * Omega_k) and u = sum_k (w_k * Omega_k * r_k)
+    // Then compute J^T * M * J once instead of K times.
+    // For K=1: use direct computation to maintain exact numerical parity with NDT.
+    const bool use_collapse = (corr.components.size() > 1);
+    Eigen::Matrix4d M = Eigen::Matrix4d::Zero();
+    Eigen::Vector4d u = Eigen::Vector4d::Zero();
+
     for (const auto& comp : corr.components) {
       if (!comp.valid || comp.gamma <= 0.0) {
         continue;
@@ -418,16 +450,33 @@ double IntegratedGMMNDTFactor_<SourceFrame>::evaluate(
       const double component_cost = -gauss_d1 - score_function;
       point_cost += comp.gamma * component_cost;
 
-      if (!H_target) {
+      if (!H_target || comp.gamma < gamma_hessian_threshold) {
         continue;
       }
 
       const double weight = comp.gamma * (-gauss_d1 * gauss_d2 * e_term);
-      *H_target += weight * J_target.transpose() * comp.inv_cov * J_target;
-      *H_source += weight * J_source.transpose() * comp.inv_cov * J_source;
-      *H_target_source += weight * J_target.transpose() * comp.inv_cov * J_source;
-      *b_target += weight * J_target.transpose() * comp.inv_cov * residual;
-      *b_source += weight * J_source.transpose() * comp.inv_cov * residual;
+
+      if (use_collapse) {
+        // Accumulate for batch Hessian computation
+        M.noalias() += weight * comp.inv_cov;
+        u.noalias() += weight * (comp.inv_cov * residual);
+      } else {
+        // Direct computation (K=1 path, exact parity with NDT)
+        *H_target += weight * J_target.transpose() * comp.inv_cov * J_target;
+        *H_source += weight * J_source.transpose() * comp.inv_cov * J_source;
+        *H_target_source += weight * J_target.transpose() * comp.inv_cov * J_source;
+        *b_target += weight * J_target.transpose() * comp.inv_cov * residual;
+        *b_source += weight * J_source.transpose() * comp.inv_cov * residual;
+      }
+    }
+
+    // Batch Hessian/gradient for multi-component case (K>1)
+    if (use_collapse && H_target && M.squaredNorm() > 0.0) {
+      *H_target += J_target.transpose() * M * J_target;
+      *H_source += J_source.transpose() * M * J_source;
+      *H_target_source += J_target.transpose() * M * J_source;
+      *b_target += J_target.transpose() * u;
+      *b_source += J_source.transpose() * u;
     }
 
     return point_cost;

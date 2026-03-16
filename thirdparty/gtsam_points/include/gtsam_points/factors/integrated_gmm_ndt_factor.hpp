@@ -86,6 +86,8 @@ public:
     use_uniform_outlier = use_uniform;
     uniform_outlier_weight = std::max(0.0, weight);
   }
+  void set_mahalanobis_ratio_threshold(double ratio) { mahalanobis_ratio_threshold = std::max(1.0, ratio); }
+  void set_gamma_hessian_threshold(double threshold) { gamma_hessian_threshold = std::max(0.0, threshold); }
 
   int num_inliers() const {
     int count = 0;
@@ -132,6 +134,8 @@ private:
   bool freeze_mixture_in_lm;
   bool use_uniform_outlier;
   double uniform_outlier_weight;
+  double mahalanobis_ratio_threshold;
+  double gamma_hessian_threshold;
 
   double correspondence_update_tolerance_rot;
   double correspondence_update_tolerance_trans;
