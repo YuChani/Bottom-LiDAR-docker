@@ -51,7 +51,6 @@
 // NDT factor from gtsam_points library
 #include <gtsam_points/factors/integrated_ndt_factor.hpp>
 #include <gtsam_points/factors/integrated_light_ndt_factor.hpp>
-#include <gtsam_points/factors/integrated_gmm_ndt_factor.hpp>
 
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
@@ -374,7 +373,6 @@ public:
     // factor_types.push_back("LOAM"); // 4 : LOAM
     factor_types.push_back("NDT"); // 5 : NDT
     factor_types.push_back("LightNDT");
-    factor_types.push_back("GMM_NDT"); // GMM-NDT (Gaussian Mixture Model + NDT)
     factor_types.push_back("LOAM_LIOSAM"); // 6 : LOAM (LIO-SAM feature extraction)
 
 #ifdef GTSAM_POINTS_USE_CUDA
@@ -386,7 +384,6 @@ public:
     // - sparse_connection_window controls sparse graph density when full_connection=false
     full_connection = false;
     sparse_connection_window = 4;
-    gmm_num_components = 2;
     num_threads = 8;
 
     correspondence_update_tolerance_rot = 0.005f;
@@ -465,12 +462,6 @@ public:
   void set_num_threads_override(int threads) {
     if (threads > 0) {
       num_threads = threads;
-    }
-  }
-
-  void set_gmm_num_components(int k) {
-    if (k >= 1) {
-      gmm_num_components = k;
     }
   }
 
@@ -665,17 +656,6 @@ public:
       factor->set_num_threads(num_threads);
       factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
       factor->set_regularization_epsilon(1e-3);
-      factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
-      return factor;
-    }
-    else if (factor_types[factor_type] == std::string("GMM_NDT"))
-    {
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedGMMNDTFactor_<gtsam_points::PointCloud>>(
-        target_key, source_key, target_voxelmap, source);
-      factor->set_num_threads(num_threads);
-      factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
-      factor->set_regularization_epsilon(1e-3);
-      factor->set_num_components(gmm_num_components);  // K from --gmm-components (default 2)
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     }
@@ -897,7 +877,6 @@ private:
   bool full_connection;
   int sparse_connection_window;
   int num_threads;
-  int gmm_num_components;
   std::string headless_factor_filter;
 
   std::vector<const char*> optimizer_types;
@@ -1019,7 +998,6 @@ int main(int argc, char** argv)
 {
   bool headless_mode = false;
   int threads_override = -1;
-  int gmm_components_override = -1;
   std::string factor_filter;
   double corr_rot_override = 0.0;
   double corr_trans_override = 0.0;
@@ -1039,12 +1017,9 @@ int main(int argc, char** argv)
       has_corr_override = true;
     } else if (std::strcmp(argv[i], "--window") == 0 && i + 1 < argc) {
       window_override = std::stoi(argv[++i]);
-    } else if (std::strcmp(argv[i], "--gmm-components") == 0 && i + 1 < argc) {
-      gmm_components_override = std::stoi(argv[++i]);
     } else if (std::strcmp(argv[i], "--help") == 0) {
       std::cout << "Usage: ./lidar_registration_benchmark [--headless] [--factor <name>]"
                 << " [--threads <n>] [--corr-rot <rad>] [--corr-trans <m>] [--window <n>]"
-                << " [--gmm-components <k>]"
                 << std::endl;
       return 0;
     }
@@ -1053,7 +1028,6 @@ int main(int argc, char** argv)
   MatchingCostFactorDemo demo(headless_mode);
   if (!factor_filter.empty()) demo.set_headless_factor_filter(factor_filter);
   if (threads_override > 0) demo.set_num_threads_override(threads_override);
-  if (gmm_components_override >= 1) demo.set_gmm_num_components(gmm_components_override);
   if (has_corr_override) demo.set_correspondence_update_tolerance_override(corr_rot_override, corr_trans_override);
   if (window_override >= 2) demo.set_window_override(window_override);
 

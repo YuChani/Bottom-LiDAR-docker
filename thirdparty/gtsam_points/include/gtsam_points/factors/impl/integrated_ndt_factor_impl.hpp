@@ -98,33 +98,19 @@ template <typename SourceFrame>
 void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   linearization_point = delta;
 
-  const bool has_correspondences = correspondences.size() == frame::size(*source);
-  double diff_rot = std::numeric_limits<double>::infinity();
-  double diff_trans = std::numeric_limits<double>::infinity();
-  if (has_correspondences) {
-    const Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
-    diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
-    diff_trans = diff.translation().norm();
-
-    constexpr double kSamePoseRotEps = 1e-12;
-    constexpr double kSamePoseTransEps = 1e-12;
-    if (diff_rot < kSamePoseRotEps && diff_trans < kSamePoseTransEps) {
-      return;
-    }
-  }
-
   bool do_update = true;
-  if (has_correspondences && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
+  if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
+    Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
+    double diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
+    double diff_trans = diff.translation().norm();
     if (diff_rot < correspondence_update_tolerance_rot && diff_trans < correspondence_update_tolerance_trans) {
       do_update = false;
     }
   }
 
-  if (!do_update) {
-    return;
+  if (do_update) {
+    last_correspondence_point = delta;
   }
-
-  last_correspondence_point = delta;
 
   correspondences.resize(frame::size(*source));
   // compute_ndt_params : intergrated_ndt_factor.hpp에서 선언됨
@@ -196,6 +182,7 @@ void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isom
       if (best_voxel) {
         correspondences[i].mean = best_voxel->mean;
         correspondences[i].inv_cov = best_inv_cov;
+        correspondences[i].one_over_Z = std::sqrt((2 * M_PI * M_PI * M_PI) * std::abs(best_voxel->cov.determinant())); // empirically determined for typical LIDAR covariances
         correspondences[i].valid = true;
       }
     }
@@ -246,20 +233,34 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
       return 0.0;
     }
 
+    // SWAN
+    double d1, d2;
+    compute_ndt_params(resolution, outlier_ratio, corr.one_over_Z, d1, d2);
+
+    // SWAN
+    // mean_A: p_i (source point)
+    // mean_B: mu_i (target point)
+    // inv_cov_B: Σ_i^{-1} (target inverse covariance)
     const auto& mean_A = frame::point(*source, i);  // source point (a_i)
     const auto& mean_B = corr.mean;                 // target point (mu_i)
     const auto& inv_cov_B = corr.inv_cov;          // inverse covariance of target point
 
+    // SWAN
+    // transed_mean_A: p_i' = R * p_i + t (transformed source point)
     Eigen::Vector4d transed_mean_A = delta * mean_A;  // 변형된 source : q_i = T*a_i
 
     // residual = target_mean - transformed_source_point (GTSAM convention)
+    // SWAN
+    // residual: e_i = mu_i - p_i'
     Eigen::Vector4d residual = mean_B - transed_mean_A; // target과 변형된 source의 차이 벡터 : r_i = mu_i - q_i
 
     // Mahalanobis 거리(4x4행렬)
     double mahalanobis_dist = residual.transpose() * inv_cov_B * residual;
 
     //   d1 < 0 이므로 -d1 > 0, 정렬이 좋을수록 score가 크다 (최대화 문제).
-    double exponent = -gauss_d2 * mahalanobis_dist / 2.0;
+    // SWAN: -d2/2.0을 미리 계산해 놓자.
+    double exponent = -d2 * mahalanobis_dist / 2.0;
+    //double exponent = -gauss_d2 * mahalanobis_dist / 2.0;
     if (exponent < -700.0) 
     {
       return 0.0;  // underflow 방지
@@ -272,10 +273,9 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     }
 
     // Magnusson Eq. 6.9 원본 score function
-    const double score_function = -gauss_d1 * e_term;  // = |d1| * exp(...), 양수
-    // gauss_d1을 묶어서 정리하면 (-gauss_d1)(1 - e_term) 형태가 됨.
-    // e_term = 1일때 cost = 0(정합 잘됨) / e_term = 0일때 cost = gauss_d1값으로 최대값 (정합 안됨)
-    const double cost = -gauss_d1 - score_function;  // gauss_d1 약 -6.9
+    const double cost = d1 * e_term; // d1 < 0, 음수
+    //const double cost = gauss_d1 * e_term; // gauss_d1 < 0, 음수
+    //const double score_function = -cost;  // 양수
 
     if (!H_target) 
     {
@@ -290,8 +290,9 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     Eigen::Matrix<double, 4, 6> J_source = Eigen::Matrix<double, 4, 6>::Zero();
     J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.template head<3>());
     J_source.block<3, 3>(0, 3) = -delta.linear();
-    // weight는 정합잘된점 = w가 큼, 정합안된점 = w가 작음 -> robust하게함
-    const double weight = -gauss_d1 * gauss_d2 * e_term;
+
+    const double weight = -d1 * d2 * e_term;
+    //const double weight = -gauss_d1 * gauss_d2 * e_term;
 
     //  Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) 
     // H ≈ weight * J^T * Σ^{-1} * J   (H2, H3 항 생략 → PSD 보장)
@@ -299,8 +300,9 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     *H_source += weight * J_source.transpose() * inv_cov_B * J_source;
     *H_target_source += weight * J_target.transpose() * inv_cov_B * J_source;
     // b = weight * J^T * Σ^{-1} * q    (= gradient)
-    *b_target += weight * J_target.transpose() * inv_cov_B * residual;  // gradient 역할 벡터
+    *b_target += weight * J_target.transpose() * inv_cov_B * residual;
     *b_source += weight * J_source.transpose() * inv_cov_B * residual;
+
     return cost;
   };
 
