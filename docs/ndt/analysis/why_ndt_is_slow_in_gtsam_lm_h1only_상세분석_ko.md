@@ -201,4 +201,4 @@ H2/H3는 정보를 늘리지만, indefinite 성분 때문에 안정성이 깨질
 
 - NDT 수식/코드 매핑: `docs/ndt/NDT_CODE_MATH_MAPPING.md`
 - Magnusson 비교: `docs/ndt/magnusson_implementation_comparison_ko.md`
-- LightNDT 비교: `docs/ndt/comparison/light_ndt_vs_ndt_구현_수학_비교_정리.md`
+- LightNDT 비교: `docs/ndt/comparison/ndt_lightndt_gicp_수학_컨셉_비교.md`
