@@ -89,7 +89,7 @@ inline void compute_ndt_params(double resolution, double outlier_ratio, double o
   // c1 * Zi + c2 * V = 1
   // Zi = sqrt((2*pi)^3 * |Sigma_i|) -> 1/Zi = 10.0 (empirically determined for typical LIDAR covariances)
   // V = resolution^3 (volume of a voxel)
-  double c1 = (1.0 - outlier_ratio) * one_over_Z;
+  double c1 = (1.0 - outlier_ratio) / one_over_Z;
   double c2 = outlier_ratio / (resolution * resolution * resolution); // c2 = o/V
 
   // SWAN: Eq. (6.8), pp. 60 of Magnusson 2009

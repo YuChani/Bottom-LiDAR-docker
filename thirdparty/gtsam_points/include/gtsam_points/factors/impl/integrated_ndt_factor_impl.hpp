@@ -175,12 +175,9 @@ void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isom
       {
         correspondences[i].mean = best_voxel->mean;
         correspondences[i].inv_cov = best_inv_cov;
-
         const Eigen::Matrix3d cov3 = best_voxel->cov.topLeftCorner<3, 3>();
         const double det3 = std::max(cov3.determinant(), 1e-12);
-
         correspondences[i].one_over_Z = 1.0 / std::sqrt(std::pow(2.0 * M_PI, 3) * det3);
-
         correspondences[i].valid = true;
       }
     }
