@@ -504,7 +504,8 @@ public:
           glk::Primitives::coordinate_system(),
           guik::VertexColor(pose * Eigen::UniformScaling<float>(5.0f)));
         
-        int sparse_j_end = i + std::max(2, sparse_connection_window);
+        const int graph_window = (factor_types[factor_type] == std::string("NDT") && sparse_connection_window == 4) ? 3 : sparse_connection_window;
+        int sparse_j_end = i + std::max(2, graph_window);
         int j_end = full_connection ? num_frames : std::min(sparse_j_end, num_frames);
         for (int j = i + 1; j < j_end; j++)
         {
@@ -644,7 +645,7 @@ public:
       auto factor = gtsam::make_shared<gtsam_points::IntegratedNDTFactor_<gtsam_points::PointCloud>>(
         target_key, source_key, target_voxelmap, source);
       factor->set_num_threads(num_threads);
-      factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
+      factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT1);
       factor->set_regularization_epsilon(1e-3);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
@@ -676,7 +677,8 @@ public:
     {
       // Graph edge construction edit point:
       // Change this branch if you want to modify how full/sparse graph connectivity is built.
-      int sparse_j_end = i + std::max(2, sparse_connection_window);
+      const int graph_window = (factor_types[factor_type] == std::string("NDT") && sparse_connection_window == 4) ? 3 : sparse_connection_window;
+      int sparse_j_end = i + std::max(2, graph_window);
       int j_end = full_connection ? num_frames : std::min(sparse_j_end, num_frames);
       for (int j = i + 1; j < j_end; j++)
       {
@@ -956,6 +958,7 @@ public:
       }
 
       factor_type = fi;
+
       spdlog::info("────────────────────────────────────────");
       spdlog::info("Running: {}", factor_types[fi]);
       spdlog::info("────────────────────────────────────────");
