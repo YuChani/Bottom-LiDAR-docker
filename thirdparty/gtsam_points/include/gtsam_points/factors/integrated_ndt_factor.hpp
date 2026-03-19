@@ -31,10 +31,10 @@ struct NdtCorrespondence {
 
   Eigen::Vector4d mean;      ///< Voxel mean (4D homogeneous)
   Eigen::Matrix4d inv_cov;   ///< Regularized inverse covariance (4x4, only top-left 3x3 is meaningful)
-  double one_over_Z;         ///< 1/Zi = \sqrt{(2\pi)^3 |\Sigma_i|} term for NDT score (precomputed for efficiency)
+  double one_over_Z;         ///< Precomputed 1/sqrt((2*pi)^3 * |Sigma|) for NDT Gaussian parameters
   bool valid;                ///< Whether this correspondence is valid
 
-  NdtCorrespondence() : mean(Eigen::Vector4d::Zero()), inv_cov(Eigen::Matrix4d::Zero()), valid(false) {}
+  NdtCorrespondence() : mean(Eigen::Vector4d::Zero()), inv_cov(Eigen::Matrix4d::Zero()), one_over_Z(0.0), valid(false) {}
 };
 
 /// @brief Compute regularized inverse covariance from a 4x4 covariance matrix.
@@ -78,19 +78,18 @@ inline void compute_ndt_params(double resolution, double outlier_ratio, double& 
   // d1 = -log(c1 + c2) - d3
   // d2 = -2 * log((-log(c1 * exp(-0.5) + c2) - d3) / d1)
 
-  constexpr double exp_neg_half = std::exp(-0.5);
+  const double exp_neg_half = std::exp(-0.5);
   double d3 = -std::log(c2);
   d1 = -std::log(c1 + c2) - d3;
   d2 = -2.0 * std::log((-std::log(c1 * exp_neg_half + c2) - d3) / d1);
 }
 
-// SWAN: Zi
 inline void compute_ndt_params(double resolution, double outlier_ratio, double one_over_Z, double& d1, double& d2) {
   // SWAN
   // c1 * Zi + c2 * V = 1
   // Zi = sqrt((2*pi)^3 * |Sigma_i|) -> 1/Zi = 10.0 (empirically determined for typical LIDAR covariances)
   // V = resolution^3 (volume of a voxel)
-  double c1 = one_over_Z * (1.0 - outlier_ratio); // c1 = (1 - o)/Zi
+  double c1 = (1.0 - outlier_ratio) * one_over_Z;
   double c2 = outlier_ratio / (resolution * resolution * resolution); // c2 = o/V
 
   // SWAN: Eq. (6.8), pp. 60 of Magnusson 2009
@@ -98,7 +97,7 @@ inline void compute_ndt_params(double resolution, double outlier_ratio, double o
   // d1 = -log(c1 + c2) - d3
   // d2 = -2 * log((-log(c1 * exp(-0.5) + c2) - d3) / d1)
 
-  constexpr double exp_neg_half = std::exp(-0.5);
+  const double exp_neg_half = std::exp(-0.5);
   double d3 = -std::log(c2);
   d1 = -std::log(c1 + c2) - d3;
   d2 = -2.0 * std::log((-std::log(c1 * exp_neg_half + c2) - d3) / d1);
@@ -233,9 +232,6 @@ private:
 
   double correspondence_update_tolerance_rot;
   double correspondence_update_tolerance_trans;
-
-  mutable double gauss_d1;
-  mutable double gauss_d2;
 
   mutable Eigen::Isometry3d linearization_point;
   mutable Eigen::Isometry3d last_correspondence_point;

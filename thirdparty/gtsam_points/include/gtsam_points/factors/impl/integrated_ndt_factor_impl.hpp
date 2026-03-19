@@ -30,8 +30,6 @@ IntegratedNDTFactor_<SourceFrame>::IntegratedNDTFactor_(
   search_mode(NDTSearchMode::DIRECT7),
   correspondence_update_tolerance_rot(0.0),
   correspondence_update_tolerance_trans(0.0),
-  gauss_d1(0.0),
-  gauss_d2(0.0),
   inv_cov_cached(false),
   target_voxels(std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(target_voxels)),
   source(source) {
@@ -59,8 +57,6 @@ IntegratedNDTFactor_<SourceFrame>::IntegratedNDTFactor_(
   search_mode(NDTSearchMode::DIRECT7),
   correspondence_update_tolerance_rot(0.0),
   correspondence_update_tolerance_trans(0.0),
-  gauss_d1(0.0),
-  gauss_d2(0.0),
   inv_cov_cached(false),
   target_voxels(std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(target_voxels)),
   source(source) {
@@ -113,10 +109,6 @@ void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isom
   }
 
   correspondences.resize(frame::size(*source));
-  // compute_ndt_params : intergrated_ndt_factor.hpp에서 선언됨
-  // c1 : 인라이어 Gaussian 스케일상수 / c2 : 아웃라이어 분포항 
-  // d1 : 최종 score 진폭 / d2 : Mahalanobis 거리 감소기울기 
-  compute_ndt_params(resolution, outlier_ratio, gauss_d1, gauss_d2);
 
   std::vector<Eigen::Vector3i> neighbor_offsets;
   switch (search_mode) {
@@ -182,7 +174,7 @@ void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isom
       if (best_voxel) {
         correspondences[i].mean = best_voxel->mean;
         correspondences[i].inv_cov = best_inv_cov;
-        correspondences[i].one_over_Z = std::sqrt((2 * M_PI * M_PI * M_PI) * std::abs(best_voxel->cov.determinant())); // empirically determined for typical LIDAR covariances
+        correspondences[i].one_over_Z = 1.0 / std::sqrt(std::pow(2.0 * M_PI, 3) * std::abs(best_voxel->cov.block<3, 3>(0, 0).determinant()));
         correspondences[i].valid = true;
       }
     }
@@ -216,9 +208,7 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
   Eigen::Matrix<double, 6, 1>* b_target,
   Eigen::Matrix<double, 6, 1>* b_source) const {
 
-  if (correspondences.size() != frame::size(*source)) {
-    update_correspondences(delta);
-  }
+  update_correspondences(delta);
 
   const auto perpoint_task = [&](
                                 int i,
@@ -272,10 +262,7 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
       return 0.0;
     }
 
-    // Magnusson Eq. 6.9 원본 score function
-    const double cost = d1 * e_term; // d1 < 0, 음수
-    //const double cost = gauss_d1 * e_term; // gauss_d1 < 0, 음수
-    //const double score_function = -cost;  // 양수
+    const double cost = d1 * e_term;
 
     if (!H_target) 
     {
@@ -292,7 +279,6 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
     J_source.block<3, 3>(0, 3) = -delta.linear();
 
     const double weight = -d1 * d2 * e_term;
-    //const double weight = -gauss_d1 * gauss_d2 * e_term;
 
     //  Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) 
     // H ≈ weight * J^T * Σ^{-1} * J   (H2, H3 항 생략 → PSD 보장)
