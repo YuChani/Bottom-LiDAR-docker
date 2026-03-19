@@ -206,6 +206,17 @@ void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isom
 }
 
 template <typename SourceFrame>
+double IntegratedNDTFactor_<SourceFrame>::error(const gtsam::Values& values) const {
+  Eigen::Isometry3d delta = calc_delta(values);
+  if (correspondences.size() == frame::size(*source)) {
+    return evaluate(delta);
+  }
+
+  update_correspondences(delta);
+  return evaluate(delta);
+}
+
+template <typename SourceFrame>
 double IntegratedNDTFactor_<SourceFrame>::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
@@ -214,7 +225,9 @@ double IntegratedNDTFactor_<SourceFrame>::evaluate(
   Eigen::Matrix<double, 6, 1>* b_target,
   Eigen::Matrix<double, 6, 1>* b_source) const {
 
-  update_correspondences(delta);
+  if (correspondences.size() != frame::size(*source)) {
+    update_correspondences(delta);
+  }
 
   const auto perpoint_task = [&](
                                 int i,
