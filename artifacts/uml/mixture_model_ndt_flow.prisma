@@ -1,0 +1,175 @@
+// Mixture-model NDT design flow for VSCode Prisma Generate UML
+// Goal: show current single-Gaussian path and the new map-level mixture path side by side.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:mixture_model_ndt_flow.db"
+}
+
+model PointCloud {
+  id                    Int                       @id @default(autoincrement())
+  numPoints             Int
+  hasCovs               Boolean
+  hasIntensities        Boolean
+
+  singleVoxelMaps       GaussianVoxelMapCPU[]    @relation("SingleMapInput")
+  mixtureVoxelMaps      GaussianMixtureVoxelMapCPU[] @relation("MixtureMapInput")
+  ndtFactors            IntegratedNDTFactor[]    @relation("SingleSource")
+  mixtureNdtFactors     IntegratedMixtureNDTFactor[] @relation("MixtureSource")
+  sampleReservoirs      SampleReservoir[]
+}
+
+model GaussianVoxelMapCPU {
+  id                    Int                  @id @default(autoincrement())
+  voxelResolution       Float
+  sourcePointCloudId    Int?
+
+  sourceFrame           PointCloud?          @relation("SingleMapInput", fields: [sourcePointCloudId], references: [id])
+  gaussianVoxels        GaussianVoxel[]
+  ndtFactors            IntegratedNDTFactor[] @relation("SingleTarget")
+}
+
+model GaussianVoxel {
+  id                    Int                  @id @default(autoincrement())
+  mapId                 Int
+  coord                 String
+  mean                  String
+  cov                   String
+  numPoints             Int
+  intensity             Float
+
+  map                   GaussianVoxelMapCPU  @relation(fields: [mapId], references: [id])
+}
+
+model IntegratedNDTFactor {
+  id                    Int                  @id @default(autoincrement())
+  targetMapId           Int
+  sourcePointCloudId    Int
+  searchMode            String
+  correspondenceType    String
+
+  targetMap             GaussianVoxelMapCPU  @relation("SingleTarget", fields: [targetMapId], references: [id])
+  sourceFrame           PointCloud           @relation("SingleSource", fields: [sourcePointCloudId], references: [id])
+}
+
+model GaussianMixtureVoxelMapCPU {
+  id                    Int                       @id @default(autoincrement())
+  voxelResolution       Float
+  maxComponents         Int
+  sourcePointCloudId    Int?
+
+  sourceFrame           PointCloud?               @relation("MixtureMapInput", fields: [sourcePointCloudId], references: [id])
+  mixtureVoxels         GaussianMixtureVoxel[]
+  initializer           MixtureInitializer?
+  merger                ComponentMerger?
+  emEstimator           EMEstimator?
+  mixtureNdtFactors     IntegratedMixtureNDTFactor[] @relation("MixtureTarget")
+}
+
+model GaussianMixtureVoxel {
+  id                    Int                       @id @default(autoincrement())
+  mapId                 Int
+  coord                 String
+  finalized             Boolean
+  numSamples            Int
+  dominantComponent     Int?
+
+  map                   GaussianMixtureVoxelMapCPU @relation(fields: [mapId], references: [id])
+  sampleReservoir       SampleReservoir?
+  components            MixtureComponent[]
+  correspondences       MixtureNdtCorrespondence[]
+}
+
+model SampleReservoir {
+  id                    Int                    @id @default(autoincrement())
+  voxelId               Int                    @unique
+  sourcePointCloudId    Int?
+  capacity              Int
+  sampleCount           Int
+
+  voxel                 GaussianMixtureVoxel   @relation(fields: [voxelId], references: [id])
+  sourceFrame           PointCloud?            @relation(fields: [sourcePointCloudId], references: [id])
+}
+
+model MixtureComponent {
+  id                    Int                    @id @default(autoincrement())
+  voxelId               Int
+  weight                Float
+  mean                  String
+  cov                   String
+  invCov                String
+  oneOverZ              Float
+  numPoints             Int
+
+  voxel                 GaussianMixtureVoxel   @relation(fields: [voxelId], references: [id])
+  correspondences       MixtureNdtCorrespondence[]
+}
+
+model MixtureInitializer {
+  id                    Int                       @id @default(autoincrement())
+  mapId                 Int                       @unique
+  method                String
+  targetComponents      Int
+
+  map                   GaussianMixtureVoxelMapCPU @relation(fields: [mapId], references: [id])
+}
+
+model ComponentMerger {
+  id                    Int                       @id @default(autoincrement())
+  mapId                 Int                       @unique
+  distanceMetric        String
+  klThreshold           Float
+
+  map                   GaussianMixtureVoxelMapCPU @relation(fields: [mapId], references: [id])
+}
+
+model EMEstimator {
+  id                    Int                       @id @default(autoincrement())
+  mapId                 Int                       @unique
+  maxIterations         Int
+  convergenceTol        Float
+  regularizationEpsilon Float
+
+  map                   GaussianMixtureVoxelMapCPU @relation(fields: [mapId], references: [id])
+}
+
+model IntegratedMixtureNDTFactor {
+  id                    Int                       @id @default(autoincrement())
+  targetMapId           Int
+  sourcePointCloudId    Int
+  searchMode            String
+  likelihoodMode        String
+  freezeResponsibilities Boolean
+
+  targetMap             GaussianMixtureVoxelMapCPU @relation("MixtureTarget", fields: [targetMapId], references: [id])
+  sourceFrame           PointCloud                @relation("MixtureSource", fields: [sourcePointCloudId], references: [id])
+  responsibilityMatrix  MixtureResponsibilityMatrix?
+}
+
+model MixtureResponsibilityMatrix {
+  id                    Int                        @id @default(autoincrement())
+  factorId              Int                        @unique
+  frozenAt              String
+
+  factor                IntegratedMixtureNDTFactor @relation(fields: [factorId], references: [id])
+  entries               MixtureNdtCorrespondence[]
+}
+
+model MixtureNdtCorrespondence {
+  id                    Int                        @id @default(autoincrement())
+  matrixId              Int
+  sourcePointIndex      Int
+  voxelId               Int
+  componentId           Int
+  responsibility        Float
+  mahalanobis           Float
+  valid                 Boolean
+
+  matrix                MixtureResponsibilityMatrix @relation(fields: [matrixId], references: [id])
+  voxel                 GaussianMixtureVoxel        @relation(fields: [voxelId], references: [id])
+  component             MixtureComponent            @relation(fields: [componentId], references: [id])
+}

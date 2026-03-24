@@ -1,0 +1,580 @@
+@startuml GMM_Voxel_Class_Diagram
+
+title GMM Voxel + MixtureLightNDT 클래스 구조
+
+' 색상 설정
+skinparam class {
+    BackgroundColor<<Existing>> LightGreen
+    BackgroundColor<<New>> LightBlue
+    BackgroundColor<<Modified>> LightYellow
+}
+
+skinparam packageStyle rectangle
+skinparam defaultFontSize 12
+skinparam noteFontSize 11
+
+' ============================================================
+' Map 계층: 타입 정의
+' ============================================================
+
+package "Map 계층 (타입 정의)" {
+
+    interface GaussianVoxelMap <<Existing>> {
+        + {abstract} voxel_resolution() : double
+        + {abstract} insert(frame : PointCloud)
+        + {abstract} save_compact(path : string)
+    }
+
+    class GaussianVoxelMapCPU <<Existing>> {
+        - voxel_map_ : IncrementalVoxelMap<GaussianVoxel>
+        --
+        + voxel_resolution() : double
+        + insert(frame : PointCloud)
+        + save_compact(path : string)
+    }
+
+    class GMMVoxelMapCPU <<New>> {
+        + gmm_setting() : GMMVoxel::Setting&
+        + voxel_coord(x : Vector4d) : Vector3i
+        + lookup_voxel_index(coord : Vector3i) : int
+        + lookup_voxel(voxel_id : int) : GMMVoxel&
+        + num_voxels() : size_t
+        --
+        + voxel_resolution() : double
+        + insert(frame : PointCloud)
+        + save_compact(path : string)
+    }
+
+    note right of GMMVoxelMapCPU
+        **선택지 B: GaussianVoxelMap 직접 상속 (sibling path)**
+        GaussianVoxelMapCPU의 자식이 아님.
+        GaussianVoxelMap 인터페이스를 직접 구현하여
+        기존 코드와의 호환성을 유지함.
+    end note
+
+    class GaussianVoxel <<Existing>> {
+        + mean : Vector4d
+        + cov : Matrix4d
+        + num_points : int
+        + intensity : double
+        + finalized : bool
+        --
+        + add(setting, points, i)
+        + finalize()
+        + size() : 1
+    }
+
+    class GMMVoxel <<New>> {
+        - reservoir_ : vector<Vector4d>
+        - total_points_seen_ : size_t
+        - dirty_ : bool
+        - rng_ : mt19937
+        - components_ : vector<GMMComponent>
+        - cached_setting_ : Setting
+        --
+        + add(setting : Setting, points : PointCloud, i : size_t)
+        + finalize()
+        + size() : K
+        + knn_search(pt : Vector4d, result)
+        + components() : vector<GMMComponent>&
+        + reservoir() : vector<Vector4d>&
+        + is_dirty() : bool
+    }
+
+    note bottom of GMMVoxel
+        **Reservoir Sampling: 메모리 O(C) 바운드**
+        Algorithm R (Vitter, 1985) 적용.
+        capacity=256 기준 voxel당 최대 8KB.
+        GMM은 충분통계량으로 증분 불가 →
+        원시 포인트 보존 후 batch EM 수행.
+    end note
+
+    class "GMMVoxel::Setting" as GMMVoxelSetting <<New>> {
+        + max_components : int = 3
+        + max_em_iterations : int = 20
+        + convergence_tol : double = 1e-4
+        + covariance_regularization : double = 1e-3
+        + min_weight_threshold : double = 0.01
+        + reservoir_capacity : int = 256
+    }
+
+    class GMMComponent <<New>> {
+        + mean : Vector4d
+        + cov : Matrix4d
+        + weight : double
+    }
+}
+
+' ============================================================
+' EM Backend
+' ============================================================
+
+package "EM Backend (내부)" {
+
+    class GMMFitResult <<New>> {
+        + components : vector<GMMComponent>
+        + converged : bool
+        + iterations_run : int
+    }
+
+    class GMMFitParams <<New>> {
+        + max_components : int
+        + max_em_iterations : int
+        + convergence_tol : double
+        + covariance_regularization : double
+        + min_weight_threshold : double
+    }
+
+    class "fit_gmm (free function)" as fit_gmm <<New>> {
+        + fit_gmm(points, params) : GMMFitResult
+        + fit_gmm(points, params, initial) : GMMFitResult
+        ..
+        내부: Eigen→Armadillo 변환
+        arma::gmm_full::learn() 호출
+        후처리: cov += εI, tiny-weight 제거
+    }
+}
+
+' ============================================================
+' Factor 계층 (정합)
+' ============================================================
+
+package "Factor 계층 (정합)" {
+
+    abstract class IntegratedMatchingCostFactor <<Existing>> {
+        + {abstract} update_correspondences(delta : Isometry3d)
+        + {abstract} evaluate(delta, H, b) : double
+    }
+
+    class "IntegratedLightNDTFactor_" as IntegratedLightNDTFactor <<Existing>> {
+        - target_voxels : GaussianVoxelMapCPU
+        - correspondences : vector<NdtCorrespondence>
+        --
+        + set_num_threads(n : int)
+        + set_regularization_epsilon(eps : double)
+        + num_inliers() : int
+        + inlier_fraction() : double
+    }
+
+    class NdtCorrespondence <<Existing>> {
+        + mean : Vector4d
+        + inv_cov : Matrix4d
+        + valid : bool
+    }
+
+    class "IntegratedMixtureLightNDTFactor_" as IntegratedMixtureLightNDTFactor <<New>> {
+        - target_voxels : GMMVoxelMapCPU
+        - source : PointCloud
+        - inv_cov_cache : vector<vector<Matrix4d>>
+        - correspondences : vector<MixtureNdtCorrespondence>
+        --
+        + set_num_threads(n : int)
+        + set_regularization_epsilon(eps : double)
+        + set_correspondence_update_tolerance(angle, trans)
+        + num_inliers() : int
+        + inlier_fraction() : double
+    }
+
+    note right of IntegratedMixtureLightNDTFactor
+        **Frozen Correspondence: optimizer 안정성 보장**
+        대응관계를 고정(freeze)하여
+        비용함수를 이차형(quadratic)으로 유지.
+        Gauss-Newton / LM에 최적화됨.
+        C⁰ 연속 (값 연속), C¹ 불연속 (기울기 점프)
+        — ICP의 대응 전환과 동일한 패턴.
+    end note
+
+    class MixtureNdtCorrespondence <<New>> {
+        + mean : Vector4d
+        + inv_cov : Matrix4d
+        + weight : double
+        + valid : bool
+    }
+}
+
+' ============================================================
+' Template Infrastructure
+' ============================================================
+
+package "Template Infrastructure" {
+
+    class "IncrementalVoxelMap<T>" as IncrementalVoxelMap <<Existing>> {
+        + insert(frame : PointCloud)
+        + knn_search(pt : Vector4d, result)
+        + leaf_size() : double
+    }
+
+    class "frame::traits<GaussianVoxel>" as TraitsGaussian <<Existing>> {
+        + size() = 1
+        + point(v) : const Vector4d& {빈도}
+    }
+
+    class "frame::traits<GMMVoxel>" as TraitsGMM <<New>> {
+        + size() = K
+        + point(v, k) : Vector4d {값 복사}
+        ..
+        k번째 component mean 반환.
+        참조가 아닌 값(value)으로 반환
+        → dangling reference 방지.
+    }
+}
+
+' ============================================================
+' 관계 설정
+' ============================================================
+
+' Map 계층 상속
+GaussianVoxelMap <|-- GaussianVoxelMapCPU
+GaussianVoxelMap <|-- GMMVoxelMapCPU
+
+' Composition
+GaussianVoxelMapCPU *-- GaussianVoxel : "contains"
+GMMVoxelMapCPU *-- GMMVoxel : "contains"
+GMMVoxel *-- "1..*" GMMComponent : "components_"
+GMMVoxel +-- GMMVoxelSetting : "inner struct"
+
+' EM 연결
+GMMVoxel ..> fit_gmm : "finalize()에서 호출"
+fit_gmm ..> GMMFitResult : "반환"
+fit_gmm ..> GMMFitParams : "파라미터"
+
+' Factor 상속
+IntegratedMatchingCostFactor <|-- IntegratedLightNDTFactor
+IntegratedMatchingCostFactor <|-- IntegratedMixtureLightNDTFactor
+
+' Factor 사용 관계
+IntegratedLightNDTFactor --> GaussianVoxelMapCPU : "target"
+IntegratedLightNDTFactor --> NdtCorrespondence : "correspondences"
+IntegratedMixtureLightNDTFactor --> GMMVoxelMapCPU : "target"
+IntegratedMixtureLightNDTFactor --> MixtureNdtCorrespondence : "correspondences"
+
+' Template 사용
+GaussianVoxelMapCPU --> "IncrementalVoxelMap<T>" : "inherits (T=GaussianVoxel)"
+GMMVoxelMapCPU --> "IncrementalVoxelMap<T>" : "inherits (T=GMMVoxel)"
+
+' 범례
+legend right
+    **색상 범례**
+    |= 색상 |= 의미 |
+    | <back:LightGreen> LightGreen </back> | 기존 클래스 (<<Existing>>) |
+    | <back:LightBlue> LightBlue </back> | 신규 클래스 (<<New>>) |
+    | <back:LightYellow> LightYellow </back> | 수정 클래스 (<<Modified>>) |
+endlegend
+
+@enduml
+
+@startuml GMM_Voxel_Sequence
+
+title GMM Voxel 삽입 → EM 피팅 → Factor 평가 시퀀스
+
+skinparam defaultFontSize 11
+skinparam noteFontSize 10
+skinparam sequenceMessageAlign center
+
+participant "Client" as Client
+participant "GMMVoxelMapCPU" as MapCPU
+participant "IncrementalVoxelMap\n<GMMVoxel>" as IVM
+participant "GMMVoxel" as Voxel
+participant "fit_gmm\n(EM Backend)" as EM
+participant "MixtureLightNDT\nFactor" as Factor
+participant "LM Optimizer" as LM
+
+== Phase 1: 포인트 삽입 ==
+
+Client -> MapCPU : insert(frame)
+activate MapCPU
+
+MapCPU -> IVM : insert(frame)
+activate IVM
+
+loop 각 포인트 i
+    IVM -> IVM : coord = fast_floor(points[i] * inv_leaf_size)
+    IVM -> Voxel : add(setting, points, i)
+    activate Voxel
+    Voxel -> Voxel : reservoir sampling\n(Algorithm R)
+    note right
+        total_points_seen_++
+        if size < capacity: push_back
+        else: 확률적 교체 (j < capacity)
+        dirty_ = true
+    end note
+    deactivate Voxel
+end
+
+deactivate IVM
+
+== Phase 2: EM 피팅 (finalize) ==
+
+loop 각 dirty voxel
+    MapCPU -> Voxel : finalize()
+    activate Voxel
+
+    Voxel -> Voxel : if (!dirty_) return
+    note right : **Dirty Flag + Warm Start:\n불필요한 EM 방지**
+
+    alt components_.empty() (cold start)
+        Voxel -> EM : fit_gmm(reservoir_, params)
+    else components_ 존재 (warm start)
+        Voxel -> EM : fit_gmm(reservoir_, params, components_)
+    end
+    activate EM
+
+    EM -> EM : Eigen → Armadillo 변환\n(Vector4d → arma::mat(3,N))
+    EM -> EM : arma::gmm_full::learn()\n(K-means init + EM 반복)
+    EM -> EM : 후처리:\ncov += εI (정규화)\ntiny-weight 제거 (π_k < τ)\nweight 재정규화 (Σπ_k = 1)
+
+    EM --> Voxel : GMMFitResult 반환
+    deactivate EM
+
+    Voxel -> Voxel : components_ = result.components\ndirty_ = false
+
+    deactivate Voxel
+end
+
+deactivate MapCPU
+
+== Phase 3: Factor 생성 및 평가 ==
+
+Client -> Factor : 생성\n(target=GMMVoxelMapCPU,\n source=PointCloud)
+activate Factor
+Factor -> Factor : dynamic_pointer_cast\n<GMMVoxelMapCPU>(target)
+Factor -> Factor : inv_cov_cache 초기화\n(voxel × component)
+deactivate Factor
+
+LM -> Factor : error() / linearize()
+activate Factor
+
+Factor -> Factor : update_correspondences(delta)
+activate Factor #LightBlue
+
+loop 각 source point i
+    Factor -> Factor : q_i = delta * source_point[i]
+    Factor -> Factor : coord = voxel_coord(q_i)
+
+    loop 이웃 voxel (neighbor_offsets)
+        Factor -> Factor : voxel_id = lookup(coord + offset)
+
+        loop 각 component k
+            Factor -> Factor : Mahalanobis 거리 계산\nm = diff^T * Σ_k^{-1} * diff
+        end
+    end
+
+    Factor -> Factor : best component 선택\n(argmin Mahalanobis)
+    note right
+        대응: {mean=μ_k*, inv_cov=Σ_k*^{-1},
+        weight=π_k*, valid=true}
+    end note
+end
+
+deactivate Factor
+
+Factor -> Factor : evaluate(delta, H, b)
+note right
+    **Frozen correspondences 사용**
+    cost = Σ_i π_{k*(i)} · r_i^T Σ_{k*}^{-1} r_i
+    H ≈ 2·Σ_i π_k · J_i^T Σ_k^{-1} J_i
+    b = 2·Σ_i π_k · J_i^T Σ_k^{-1} r_i
+end note
+
+Factor --> LM : (cost, H, b) 반환
+deactivate Factor
+
+LM -> LM : Δξ = -(H + λI)^{-1} b\npose 업데이트
+
+@enduml
+
+@startuml GMM_Voxel_Activity
+
+title GMMVoxel::finalize() 결정 흐름
+
+skinparam defaultFontSize 12
+skinparam noteFontSize 11
+skinparam activityDiamondFontSize 11
+
+start
+
+:finalize() 호출;
+
+if (dirty_ == false?) then (아니오: dirty=false)
+    :즉시 리턴 (비용 O(1));
+    note right
+        **Dirty Flag 최적화**
+        마지막 finalize 이후
+        새 포인트 없음 → EM 생략
+    end note
+    stop
+else (예: dirty=true)
+endif
+
+if (reservoir_.size() < 3?) then (예: 포인트 부족)
+    :단일 component fallback;
+    note right
+        μ = mean(reservoir_)
+        Σ = cov(reservoir_) + εI
+        weight = 1.0
+        → 1-component GMM
+    end note
+    :dirty_ = false;
+    stop
+else (아니오: 충분한 포인트)
+endif
+
+if (components_.empty()?) then (예: 첫 finalize)
+    :Cold start;
+    :fit_gmm(reservoir_, params);
+    note right
+        K-means 초기화 →
+        E-step/M-step 반복
+    end note
+else (아니오: 기존 components 존재)
+    :Warm start;
+    :fit_gmm(reservoir_, params, components_);
+    note right
+        **Warm Start 이점**
+        기존 θ_old를 초기값으로 사용
+        수렴 횟수 50~80% 감소
+        (15-20회 → 3-8회)
+    end note
+endif
+
+:EM 수행;
+note right
+    arma::gmm_full::learn()
+    K-means init → E-step → M-step 반복
+    수렴 조건: |ΔL/L| < ε
+    또는 max_iterations 도달
+end note
+
+:후처리: cov += εI;
+note right
+    **공분산 정규화**
+    λ_min(Σ_k) ≥ ε > 0 보장
+    ε=1e-3 → 최소 σ ≈ 3.2cm
+    (LiDAR 센서 노이즈 수준)
+end note
+
+:Tiny-weight pruning;
+note right
+    π_k < τ (기본 0.01) 인
+    component 제거
+end note
+
+:Weight 재정규화: Σπ_k = 1;
+
+:components_ = result.components;
+:dirty_ = false;
+
+stop
+
+@enduml
+
+@startuml GMM_Voxel_Component
+
+title GMM Voxel 시스템 컴포넌트 아키텍처
+
+skinparam defaultFontSize 12
+skinparam noteFontSize 11
+skinparam componentStyle uml2
+
+' ============================================================
+' Map 계층
+' ============================================================
+
+package "Map 계층 (타입 정의)" as PKG_MAP {
+    [GaussianVoxelMap\n(interface)] as GVMAP #LightGreen
+    [GaussianVoxelMapCPU\n(기존)] as GVMAP_CPU #LightGreen
+    [GMMVoxelMapCPU\n(신규)] as GMM_CPU #LightBlue
+    [GMMVoxel\n(신규)] as GMM_VOXEL #LightBlue
+    [GMMComponent\n(신규)] as GMM_COMP #LightBlue
+    [GaussianVoxel\n(기존)] as G_VOXEL #LightGreen
+
+    GVMAP <|.. GVMAP_CPU
+    GVMAP <|.. GMM_CPU
+    GVMAP_CPU *-- G_VOXEL
+    GMM_CPU *-- GMM_VOXEL
+    GMM_VOXEL *-- GMM_COMP
+}
+
+' ============================================================
+' EM Backend
+' ============================================================
+
+package "EM Backend (내부)" as PKG_EM {
+    [mixture_em_backend\nfit_gmm()] as EM_BACKEND #LightBlue
+    [Armadillo\ngmm_full::learn()] as ARMA #LightYellow
+
+    EM_BACKEND --> ARMA : "내부 위임"
+}
+
+' ============================================================
+' Factor 계층
+' ============================================================
+
+package "Factor 계층 (정합)" as PKG_FACTOR {
+    [IntegratedMatchingCostFactor\n(base)] as BASE_FACTOR #LightGreen
+    [IntegratedLightNDTFactor\n(기존)] as LNDT #LightGreen
+    [IntegratedMixtureLightNDTFactor\n(신규)] as MLNDT #LightBlue
+    [MixtureNdtCorrespondence\n(신규)] as MCORR #LightBlue
+    [NdtCorrespondence\n(기존)] as NCORR #LightGreen
+
+    BASE_FACTOR <|.. LNDT
+    BASE_FACTOR <|.. MLNDT
+    LNDT --> NCORR
+    MLNDT --> MCORR
+}
+
+' ============================================================
+' Benchmark / 실행
+' ============================================================
+
+package "Benchmark / 실행" as PKG_BENCH {
+    [src/main.cpp] as MAIN #LightYellow
+    [headless benchmark] as BENCH #LightGreen
+}
+
+' ============================================================
+' 테스트
+' ============================================================
+
+package "테스트" as PKG_TEST {
+    [test_gmm_voxelmap.cpp] as TEST_VOXEL #LightBlue
+    [test_matching_cost_factors\n(기존)] as TEST_FACTOR #LightGreen
+}
+
+' ============================================================
+' 패키지 간 관계
+' ============================================================
+
+PKG_MAP --> PKG_EM : "finalize()에서 호출"
+PKG_FACTOR --> PKG_MAP : "target voxel map 참조"
+LNDT --> GVMAP_CPU : "GaussianVoxelMapCPU 사용"
+MLNDT --> GMM_CPU : "GMMVoxelMapCPU 사용"
+
+PKG_BENCH --> PKG_FACTOR : "factor 생성 및 실행"
+MAIN --> MLNDT : "MixtureLightNDT\nfactor 추가"
+
+TEST_VOXEL --> PKG_MAP : "voxel 생성/조회 테스트"
+TEST_VOXEL --> PKG_EM : "EM 피팅 단위 테스트"
+TEST_VOXEL --> MLNDT : "factor 단위 테스트"
+TEST_FACTOR --> LNDT : "기존 factor 회귀 테스트"
+
+' ============================================================
+' 범례
+' ============================================================
+
+legend right
+    **색상 범례**
+    |= 색상 |= 의미 |
+    | <back:LightGreen> LightGreen </back> | 기존 컴포넌트 |
+    | <back:LightBlue> LightBlue </back> | 신규 컴포넌트 |
+    | <back:LightYellow> LightYellow </back> | 수정 컴포넌트 |
+
+    **핵심 설계 결정**
+    • sibling 상속: GMMVoxelMapCPU는 GaussianVoxelMap을 직접 상속
+    • Reservoir Sampling으로 메모리 O(C) 바운드
+    • Dirty Flag + Warm Start로 불필요한 EM 방지
+    • Frozen Correspondence로 optimizer 안정성 보장
+    • π_k 가중 Mahalanobis → 이차 비용함수 유지
+endlegend
+
+@enduml

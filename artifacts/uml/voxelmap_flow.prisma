@@ -1,0 +1,181 @@
+// Focused voxel-map flow diagram for VSCode Prisma Generate UML
+// Goal: make it obvious how voxel maps are created and how factors consume them.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:voxelmap_flow.db"
+}
+
+model PointCloud {
+  id               Int      @id @default(autoincrement())
+  numPoints        Int
+  hasCovs          Boolean
+  hasIntensities   Boolean
+
+  cpuFrame         PointCloudCPU?
+  targetVoxelMaps  GaussianVoxelMap[]
+  ndtFactors       IntegratedNDTFactor[]
+  lightNdtFactors  IntegratedLightNDTFactor[]
+  vgicpFactors     IntegratedVGICPFactor[]
+}
+
+model PointCloudCPU {
+  id                  Int        @id @default(autoincrement())
+  pointCloudId        Int        @unique
+  pointsStorage       String
+  covsStorage         String
+  intensitiesStorage  String
+
+  frame               PointCloud @relation(fields: [pointCloudId], references: [id])
+}
+
+model GaussianVoxelMap {
+  id                  Int                 @id @default(autoincrement())
+  voxelResolution     Float
+  sourcePointCloudId  Int?
+
+  sourceFrame         PointCloud?         @relation(fields: [sourcePointCloudId], references: [id])
+  cpuImplementation   GaussianVoxelMapCPU?
+}
+
+model GaussianVoxelMapCPU {
+  id                        Int                               @id @default(autoincrement())
+  gaussianVoxelMapId        Int                               @unique
+  incrementalVoxelMapId     Int                               @unique
+
+  interfaceMap              GaussianVoxelMap                  @relation(fields: [gaussianVoxelMapId], references: [id])
+  storageEngine             IncrementalVoxelMapGaussianVoxel  @relation(fields: [incrementalVoxelMapId], references: [id])
+  compactVoxelData          GaussianVoxelData[]
+
+  ndtFactors                IntegratedNDTFactor[]
+  lightNdtFactors           IntegratedLightNDTFactor[]
+  vgicpFactors              IntegratedVGICPFactor[]
+}
+
+model IncrementalVoxelMapGaussianVoxel {
+  id                  Int            @id @default(autoincrement())
+  invLeafSize         Float
+  lruHorizon          Int
+  lruClearCycle       Int
+  lruCounter          Int
+  offsets             String
+
+  cpuVoxelMap         GaussianVoxelMapCPU?
+  voxelInfos          VoxelInfo[]
+  gaussianVoxels      GaussianVoxel[]
+}
+
+model VoxelInfo {
+  id                        Int                             @id @default(autoincrement())
+  incrementalVoxelMapId     Int
+  lru                       Int
+  coord                     String
+
+  storageEngine             IncrementalVoxelMapGaussianVoxel @relation(fields: [incrementalVoxelMapId], references: [id])
+  voxel                     GaussianVoxel?
+}
+
+model GaussianVoxel {
+  id                        Int                             @id @default(autoincrement())
+  incrementalVoxelMapId     Int
+  voxelInfoId               Int?                            @unique
+  finalized                 Boolean
+  numPoints                 Int
+  mean                      String
+  cov                       String
+  intensity                 Float
+
+  storageEngine             IncrementalVoxelMapGaussianVoxel @relation(fields: [incrementalVoxelMapId], references: [id])
+  info                      VoxelInfo?                      @relation(fields: [voxelInfoId], references: [id])
+  compactData               GaussianVoxelData?
+}
+
+model GaussianVoxelData {
+  id                        Int                 @id @default(autoincrement())
+  gaussianVoxelMapCPUId     Int
+  gaussianVoxelId           Int?                @unique
+  coord                     String
+  numPoints                 Int
+  mean                      String
+  cov                       String
+  intensity                 Float
+
+  cpuVoxelMap               GaussianVoxelMapCPU @relation(fields: [gaussianVoxelMapCPUId], references: [id])
+  gaussianVoxel             GaussianVoxel?      @relation(fields: [gaussianVoxelId], references: [id])
+}
+
+model IntegratedMatchingCostFactor {
+  id                        Int      @id @default(autoincrement())
+  dim                       Int
+  isBinary                  Boolean
+  fixedTargetPose           String
+
+  ndtFactor                 IntegratedNDTFactor?
+  lightNdtFactor            IntegratedLightNDTFactor?
+  vgicpFactor               IntegratedVGICPFactor?
+}
+
+model NdtCorrespondence {
+  id                        Int                  @id @default(autoincrement())
+  mean                      String
+  invCov                    String
+  oneOverZ                  Float
+  valid                     Boolean
+  ndtFactorId               Int?
+  lightNdtFactorId          Int?
+
+  ndtFactor                 IntegratedNDTFactor?       @relation("NdtFactorCorrespondencesFlow", fields: [ndtFactorId], references: [id])
+  lightNdtFactor            IntegratedLightNDTFactor?  @relation("LightNdtFactorCorrespondencesFlow", fields: [lightNdtFactorId], references: [id])
+}
+
+model IntegratedNDTFactor {
+  id                                 Int                         @id @default(autoincrement())
+  baseFactorId                       Int                         @unique
+  targetVoxelMapCPUId                Int
+  sourcePointCloudId                 Int
+  resolution                         Float
+  outlierRatio                       Float
+  regularizationEpsilon              Float
+  searchMode                         String
+  corrToleranceRot                   Float
+  corrToleranceTrans                 Float
+
+  baseFactor                         IntegratedMatchingCostFactor @relation(fields: [baseFactorId], references: [id])
+  targetVoxelMap                     GaussianVoxelMapCPU          @relation(fields: [targetVoxelMapCPUId], references: [id])
+  sourcePointCloud                   PointCloud                   @relation(fields: [sourcePointCloudId], references: [id])
+  correspondences                    NdtCorrespondence[]          @relation("NdtFactorCorrespondencesFlow")
+}
+
+model IntegratedLightNDTFactor {
+  id                                 Int                         @id @default(autoincrement())
+  baseFactorId                       Int                         @unique
+  targetVoxelMapCPUId                Int
+  sourcePointCloudId                 Int
+  regularizationEpsilon              Float
+  searchMode                         String
+  corrToleranceRot                   Float
+  corrToleranceTrans                 Float
+
+  baseFactor                         IntegratedMatchingCostFactor @relation(fields: [baseFactorId], references: [id])
+  targetVoxelMap                     GaussianVoxelMapCPU          @relation(fields: [targetVoxelMapCPUId], references: [id])
+  sourcePointCloud                   PointCloud                   @relation(fields: [sourcePointCloudId], references: [id])
+  correspondences                    NdtCorrespondence[]          @relation("LightNdtFactorCorrespondencesFlow")
+}
+
+model IntegratedVGICPFactor {
+  id                                 Int                         @id @default(autoincrement())
+  baseFactorId                       Int                         @unique
+  targetVoxelMapCPUId                Int
+  sourcePointCloudId                 Int
+  mahalanobisCacheMode               String
+  corrToleranceRot                   Float
+  corrToleranceTrans                 Float
+
+  baseFactor                         IntegratedMatchingCostFactor @relation(fields: [baseFactorId], references: [id])
+  targetVoxelMap                     GaussianVoxelMapCPU          @relation(fields: [targetVoxelMapCPUId], references: [id])
+  sourcePointCloud                   PointCloud                   @relation(fields: [sourcePointCloudId], references: [id])
+}
