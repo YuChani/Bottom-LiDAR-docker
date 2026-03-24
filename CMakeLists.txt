@@ -43,6 +43,7 @@ add_executable(lidar_registration_benchmark
     src/ndt/integrated_light_ndt_factor.cpp
     src/gmm/gmm_voxelmap_cpu.cpp
     src/gmm/mixture_em_backend.cpp
+    src/gmm/integrated_mixture_light_ndt_factor.cpp
 )
 target_link_libraries(lidar_registration_benchmark
     ${PCL_LIBRARIES}
@@ -78,6 +79,7 @@ add_executable(test_gmm_voxelmap
     src/gmm/test/test_gmm_voxelmap.cpp
     src/gmm/gmm_voxelmap_cpu.cpp
     src/gmm/mixture_em_backend.cpp
+    src/gmm/integrated_mixture_light_ndt_factor.cpp
 )
 target_link_libraries(test_gmm_voxelmap
     GTest::gtest
