@@ -11,11 +11,11 @@ namespace gtsam_points {
 
 template <typename VoxelContents>
 IncrementalVoxelMap<VoxelContents>::IncrementalVoxelMap(double leaf_size)
-: inv_leaf_size(1.0 / leaf_size),
-  lru_horizon(10),
-  lru_clear_cycle(10),
-  lru_counter(0),
-  offsets(neighbor_offsets(7)) {}
+: inv_leaf_size(1.0 / leaf_size),   // leaf_size : Voxel 한변의 길이. inv_leaf_size : Voxel크기의 역수로 좌표를 Voxel Index로 변환때 곱셉으로 처리
+  lru_horizon(10),                  // 10번마다 LRU로 제거할 Voxel을 결정
+  lru_clear_cycle(10),              // LRU로 제거할 Voxel을 결정하는 주기
+  lru_counter(0),                   // Voxel의 최근 사용 시점을 나타내는 카운터
+  offsets(neighbor_offsets(7)) {}   // KNN으로 주변 Voxel 상대좌표목록(현재 7개). xyz축 +-1 / 자기자신 Voxel 포함
 
 template <typename VoxelContents>
 IncrementalVoxelMap<VoxelContents>::~IncrementalVoxelMap() {}
@@ -77,6 +77,7 @@ size_t IncrementalVoxelMap<VoxelContents>::knn_search(const double* pt, size_t k
 
   KnnResult<-1, decltype(index_transform)> result(k_indices, k_sq_dists, k, index_transform, max_sq_dist);
   for (const auto& offset : offsets) {
+
     const Eigen::Vector3i coord = center + offset;
     const auto found = voxels.find(coord);
     if (found == voxels.end()) {
