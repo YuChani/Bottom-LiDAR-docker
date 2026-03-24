@@ -1,5 +1,5 @@
 // GMM Voxel + MixtureLightNDT implementation schema for VSCode Prisma Generate UML
-// Source of truth: .sisyphus/plans/gmm-voxel-implementation-plan.md
+// Source of truth: docs/gmm/gmm-design.md
 //
 // Architecture overview:
 //   GaussianVoxelMap (interface)
@@ -7,8 +7,9 @@
 //     └── GMMVoxelMapCPU       (NEW GMM path — sibling, NOT subclass of CPU)
 //
 // Covers: Phase 1 (GMMVoxel struct), Phase 2 (EM backend), Phase 2.5 (connect EM),
-//         Phase 3 (MixtureLightNDT factor), Phase 3.5 (benchmark integration)
-// Does NOT cover: Phase 4+ (full Mixture NDT, KL merge/split)
+//         Phase 3 (MixtureLightNDT factor), Phase 3.5 (benchmark integration),
+//         Phase 3.6 (w-component leakage fix, lazy finalize safety fix)
+// Does NOT cover: Phase 4+ (hyperparameter tuning, GPU acceleration)
 
 generator client {
   provider = "prisma-client-js"
@@ -113,13 +114,16 @@ model NdtCorrespondence {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NEW GMM Map Path (Phase 1 + Phase 2.5)
-// Maps to: gtsam_points/types/gmm_voxelmap_cpu.hpp
+// NEW GMM Map Path (Phase 1 + Phase 2.5 + Phase 3.6 lazy finalize)
+// Maps to: include/gmm/gmm_voxelmap_cpu.hpp
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// CPU GMM voxel map — sibling of GaussianVoxelMapCPU, inherits GaussianVoxelMap.
 /// Uses IncrementalVoxelMap<GMMVoxel> as storage engine.
-/// Maps to: gtsam_points/types/gmm_voxelmap_cpu.hpp — GMMVoxelMapCPU class
+/// Phase 3.6: insert() defers finalize (needs_finalize_=true).
+///   - knn_search() auto-triggers finalize_all() (lazy).
+///   - ensure_gmm_voxelmaps() explicitly calls finalize_all() after insert().
+/// Maps to: include/gmm/gmm_voxelmap_cpu.hpp — GMMVoxelMapCPU class
 model GMMVoxelMapCPU {
   id                          Int                               @id @default(autoincrement())
   gaussianVoxelMapId          Int                               @unique
@@ -127,6 +131,7 @@ model GMMVoxelMapCPU {
   sourcePointCloudId          Int?
   voxelResolution             Float
   maxComponents               Int                               // from GMMVoxel::Setting
+  needsFinalize               Boolean                           @default(false) // Phase 3.6: deferred finalize flag (mutable)
 
   // Relations
   interfaceMap                GaussianVoxelMap                  @relation(fields: [gaussianVoxelMapId], references: [id])
@@ -139,6 +144,7 @@ model GMMVoxelMapCPU {
 
 /// IncrementalVoxelMap<GMMVoxel> — LRU-based spatial hash for GMM voxels.
 /// Maps to: gtsam_points/ann/incremental_voxelmap.hpp (template instantiation for GMMVoxel)
+/// Explicit instantiation: src/gmm/gmm_voxelmap_cpu.cpp (template class IncrementalVoxelMap<GMMVoxel>)
 model IncrementalVoxelMapGMMVoxel {
   id                          Int                    @id @default(autoincrement())
   invLeafSize                 Float
@@ -154,7 +160,9 @@ model IncrementalVoxelMapGMMVoxel {
 
 /// GMM voxel — VoxelContents type with reservoir sampling and multi-component GMM.
 /// After finalize(): size() = numComponents (K after EM, 0 before).
-/// Maps to: gtsam_points/types/gmm_voxelmap_cpu.hpp — GMMVoxel struct
+/// INVARIANT: All points in reservoir have w=0 (enforced in add()).
+///            All component means have w=0 (from Armadillo 3D→4D conversion).
+/// Maps to: include/gmm/gmm_voxelmap_cpu.hpp — GMMVoxel struct
 model GMMVoxel {
   id                          Int                               @id @default(autoincrement())
   mapId                       Int
@@ -174,7 +182,7 @@ model GMMVoxel {
 }
 
 /// Configuration for GMM fitting per-voxel (snapshot of Setting at last finalize).
-/// Maps to: gtsam_points/types/gmm_voxelmap_cpu.hpp — GMMVoxel::Setting struct
+/// Maps to: include/gmm/gmm_voxelmap_cpu.hpp — GMMVoxel::Setting struct
 model GMMVoxelSetting {
   id                          Int        @id @default(autoincrement())
   voxelId                     Int        @unique
@@ -189,7 +197,8 @@ model GMMVoxelSetting {
 }
 
 /// One Gaussian component of a GMM voxel (weight + mean + covariance).
-/// Maps to: gtsam_points/types/gmm_voxelmap_cpu.hpp — GMMComponent struct
+/// INVARIANT (Phase 3.6): mean.w = 0 always. Factor must enforce diff(3)=0 and residual(3)=0.
+/// Maps to: include/gmm/gmm_voxelmap_cpu.hpp — GMMComponent struct
 model GMMComponent {
   id                          Int                   @id @default(autoincrement())
   voxelId                     Int
@@ -217,12 +226,13 @@ model SampleReservoir {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EM Backend (Phase 2)
-// Maps to: gtsam_points/types/mixture_em_backend.hpp
+// Maps to: include/gmm/mixture_em_backend.hpp, src/gmm/mixture_em_backend.cpp
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// EM fitting configuration — one per GMMVoxelMapCPU.
 /// Wraps Armadillo gmm_full with warm-start support.
-/// Maps to: gtsam_points/types/mixture_em_backend.hpp — GMMFitParams struct + fit_gmm()
+/// Phase 3.6: convergence_tol dead code fixed (hardcoded 1e-6 → params.convergence_tol).
+/// Maps to: include/gmm/mixture_em_backend.hpp — GMMFitParams struct + fit_gmm()
 model EMBackend {
   id                          Int            @id @default(autoincrement())
   mapId                       Int            @unique
@@ -236,7 +246,7 @@ model EMBackend {
 }
 
 /// Result of a single EM fit for one voxel.
-/// Maps to: gtsam_points/types/mixture_em_backend.hpp — GMMFitResult struct
+/// Maps to: include/gmm/mixture_em_backend.hpp — GMMFitResult struct
 model GMMFitResult {
   id                          Int            @id @default(autoincrement())
   voxelId                     Int            @unique
@@ -252,6 +262,7 @@ model GMMFitResult {
 // Factor Path — Existing (for comparison)
 // Maps to: gtsam_points/factors/integrated_matching_cost_factor.hpp
 //          gtsam_points/factors/integrated_light_ndt_factor.hpp
+// Note: LightNDT uses GaussianVoxel.mean w=1 → diff.w naturally 0 (no fix needed)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Abstract base factor for all matching cost factors (NDT, LightNDT, VGICP, MixtureLightNDT).
@@ -288,14 +299,16 @@ model IntegratedLightNDTFactor {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NEW Factor Path — MixtureLightNDT (Phase 3)
-// Maps to: gtsam_points/factors/integrated_mixture_light_ndt_factor.hpp
+// NEW Factor Path — MixtureLightNDT (Phase 3 + Phase 3.6 w-fix)
+// Maps to: include/gmm/integrated_mixture_light_ndt_factor.hpp
+//          include/gmm/impl/integrated_mixture_light_ndt_factor_impl.hpp
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// MixtureLightNDT factor — multi-component GMM voxel registration.
 /// Each source point matches against the best component (min Mahalanobis) across
 /// neighbor voxels' components. Cost = pi_k * r^T * Sigma_k^{-1} * r.
-/// Maps to: gtsam_points/factors/integrated_mixture_light_ndt_factor.hpp
+/// Phase 3.6 fixes: diff(3)=0 in update_correspondences(), residual(3)=0 in evaluate().
+/// Maps to: include/gmm/integrated_mixture_light_ndt_factor.hpp
 model IntegratedMixtureLightNDTFactor {
   id                                 Int                         @id @default(autoincrement())
   baseFactorId                       Int                         @unique
@@ -318,7 +331,8 @@ model IntegratedMixtureLightNDTFactor {
 
 /// Multi-component correspondence — best single component from a GMM voxel.
 /// Selected via argmin_k d_{ik}^T Sigma_k^{-1} d_{ik} (min Mahalanobis).
-/// Maps to: gtsam_points/factors/integrated_mixture_light_ndt_factor.hpp — MixtureNdtCorrespondence
+/// Phase 3.6: diff(3)=0 enforced during selection to prevent w-component leakage.
+/// Maps to: include/gmm/integrated_mixture_light_ndt_factor.hpp — MixtureNdtCorrespondence
 model MixtureNdtCorrespondence {
   id                          Int                                @id @default(autoincrement())
   factorId                    Int
@@ -334,13 +348,14 @@ model MixtureNdtCorrespondence {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inverse Covariance Cache (Phase 3)
-// Maps to: integrated_mixture_light_ndt_factor.hpp — inv_cov_cache member
+// Maps to: include/gmm/impl/integrated_mixture_light_ndt_factor_impl.hpp — inv_cov_cache member
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Per-(voxel, component) cached inverse covariance matrix.
 /// Computed once at correspondence update time, reused across optimizer iterations.
 /// Memory: V × K × 128 bytes ≈ 3.84 MB for 10k voxels × 3 components.
-/// Maps to: integrated_mixture_light_ndt_factor.hpp — inv_cov_cache[voxel_id][component_k]
+/// Invalidated when set_regularization_epsilon() is called (inv_cov_cached = false).
+/// Maps to: include/gmm/impl/integrated_mixture_light_ndt_factor_impl.hpp — inv_cov_cache[voxel_id][component_k]
 model InvCovCache {
   id                          Int                                @id @default(autoincrement())
   factorId                    Int
@@ -355,13 +370,14 @@ model InvCovCache {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // frame::traits<GMMVoxel> metadata (Phase 1)
-// Maps to: gtsam_points/types/gmm_voxelmap_cpu.hpp — frame::traits<GMMVoxel> specialization
+// Maps to: include/gmm/gmm_voxelmap_cpu.hpp — frame::traits<GMMVoxel> specialization
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// frame::traits specialization for GMMVoxel — exposes component count and capabilities.
 /// size() = K (numComponents), point(v, k) = k-th mean, cov(v, k) = k-th cov.
-/// Note: point() returns by VALUE (not reference) — verified by static_assert.
-/// Maps to: gtsam_points/types/gmm_voxelmap_cpu.hpp — template<> struct frame::traits<GMMVoxel>
+/// CRITICAL: point() returns by VALUE (not reference) — verified by static_assert.
+/// This prevents dangling reference since GMMComponent lives inside vector.
+/// Maps to: include/gmm/gmm_voxelmap_cpu.hpp — template<> struct frame::traits<GMMVoxel>
 model FrameTraitsGMMVoxel {
   id                          Int        @id @default(autoincrement())
   voxelId                     Int        @unique

@@ -409,8 +409,9 @@ docker exec bottom-lidar bash -c "cd /root/workdir && ./build/lidar_registration
 
 | 파일 | 내용 |
 |------|------|
-| `docs/gmm/gmm-design.md` | GMM 설계 문서 (아키텍처, 클래스 구조, EM 파라미터 등) |
-| `docs/gmm/` 내 UML 아티팩트 | 클래스 다이어그램, 시퀀스 다이어그램 |
+| `docs/gmm/gmm-design.md` | GMM 설계 문서 (아키텍처, 수학적 근거, 코드 동작, 수식-코드 매핑 17건, 설계 결정 근거, 튜닝 가이드) |
+| `artifacts/uml/gmm_voxel_implementation.prisma` | GMM 구현 엔티티 다이어그램 (Phase 3.6 반영: w-fix, lazy finalize, needsFinalize) |
+| `artifacts/uml/mixture_model_ndt_flow.prisma` | Single-Gaussian vs Mixture 경로 비교 다이어그램 |
 | `docs/gmm/gmm-work-status.md` | 본 문서 (작업 현황 추적) |
 
 ## ⚠️ 알려진 제약사항 & 설계 결정
