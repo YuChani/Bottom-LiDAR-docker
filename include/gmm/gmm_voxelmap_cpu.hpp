@@ -60,7 +60,9 @@ public:
   template <typename Result>
   void knn_search(const Eigen::Vector4d& pt, Result& result) const {
     for (size_t k = 0; k < components_.size(); k++) {
-      const double sq_dist = (pt - components_[k].mean).squaredNorm();
+      Eigen::Vector4d diff = pt - components_[k].mean;
+      diff(3) = 0.0;  // Ignore w-component (query w=1, mean w=0 → +1 bias)
+      const double sq_dist = diff.squaredNorm();
       result.push(k, sq_dist);
     }
   }
@@ -109,6 +111,28 @@ struct traits<GMMVoxel> {
   static Eigen::Vector4d normal(const GMMVoxel&, size_t) { return Eigen::Vector4d::Zero(); }
   static Eigen::Matrix4d cov(const GMMVoxel& v, size_t k) { return v.components()[k].cov; }
   static double intensity(const GMMVoxel&, size_t) { return 0.0; }
+};
+
+}  // namespace frame
+
+// ---------------------------------------------------------------------------
+// frame::traits<IncrementalVoxelMap<GMMVoxel>> — returns by VALUE to avoid
+// dangling reference (generic traits returns const&, but GMMVoxel traits
+// returns temporaries, not references to stored data).
+// ---------------------------------------------------------------------------
+namespace frame {
+
+template <>
+struct traits<IncrementalVoxelMap<GMMVoxel>> {
+  static bool has_points(const IncrementalVoxelMap<GMMVoxel>& ivox) { return ivox.has_points(); }
+  static bool has_normals(const IncrementalVoxelMap<GMMVoxel>& ivox) { return ivox.has_normals(); }
+  static bool has_covs(const IncrementalVoxelMap<GMMVoxel>& ivox) { return ivox.has_covs(); }
+  static bool has_intensities(const IncrementalVoxelMap<GMMVoxel>& ivox) { return ivox.has_intensities(); }
+
+  static Eigen::Vector4d point(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i) { return ivox.point(i); }
+  static Eigen::Vector4d normal(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i) { return ivox.normal(i); }
+  static Eigen::Matrix4d cov(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i) { return ivox.cov(i); }
+  static double intensity(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i) { return ivox.intensity(i); }
 };
 
 }  // namespace frame

@@ -76,7 +76,6 @@ GMMFitResult extract_result(
     const arma::vec& m = model.means.col(k);
     comp.mean = Eigen::Vector4d(m(0), m(1), m(2), 0.0);
 
-    // 3x3 covariance from Armadillo → 4x4 Eigen (upper-left block)
     comp.cov = Eigen::Matrix4d::Zero();
     const arma::mat& fcov = model.fcovs.slice(k);
     for (int r = 0; r < 3; r++) {
@@ -90,17 +89,29 @@ GMMFitResult extract_result(
     result.components.push_back(comp);
   }
 
-  // Prune low-weight components
+  // Compute weighted mean before pruning (fallback if all components are pruned)
+  Eigen::Vector4d weighted_mean = Eigen::Vector4d::Zero();
+  double pre_prune_total_weight = 0.0;
+  for (const auto& c : result.components) {
+    weighted_mean += c.weight * c.mean;
+    pre_prune_total_weight += c.weight;
+  }
+  if (pre_prune_total_weight > 0.0) {
+    weighted_mean /= pre_prune_total_weight;
+  }
+
   result.components.erase(
       std::remove_if(result.components.begin(), result.components.end(),
                      [&](const GMMComponent& c) { return c.weight < params.min_weight_threshold; }),
       result.components.end());
 
   if (result.components.empty()) {
-    result.components.push_back(GMMComponent());
-    result.components.back().weight = 1.0;
-    result.components.back().cov.block<3, 3>(0, 0) =
+    GMMComponent fallback;
+    fallback.mean = weighted_mean;
+    fallback.weight = 1.0;
+    fallback.cov.block<3, 3>(0, 0) =
         params.covariance_regularization * Eigen::Matrix3d::Identity();
+    result.components.push_back(fallback);
     return result;
   }
 
@@ -175,9 +186,16 @@ GMMFitResult fit_gmm(
     means(1, k) = comp.mean(1);
     means(2, k) = comp.mean(2);
 
+    // Subtract post-hoc regularization before feeding to Armadillo
+    // (extract_result() will re-add it after EM converges)
     for (int r = 0; r < 3; r++) {
       for (int c = 0; c < 3; c++) {
-        fcovs(r, c, k) = comp.cov(r, c);
+        double val = comp.cov(r, c);
+        if (r == c) {
+          val -= params.covariance_regularization;
+          val = std::max(val, 1e-6);
+        }
+        fcovs(r, c, k) = val;
       }
     }
 

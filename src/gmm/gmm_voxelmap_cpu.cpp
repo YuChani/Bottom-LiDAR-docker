@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #include "gmm/gmm_voxelmap_cpu.hpp"
+#include "gmm/mixture_em_backend.hpp"
 
 #include <iostream>
 #include <algorithm>
@@ -27,13 +28,17 @@ void GMMVoxel::add(const Setting& setting, const PointCloud& points, size_t i) {
   total_points_seen_++;
   const int capacity = setting.reservoir_capacity;
 
+  // Force homogeneous coordinate w=0 to prevent leakage into mean/cov
+  Eigen::Vector4d pt = points.points[i];
+  pt(3) = 0.0;
+
   if (static_cast<int>(reservoir_.size()) < capacity) {
-    reservoir_.push_back(points.points[i]);
+    reservoir_.push_back(pt);
   } else {
     std::uniform_int_distribution<size_t> dist(0, total_points_seen_ - 1);
     const size_t j = dist(rng_);
     if (j < static_cast<size_t>(capacity)) {
-      reservoir_[j] = points.points[i];
+      reservoir_[j] = pt;
     }
   }
 
@@ -51,38 +56,21 @@ void GMMVoxel::finalize() {
     return;
   }
 
-  // Phase 1 stub: single-Gaussian fallback from reservoir points
-  const size_t N = reservoir_.size();
+  GMMFitParams params;
+  params.max_components = cached_setting_.max_components;
+  params.max_em_iterations = cached_setting_.max_em_iterations;
+  params.convergence_tol = cached_setting_.convergence_tol;
+  params.covariance_regularization = cached_setting_.covariance_regularization;
+  params.min_weight_threshold = cached_setting_.min_weight_threshold;
 
-  Eigen::Vector4d mean = Eigen::Vector4d::Zero();
-  for (const auto& pt : reservoir_) {
-    mean += pt;
-  }
-  mean /= static_cast<double>(N);
-
-  Eigen::Matrix4d cov = Eigen::Matrix4d::Zero();
-  for (const auto& pt : reservoir_) {
-    const Eigen::Vector4d diff = pt - mean;
-    cov += diff * diff.transpose();
-  }
-  if (N > 1) {
-    cov /= static_cast<double>(N);
+  GMMFitResult result;
+  if (components_.empty()) {
+    result = fit_gmm(reservoir_, params);
+  } else {
+    result = fit_gmm(reservoir_, params, components_);
   }
 
-  // Regularize 3x3 block to ensure positive definiteness
-  cov.block<3, 3>(0, 0) += cached_setting_.covariance_regularization * Eigen::Matrix3d::Identity();
-  // Ensure 4th row/col stays zero (homogeneous coordinate)
-  cov.row(3).setZero();
-  cov.col(3).setZero();
-
-  GMMComponent comp;
-  comp.mean = mean;
-  comp.cov = cov;
-  comp.weight = 1.0;
-
-  components_.clear();
-  components_.push_back(comp);
-
+  components_ = std::move(result.components);
   dirty_ = false;
 }
 
