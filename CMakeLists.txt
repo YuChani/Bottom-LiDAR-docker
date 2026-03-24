@@ -12,6 +12,7 @@ find_package(Eigen3 REQUIRED)
 find_package(GTSAM REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(Iridescence)
+find_package(Armadillo REQUIRED)
 
 option(BUILD_WITH_OPENMP "Build with OpenMP" ON)
 option(BUILD_WITH_CUDA "Build with CUDA" OFF)
@@ -40,13 +41,17 @@ add_executable(lidar_registration_benchmark
     src/featureExtraction.cpp
     src/ndt/integrated_ndt_factor.cpp
     src/ndt/integrated_light_ndt_factor.cpp
+    src/gmm/gmm_voxelmap_cpu.cpp
+    src/gmm/mixture_em_backend.cpp
 )
 target_link_libraries(lidar_registration_benchmark
     ${PCL_LIBRARIES}
     gtsam
     gtsam_points   
     OpenMP::OpenMP_CXX
+    ${ARMADILLO_LIBRARIES}
 )
+target_include_directories(lidar_registration_benchmark PRIVATE ${ARMADILLO_INCLUDE_DIRS})
 
 if(TARGET Iridescence::Iridescence)
   target_link_libraries(lidar_registration_benchmark Iridescence::Iridescence)
@@ -64,3 +69,25 @@ endif()
 #     gtsam_points   
 #     OpenMP::OpenMP_CXX
 # )
+
+# GMM voxel tests
+find_package(GTest REQUIRED)
+enable_testing()
+
+add_executable(test_gmm_voxelmap
+    src/gmm/test/test_gmm_voxelmap.cpp
+    src/gmm/gmm_voxelmap_cpu.cpp
+    src/gmm/mixture_em_backend.cpp
+)
+target_link_libraries(test_gmm_voxelmap
+    GTest::gtest
+    GTest::gtest_main
+    gtsam
+    gtsam_points
+    ${PCL_LIBRARIES}
+    ${ARMADILLO_LIBRARIES}
+    OpenMP::OpenMP_CXX
+)
+target_include_directories(test_gmm_voxelmap PRIVATE ${ARMADILLO_INCLUDE_DIRS})
+
+add_test(NAME GMMVoxelTests COMMAND test_gmm_voxelmap)
