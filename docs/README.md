@@ -16,7 +16,6 @@ docs/
 │   ├── comparison/                    # NDT vs LightNDT/GICP 비교
 │   ├── experiments/                   # 실험 결과 보고서
 │   └── checklists/                    # 실행 체크리스트
-├── gmm/                               # GMM-NDT 연구/작업지시
 ├── loam/                              # LOAM/LIO-SAM 관련
 ├── changelog/                         # 변경 이력
 └── archive/                           # 월별 아카이브
@@ -97,20 +96,7 @@ docs/
 
 ---
 
-## 4) GMM (`docs/gmm/`)
-
-| 문서 | 설명 |
-|---|---|
-| [NDT_GMM_연구보고서_방향_TODO_2026-03-06.md](./gmm/NDT_GMM_연구보고서_방향_TODO_2026-03-06.md) | GMM-NDT 연구 방향/TODO |
-| [GMM_NDT_구현_작업지시서.md](./gmm/GMM_NDT_구현_작업지시서.md) | 구현 작업지시서 |
-| [GMM_NDT_구현진행로그_2026-03-10.md](./gmm/GMM_NDT_구현진행로그_2026-03-10.md) | GMM-NDT 구현 진행 로그 |
-| [MNDT_구현플랜_상세보고서_2026-03-10.md](./gmm/MNDT_구현플랜_상세보고서_2026-03-10.md) | MNDT 구현 계획 상세 보고서 |
-| [NDT_vs_NDT+MixtureModel_수학_상세설명_2026-03-16.md](./gmm/NDT_vs_NDT+MixtureModel_수학_상세설명_2026-03-16.md) | **NDT와 NDT+Mixture Model의 확률 해석, 목적함수, soft/hard assignment 차이를 수학과 그림으로 정리한 문서** |
-| [GMM_NDT_벤치마크_결과_2026-03-16.md](./gmm/GMM_NDT_벤치마크_결과_2026-03-16.md) | **GMM-NDT 벤치마크 결과 — AC 4/4 통과, K=1 parity, K=2 Max T -0.7% 개선, 시간 오버헤드 1.215x** |
-
----
-
-## 5) LOAM (`docs/loam/`)
+## 4) LOAM (`docs/loam/`)
 
 | 문서 | 설명 |
 |---|---|
@@ -118,13 +104,13 @@ docs/
 
 ---
 
-## 6) 변경이력 (`docs/changelog/`)
+## 5) 변경이력 (`docs/changelog/`)
 
 날짜별 코드/문서 변경 기록을 보관합니다.
 
 ---
 
-## 7) 아카이브 (`docs/archive/`)
+## 6) 아카이브 (`docs/archive/`)
 
 이전 버전 문서는 월별(`2026-01`, `2026-02`)로 보관합니다.
 
@@ -136,7 +122,6 @@ docs/
 - NDT 비교 문서 -> `docs/ndt/comparison/`
 - NDT 실험 결과 -> `docs/ndt/experiments/`
 - 실행 체크리스트 -> `docs/ndt/checklists/`
-- GMM 관련 문서 -> `docs/gmm/`
 - 변경 내역 -> `docs/changelog/`
 
 ---
