@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
-#include <gtsam_points/factors/integrated_light_ndt_factor.hpp>
+#include "ndt/integrated_ndt_factor.hpp"
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/HessianFactor.h>
@@ -17,13 +17,15 @@
 namespace gtsam_points {
 
 template <typename SourceFrame>
-IntegratedLightNDTFactor_<SourceFrame>::IntegratedLightNDTFactor_(
+IntegratedNDTFactor_<SourceFrame>::IntegratedNDTFactor_(
   gtsam::Key target_key,
   gtsam::Key source_key,
   const GaussianVoxelMap::ConstPtr& target_voxels,
   const std::shared_ptr<const SourceFrame>& source)
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
+  resolution(1.0),    // NDT에서 사용하는 voxel의 해상도. 0.5m ~ 1.0m 사이로 설정
+  outlier_ratio(0.1),  // outlier 비율. 낮을수록 gradient가 커져 수렴 속도 향상. 0.1 = 10% outlier 가정
   regularization_epsilon(1e-3),
   search_mode(NDTSearchMode::DIRECT7),
   correspondence_update_tolerance_rot(0.0),
@@ -42,13 +44,15 @@ IntegratedLightNDTFactor_<SourceFrame>::IntegratedLightNDTFactor_(
 }
 
 template <typename SourceFrame>
-IntegratedLightNDTFactor_<SourceFrame>::IntegratedLightNDTFactor_(
+IntegratedNDTFactor_<SourceFrame>::IntegratedNDTFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
   const GaussianVoxelMap::ConstPtr& target_voxels,
   const std::shared_ptr<const SourceFrame>& source)
 : gtsam_points::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
+  resolution(1.0),
+  outlier_ratio(0.1),
   regularization_epsilon(1e-3),
   search_mode(NDTSearchMode::DIRECT7),
   correspondence_update_tolerance_rot(0.0),
@@ -67,11 +71,11 @@ IntegratedLightNDTFactor_<SourceFrame>::IntegratedLightNDTFactor_(
 }
 
 template <typename SourceFrame>
-IntegratedLightNDTFactor_<SourceFrame>::~IntegratedLightNDTFactor_() {}
+IntegratedNDTFactor_<SourceFrame>::~IntegratedNDTFactor_() {}
 
 template <typename SourceFrame>
-void IntegratedLightNDTFactor_<SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
-  std::cout << s << "IntegratedLightNDTFactor";
+void IntegratedNDTFactor_<SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedNDTFactor";
   if (is_binary) {
     std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
   } else {
@@ -82,12 +86,12 @@ void IntegratedLightNDTFactor_<SourceFrame>::print(const std::string& s, const g
 }
 
 template <typename SourceFrame>
-size_t IntegratedLightNDTFactor_<SourceFrame>::memory_usage() const {
+size_t IntegratedNDTFactor_<SourceFrame>::memory_usage() const {
   return sizeof(*this) + sizeof(NdtCorrespondence) * correspondences.capacity();
 }
 
 template <typename SourceFrame>
-void IntegratedLightNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+void IntegratedNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   linearization_point = delta;
 
   bool do_update = true;
@@ -167,9 +171,13 @@ void IntegratedLightNDTFactor_<SourceFrame>::update_correspondences(const Eigen:
         }
       }
 
-      if (best_voxel) {
+      if (best_voxel) 
+      {
         correspondences[i].mean = best_voxel->mean;
         correspondences[i].inv_cov = best_inv_cov;
+        const Eigen::Matrix3d cov3 = best_voxel->cov.topLeftCorner<3, 3>();
+        const double det3 = std::max(cov3.determinant(), 1e-12);
+        correspondences[i].one_over_Z = 1.0 / std::sqrt(std::pow(2.0 * M_PI, 3) * det3);
         correspondences[i].valid = true;
       }
     }
@@ -195,7 +203,18 @@ void IntegratedLightNDTFactor_<SourceFrame>::update_correspondences(const Eigen:
 }
 
 template <typename SourceFrame>
-double IntegratedLightNDTFactor_<SourceFrame>::evaluate(
+double IntegratedNDTFactor_<SourceFrame>::error(const gtsam::Values& values) const {
+  Eigen::Isometry3d delta = calc_delta(values);
+  if (correspondences.size() == frame::size(*source)) {
+    return evaluate(delta);
+  }
+
+  update_correspondences(delta);
+  return evaluate(delta);
+}
+
+template <typename SourceFrame>
+double IntegratedNDTFactor_<SourceFrame>::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
   Eigen::Matrix<double, 6, 6>* H_source,
@@ -207,52 +226,94 @@ double IntegratedLightNDTFactor_<SourceFrame>::evaluate(
     update_correspondences(delta);
   }
 
-  const auto perpoint_task = [&](int i,
-                                 Eigen::Matrix<double, 6, 6>* H_target,
-                                 Eigen::Matrix<double, 6, 6>* H_source,
-                                 Eigen::Matrix<double, 6, 6>* H_target_source,
-                                 Eigen::Matrix<double, 6, 1>* b_target,
-                                 Eigen::Matrix<double, 6, 1>* b_source) {
+  const auto perpoint_task = [&](
+                                int i,
+                                Eigen::Matrix<double, 6, 6>* H_target,
+                                Eigen::Matrix<double, 6, 6>* H_source,
+                                Eigen::Matrix<double, 6, 6>* H_target_source,
+                                Eigen::Matrix<double, 6, 1>* b_target,
+                                Eigen::Matrix<double, 6, 1>* b_source) {
     const auto& corr = correspondences[i];
-    if (!corr.valid) {
+    if (!corr.valid) 
+    {
       return 0.0;
     }
 
-    const auto& mean_A = frame::point(*source, i);
-    const auto& mean_B = corr.mean;
-    const auto& inv_cov_B = corr.inv_cov;
+    // SWAN
+    double d1, d2;
+    compute_ndt_params(resolution, outlier_ratio, corr.one_over_Z, d1, d2);
 
-    Eigen::Vector4d transed_mean_A = delta * mean_A;
-    Eigen::Vector4d residual = mean_B - transed_mean_A;
+    // SWAN
+    // mean_A: p_i (source point)
+    // mean_B: mu_i (target point)
+    // inv_cov_B: Σ_i^{-1} (target inverse covariance)
+    const auto& mean_A = frame::point(*source, i);  // source point (a_i)
+    const auto& mean_B = corr.mean;                 // target point (mu_i)
+    const auto& inv_cov_B = corr.inv_cov;          // inverse covariance of target point
 
-    const double cost = residual.transpose() * inv_cov_B * residual;
-    if (!H_target) {
+    // SWAN
+    // transed_mean_A: p_i' = R * p_i + t (transformed source point)
+    Eigen::Vector4d transed_mean_A = delta * mean_A;  // 변형된 source : q_i = T*a_i
+
+    // residual = target_mean - transformed_source_point (GTSAM convention)
+    // SWAN
+    // residual: e_i = mu_i - p_i'
+    Eigen::Vector4d residual = mean_B - transed_mean_A; // target과 변형된 source의 차이 벡터 : r_i = mu_i - q_i
+
+    // Mahalanobis 거리(4x4행렬)
+    double mahalanobis_dist = residual.transpose() * inv_cov_B * residual;
+
+    //   d1 < 0 이므로 -d1 > 0, 정렬이 좋을수록 score가 크다 (최대화 문제).
+    // SWAN: -d2/2.0을 미리 계산해 놓자.
+    double exponent = -d2 * mahalanobis_dist / 2.0;
+    //double exponent = -gauss_d2 * mahalanobis_dist / 2.0;
+    if (exponent < -700.0) 
+    {
+      return 0.0;  // underflow 방지
+    }
+    
+    double e_term = std::exp(exponent);  // exp(-d2/2 * m), 범위: (0, 1]
+    if (std::isnan(e_term)) 
+    {
+      return 0.0;
+    }
+
+    // const double cost = d1 * e_term;
+    const double cost = -d1 * (1 - e_term);
+    if (!H_target) 
+    {
       return cost;
     }
 
+    // 변환 포즈에 대한 residual의 자코비안 (4x6, SE(3) Lie algebra 기반)
     Eigen::Matrix<double, 4, 6> J_target = Eigen::Matrix<double, 4, 6>::Zero();
-    J_target.block<3, 3>(0, 0) = -gtsam::SO3::Hat(transed_mean_A.head<3>());
-    J_target.block<3, 3>(0, 3) = Eigen::Matrix3d::Identity();
+    J_target.block<3, 3>(0, 0) = -gtsam::SO3::Hat(transed_mean_A.head<3>());  // rotation
+    J_target.block<3, 3>(0, 3) = Eigen::Matrix3d::Identity();                 // translation
 
     Eigen::Matrix<double, 4, 6> J_source = Eigen::Matrix<double, 4, 6>::Zero();
     J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.template head<3>());
     J_source.block<3, 3>(0, 3) = -delta.linear();
 
-    Eigen::Matrix<double, 6, 4> J_target_weighted = J_target.transpose() * inv_cov_B;
-    Eigen::Matrix<double, 6, 4> J_source_weighted = J_source.transpose() * inv_cov_B;
+    const double weight = -d1 * d2 * e_term;
 
-    *H_target += J_target_weighted * J_target;
-    *H_source += J_source_weighted * J_source;
-    *H_target_source += J_target_weighted * J_source;
-    *b_target += J_target_weighted * residual;
-    *b_source += J_source_weighted * residual;
+    //  Gauss-Newton 근사 Hessian (Magnusson Eq. 6.13의 H1 항) 
+    // H ≈ weight * J^T * Σ^{-1} * J   (H2, H3 항 생략 → PSD 보장)
+    *H_target += weight * J_target.transpose() * inv_cov_B * J_target;
+    *H_source += weight * J_source.transpose() * inv_cov_B * J_source;
+    *H_target_source += weight * J_target.transpose() * inv_cov_B * J_source;
+    // b = weight * J^T * Σ^{-1} * q    (= gradient)
+    *b_target += weight * J_target.transpose() * inv_cov_B * residual;
+    *b_source += weight * J_source.transpose() * inv_cov_B * residual;
 
     return cost;
   };
 
-  if (is_omp_default() || num_threads == 1) {
+  if (is_omp_default() || num_threads == 1) 
+  {
     return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
-  } else {
+  } 
+  else 
+  {
     return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);
   }
 }

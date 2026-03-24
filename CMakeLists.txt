@@ -38,6 +38,8 @@ add_executable(lidar_registration_benchmark
     src/main.cpp
     src/loam_feature.cpp
     src/featureExtraction.cpp
+    src/ndt/integrated_ndt_factor.cpp
+    src/ndt/integrated_light_ndt_factor.cpp
 )
 target_link_libraries(lidar_registration_benchmark
     ${PCL_LIBRARIES}

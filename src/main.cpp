@@ -48,9 +48,9 @@
 #include <gtsam_points/factors/integrated_gicp_factor.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_points/factors/integrated_loam_factor.hpp>
-// NDT factor from gtsam_points library
-#include <gtsam_points/factors/integrated_ndt_factor.hpp>
-#include <gtsam_points/factors/integrated_light_ndt_factor.hpp>
+// NDT factor (project-owned)
+#include "ndt/integrated_ndt_factor.hpp"
+#include "ndt/integrated_light_ndt_factor.hpp"
 
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
@@ -865,7 +865,7 @@ public:
 
   void run_optimization()
   {
-    run_optimization_single_stage(voxelmaps, 100);
+    run_optimization_single_stage(voxelmaps, 300);
   }
 
 private:

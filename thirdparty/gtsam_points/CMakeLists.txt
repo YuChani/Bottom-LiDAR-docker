@@ -188,9 +188,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/factors/integrated_gicp_factor.cpp
   src/gtsam_points/factors/integrated_vgicp_factor.cpp
   src/gtsam_points/factors/integrated_loam_factor.cpp
-  src/gtsam_points/factors/integrated_ndt_factor.cpp
-  src/gtsam_points/factors/integrated_light_ndt_factor.cpp
-  src/gtsam_points/factors/integrated_gmm_ndt_factor.cpp
+
   src/gtsam_points/factors/intensity_gradients.cpp
   src/gtsam_points/factors/integrated_colored_gicp_factor.cpp
   src/gtsam_points/factors/integrated_color_consistency_factor.cpp

@@ -11,7 +11,7 @@
 #include <gtsam_points/types/point_cloud.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_points/factors/integrated_matching_cost_factor.hpp>
-#include <gtsam_points/factors/integrated_ndt_factor.hpp>
+#include "ndt/integrated_ndt_factor.hpp"
 
 namespace gtsam_points {
 
