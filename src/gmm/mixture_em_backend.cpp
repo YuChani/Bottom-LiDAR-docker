@@ -184,8 +184,8 @@ GMMFitResult fit_gmm(
       arma::random_spread,   // 초기화: 데이터에서 분산 선택
       20,                    // k-means 사전 반복 횟수
       static_cast<arma::uword>(params.max_em_iterations),
-      1e-6,                  // EM 수렴 임계치
-      false);                // verbose 비활성화
+      params.convergence_tol,  // EM 수렴 임계치 (GMMFitParams::convergence_tol)
+      false);                  // verbose 비활성화
 
   if (!ok) {
     // EM 실패 시 단일 컴포넌트 폴백 (수렴 불가 등)
@@ -263,7 +263,7 @@ GMMFitResult fit_gmm(
       arma::keep_existing,   // 기존 파라미터 유지하고 EM만 실행
       0,                     // k-means 반복 = 0 (불필요)
       static_cast<arma::uword>(params.max_em_iterations),
-      1e-6,
+      params.convergence_tol,
       false);
 
   if (!ok) {

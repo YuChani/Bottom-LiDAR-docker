@@ -217,8 +217,9 @@ void IntegratedMixtureLightNDTFactor_<SourceFrame>::update_correspondences(const
           // Σ_k^{-1} 캐시에서 가져옴
           const Eigen::Matrix4d& inv_cov = inv_cov_cache[voxel_id][k];
 
-          // 4D 차이벡터: diff = q_i - μ_k (w 성분은 0-0=0이므로 4행/열이 기여 안함)
+          // 4D 차이벡터: diff = q_i - μ_k
           Eigen::Vector4d diff = pt - comps[k].mean;
+          diff(3) = 0.0;  // w-component 차이 제거 (mean w=0, pt w=1 → 편향 방지)
           // 마할라노비스 거리: m = diff^T · Σ_k^{-1} · diff
           double mahalanobis_dist = diff.transpose() * inv_cov * diff;
 
@@ -308,6 +309,7 @@ double IntegratedMixtureLightNDTFactor_<SourceFrame>::evaluate(
     Eigen::Vector4d transed_mean_A = delta * mean_A;
     // 잔차: r_i = μ_{k*} - T·p_i (GTSAM 컨벤션: target - transformed source)
     Eigen::Vector4d residual = mean_B - transed_mean_A;
+    residual(3) = 0.0;  // w-component 차이 제거 (mean w=0, pt w=1 → 편향 방지)
 
     // π_k 가중 비용: C_i = π_{k*} · r_i^T · Σ_{k*}^{-1} · r_i
     // .value()로 1×1 Eigen 행렬 → double 스칼라 추출

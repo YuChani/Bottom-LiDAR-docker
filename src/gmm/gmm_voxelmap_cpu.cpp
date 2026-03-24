@@ -101,9 +101,40 @@ double GMMVoxelMapCPU::voxel_resolution() const {
   return leaf_size();
 }
 
-// IncrementalVoxelMap::insert()에 위임: 포인트별로 복셀 좌표 계산 → add() → finalize()
+// 지연 finalize 패턴: Phase1(포인트 누적) + Phase2(LRU) 수행, Phase3(finalize) 생략.
+// GMMVoxel EM 비용 O(K×N×D²×iters)이 GaussianVoxel O(N)과 달라 매 insert마다
+// 전체 finalize 시 ~35분 병목 발생 → knn_search() 시점에 1회 일괄 수행.
 void GMMVoxelMapCPU::insert(const PointCloud& frame) {
-  IncrementalVoxelMap<GMMVoxel>::insert(frame);
+  for (size_t i = 0; i < frame.size(); i++) {
+    const Eigen::Vector3i coord = fast_floor(frame.points[i] * inv_leaf_size).template head<3>();
+
+    auto found = voxels.find(coord);
+    if (found == voxels.end()) {
+      auto voxel = std::make_shared<std::pair<VoxelInfo, GMMVoxel>>(VoxelInfo(coord, lru_counter), GMMVoxel());
+      found = voxels.emplace_hint(found, coord, flat_voxels.size());
+      flat_voxels.emplace_back(voxel);
+    }
+
+    auto& [info, voxel] = *flat_voxels[found->second];
+    info.lru = lru_counter;
+    voxel.add(voxel_setting, frame, i);
+  }
+
+  if ((++lru_counter) % lru_clear_cycle == 0) {
+    auto remove_counter = std::remove_if(
+      flat_voxels.begin(), flat_voxels.end(),
+      [&](const std::shared_ptr<std::pair<VoxelInfo, GMMVoxel>>& voxel) {
+        return voxel->first.lru + lru_horizon < lru_counter;
+      });
+    flat_voxels.erase(remove_counter, flat_voxels.end());
+
+    voxels.clear();
+    for (size_t i = 0; i < flat_voxels.size(); i++) {
+      voxels[flat_voxels[i]->first.coord] = i;
+    }
+  }
+
+  needs_finalize_ = true;
 }
 
 void GMMVoxelMapCPU::save_compact(const std::string& path) const {
@@ -130,6 +161,29 @@ int GMMVoxelMapCPU::lookup_voxel_index(const Eigen::Vector3i& coord) const {
 // flat_voxels는 해시맵 이터레이터를 보관하는 벡터로, O(1) 인덱스 접근 제공.
 const GMMVoxel& GMMVoxelMapCPU::lookup_voxel(int voxel_id) const {
   return flat_voxels[voxel_id]->second;
+}
+
+// dirty 복셀 일괄 EM 피팅. OpenMP로 복셀 간 독립 병렬 실행.
+void GMMVoxelMapCPU::finalize_all() {
+  if (!needs_finalize_) {
+    return;
+  }
+
+  const int n = static_cast<int>(flat_voxels.size());
+#pragma omp parallel for schedule(dynamic)
+  for (int i = 0; i < n; i++) {
+    flat_voxels[i]->second.finalize();
+  }
+
+  needs_finalize_ = false;
+}
+
+size_t GMMVoxelMapCPU::knn_search(
+  const double* pt, size_t k, size_t* k_indices, double* k_sq_dists, double max_sq_dist) const {
+  if (needs_finalize_) {
+    const_cast<GMMVoxelMapCPU*>(this)->finalize_all();
+  }
+  return IncrementalVoxelMap<GMMVoxel>::knn_search(pt, k, k_indices, k_sq_dists, max_sq_dist);
 }
 
 }  // namespace gtsam_points

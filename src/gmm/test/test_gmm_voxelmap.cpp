@@ -450,6 +450,7 @@ TEST(GMMVoxelMapCPU, EndToEndBimodal) {
 
   auto cloud = make_point_cloud(all_pts);
   voxelmap->insert(*cloud);
+  voxelmap->finalize_all();
 
   bool found_multi_component = false;
   for (size_t v = 0; v < voxelmap->num_voxels(); v++) {
@@ -492,6 +493,7 @@ struct MixtureNDTTestFixture {
 
     auto cloud = make_point_cloud(all_pts);
     voxelmap->insert(*cloud);
+    voxelmap->finalize_all();
 
     // 소스: 타겟과 동일한 포인트 (identity pose에서 zero residual 기대)
     source_cloud = cloud;

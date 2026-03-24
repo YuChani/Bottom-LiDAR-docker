@@ -52,6 +52,11 @@
 #include "ndt/integrated_ndt_factor.hpp"
 #include "ndt/integrated_light_ndt_factor.hpp"
 
+// GMM factor (project-owned)
+#include "gmm/gmm_voxelmap_cpu.hpp"
+#include "gmm/integrated_mixture_light_ndt_factor.hpp"
+#include "gmm/impl/integrated_mixture_light_ndt_factor_impl.hpp"
+
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_points/optimizers/linearization_hook.hpp>
@@ -373,6 +378,7 @@ public:
     // factor_types.push_back("LOAM"); // 4 : LOAM
     factor_types.push_back("NDT"); // 5 : NDT
     factor_types.push_back("LightNDT");
+    factor_types.push_back("MixtureLightNDT");
     factor_types.push_back("LOAM_LIOSAM"); // 6 : LOAM (LIO-SAM feature extraction)
 
 #ifdef GTSAM_POINTS_USE_CUDA
@@ -660,6 +666,16 @@ public:
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     }
+    else if (factor_types[factor_type] == std::string("MixtureLightNDT"))
+    {
+      auto factor = gtsam::make_shared<gtsam_points::IntegratedMixtureLightNDTFactor_<gtsam_points::PointCloud>>(
+        target_key, source_key, target_voxelmap, source);
+      factor->set_num_threads(num_threads);
+      factor->set_search_mode(gtsam_points::NDTSearchMode::DIRECT7);
+      factor->set_regularization_epsilon(1e-3);
+      factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      return factor;
+    }
 
     spdlog::error("Unknown factor type: {}", factor_types[factor_type]);
     return nullptr;
@@ -863,9 +879,29 @@ public:
     summarize_results(optimized_values, elapsed_ms);
   }
 
+  void ensure_gmm_voxelmaps()
+  {
+    if (!gmm_voxelmaps.empty()) return;
+    spdlog::info("Building GMM voxelmaps (lazy init)...");
+    for (int i = 0; i < static_cast<int>(frames.size()); i++)
+    {
+      auto gvm = std::make_shared<gtsam_points::GMMVoxelMapCPU>(1.0);
+      gvm->insert(*frames[i]);
+      gvm->finalize_all();
+      gmm_voxelmaps.push_back(gvm);
+    }
+    spdlog::info("GMM voxelmaps built: {} frames", gmm_voxelmaps.size());
+  }
+
   void run_optimization()
   {
-    run_optimization_single_stage(voxelmaps, 300);
+    bool use_gmm = (factor_types[factor_type] == std::string("MixtureLightNDT"));
+    if (use_gmm) {
+      ensure_gmm_voxelmaps();
+      run_optimization_single_stage(gmm_voxelmaps, 300);
+    } else {
+      run_optimization_single_stage(voxelmaps, 300);
+    }
   }
 
 private:
@@ -894,6 +930,7 @@ private:
   
   std::vector<gtsam_points::PointCloud::Ptr> frames;  // point, 법선, 공분산 정보 가지고있음
   std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps; // VG-ICP용 복셀맵
+  std::vector<gtsam_points::GaussianVoxelMap::Ptr> gmm_voxelmaps; // GMM 복셀맵 (lazy init)
   
   std::vector<LOAMFeatures> loam_features;
   std::vector<LOAMFeatures> loam_features_liosam;
@@ -982,17 +1019,17 @@ public:
     }
 
     spdlog::info("\n");
-    spdlog::info("╔══════════════════════════════════════════════════════════════════════════════════════════════╗");
-    spdlog::info("║                        Final Comparison Table                                                ║");
-    spdlog::info("╠════════════════╦═══════════════╦═══════════════╦═══════════════╦═══════════════╦═════╦═══════╣");
-    spdlog::info("║ Factor         ║ Mean T (m)    ║ Mean R (deg)  ║ Max T (m)     ║ Max R (deg)   ║ ms  ║ Iters ║");
-    spdlog::info("╠════════════════╬═══════════════╬═══════════════╬═══════════════╬═══════════════╬═════╬═══════╣");
+    spdlog::info("╔════════════════════════════════════════════════════════════════════════════════════════════════╗");
+    spdlog::info("║                                  Final Comparison Table                                        ║");
+    spdlog::info("╠══════════════════╦═══════════════╦═══════════════╦═══════════════╦═══════════════╦═════╦═══════╣");
+    spdlog::info("║ Factor           ║ Mean T (m)    ║ Mean R (deg)  ║ Max T (m)     ║ Max R (deg)   ║ ms  ║ Iters ║");
+    spdlog::info("╠══════════════════╬═══════════════╬═══════════════╬═══════════════╬═══════════════╬═════╬═══════╣");
     for (const auto& r : results)
     {
-      spdlog::info("║ {:14s} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║{:5.0f}║{:7d}║",
+      spdlog::info("║ {:16s} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║ {:13.6f} ║{:5.0f}║{:7d}║",
                    r.name, r.mean_t, r.mean_r, r.max_t, r.max_r, r.ms, r.iterations);
     }
-    spdlog::info("╚════════════════╩═══════════════╩═══════════════╩═══════════════╩═══════════════╩═════╩═══════╝");
+    spdlog::info("╚══════════════════╩═══════════════╩═══════════════╩═══════════════╩═══════════════╩═════╩═══════╝");
   }
 };
 

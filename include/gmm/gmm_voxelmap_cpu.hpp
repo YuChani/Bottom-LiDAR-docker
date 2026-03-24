@@ -217,6 +217,24 @@ public:
   /// @brief Number of voxels.
   // 현재 맵에 존재하는 복셀 수. flat_voxels 벡터 크기.
   size_t num_voxels() const { return flat_voxels.size(); }
+
+  /// @brief Finalize all dirty voxels (deferred EM fitting).
+  // 지연된 EM 피팅 일괄 실행: insert() 시 생략된 finalize()를 모든 dirty 복셀에 대해 수행.
+  // OpenMP로 복셀 간 독립적인 EM을 병렬 실행. needs_finalize_ 해제.
+  void finalize_all();
+
+  /// @brief Override knn_search to auto-finalize before querying.
+  // 검색 전 지연된 finalize 자동 실행: needs_finalize_ 플래그 확인 후 finalize_all() 호출.
+  // IncrementalVoxelMap의 insert()가 매 insert마다 전체 복셀 finalize를 실행하는
+  // 설계 불일치(GaussianVoxel용 O(N) vs GMMVoxel EM O(K×N×D²×iters))를 우회하기 위함.
+  virtual size_t knn_search(
+    const double* pt, size_t k, size_t* k_indices, double* k_sq_dists,
+    double max_sq_dist = std::numeric_limits<double>::max()) const override;
+
+private:
+  // 지연 finalize 플래그: insert() 후 true, finalize_all() 후 false.
+  // mutable: const knn_search()에서 lazy evaluation 트리거 가능.
+  mutable bool needs_finalize_ = false;
 };
 
 // ---------------------------------------------------------------------------
