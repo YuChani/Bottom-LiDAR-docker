@@ -8,14 +8,16 @@
 namespace gtsam_points {
 
 // GMM 피팅 결과 구조체: EM 알고리즘 실행 후 반환되는 컴포넌트 목록 및 수렴 정보.
-struct GMMFitResult {
+struct GMMFitResult
+{
   std::vector<GMMComponent> components;  // 피팅된 K개 컴포넌트 (pruning 후)
   bool converged = false;                // EM이 convergence_tol 이내로 수렴했는지 여부
   int iterations_run = 0;                // 실제 수행된 EM 반복 횟수
 };
 
 // GMM 피팅 하이퍼파라미터: GMMVoxel::Setting에서 복사하여 fit_gmm()에 전달.
-struct GMMFitParams {
+struct GMMFitParams
+{
   int max_components = 3;                  // 최대 가우시안 컴포넌트 수 K
   int max_em_iterations = 20;              // EM 최대 반복 횟수
   double convergence_tol = 1e-4;           // 로그-우도 변화량 수렴 임계치

@@ -27,7 +27,8 @@ namespace gtsam_points {
 
 /// @brief GMM-NDT 대응 데이터: winner-take-all로 선택된 단일 컴포넌트 정보.
 // LightNDT의 NdtCorrespondence와 유사하나, 혼합 가중치 π_k를 추가로 보유.
-struct MixtureNdtCorrespondence {
+struct MixtureNdtCorrespondence
+{
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Eigen::Vector4d mean = Eigen::Vector4d::Zero();     // 대응 GMM 컴포넌트 평균 μ_{k*}
   Eigen::Matrix4d inv_cov = Eigen::Matrix4d::Zero();  // 정규화된 역공분산 Σ_{k*}^{-1} (4x4, 상단 3x3만 유효)
@@ -42,7 +43,8 @@ struct MixtureNdtCorrespondence {
 // IntegratedLightNDTFactor_를 미러링: 동일한 IntegratedMatchingCostFactor 상속,
 // 동일한 update_correspondences/evaluate 가상 함수 오버라이드 패턴.
 template <typename SourceFrame = gtsam_points::PointCloud>
-class IntegratedMixtureLightNDTFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
+class IntegratedMixtureLightNDTFactor_ : public gtsam_points::IntegratedMatchingCostFactor
+{
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = gtsam_points::shared_ptr<IntegratedMixtureLightNDTFactor_>;
@@ -67,26 +69,35 @@ public:
   virtual size_t memory_usage() const override;
 
   // 병렬 스레드 수 설정 (OMP 백엔드)
-  void set_num_threads(int n) { num_threads = n; }
+  void set_num_threads(int n)
+  {
+    num_threads = n;
+  }
 
   // 공분산 정칙화 ε 설정: 작은 고유값을 ε·λ_max로 클램프.
   // 변경 시 inv_cov_cache 무효화 (재계산 필요)
-  void set_regularization_epsilon(double eps) {
+  void set_regularization_epsilon(double eps)
+  {
     regularization_epsilon = eps;
     inv_cov_cached = false;  // 역공분산 캐시 무효화
   }
 
   // 대응 업데이트 허용 오차: 변위가 임계치 미만이면 대응 재탐색 생략
-  void set_correspondence_update_tolerance(double angle, double trans) {
+  void set_correspondence_update_tolerance(double angle, double trans)
+  {
     correspondence_update_tolerance_rot = angle;
     correspondence_update_tolerance_trans = trans;
   }
 
   // 이웃 복셀 탐색 모드: DIRECT1(현재만), DIRECT7(+6면), DIRECT27(+26이웃)
-  void set_search_mode(NDTSearchMode mode) { search_mode = mode; }
+  void set_search_mode(NDTSearchMode mode)
+  {
+    search_mode = mode;
+  }
 
   // 유효 대응이 있는 소스 포인트 수 (linearize() 이후 호출)
-  int num_inliers() const {
+  int num_inliers() const
+  {
     int count = 0;
     for (const auto& c : correspondences) {
       if (c.valid) count++;
@@ -95,15 +106,20 @@ public:
   }
 
   // 인라이어 비율: num_inliers / |source|, [0, 1] 범위
-  double inlier_fraction() const {
+  double inlier_fraction() const
+  {
     return correspondences.empty() ? 0.0 : num_inliers() / static_cast<double>(correspondences.size());
   }
 
   // GMMVoxelMapCPU 타겟 맵 반환
-  const std::shared_ptr<const GMMVoxelMapCPU>& get_target() const { return target_voxels; }
+  const std::shared_ptr<const GMMVoxelMapCPU>& get_target() const
+  {
+    return target_voxels;
+  }
 
   // 팩터 딥 카피 (gtsam 그래프 복제용)
-  gtsam::NonlinearFactor::shared_ptr clone() const override {
+  gtsam::NonlinearFactor::shared_ptr clone() const override
+  {
     return gtsam::NonlinearFactor::shared_ptr(new IntegratedMixtureLightNDTFactor_(*this));
   }
 

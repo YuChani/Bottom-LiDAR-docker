@@ -134,7 +134,8 @@ docs/
 | [gmm-design.md](./gmm/gmm-design.md) | GMM 설계 문서 (아키텍처, 수학적 근거, 코드 동작, 수식-코드 매핑, 설계 결정 근거, 튜닝 가이드) |
 | [gmm-mathematical-foundations.md](./gmm/gmm-mathematical-foundations.md) | **GMM 수학적 기반 종합 문서** — EM 유도, 저수지 샘플링 증명, SE(3) Jacobian, Gauss-Newton Hessian, 수식-코드 매핑 22건, 참고 문헌 10건 |
 | [gmm-work-status.md](./gmm/gmm-work-status.md) | GMM 구현 작업 현황 추적 |
+| [gmm-voxel-structure-study.md](./gmm/gmm-voxel-structure-study.md) | **GMM/gtsam_points 복셀 생성 구조 학습 가이드** — IncrementalVoxelMap 해싱, GaussianVoxel vs GMMVoxel, Reservoir→EM 파이프라인, Factor 비교, Armadillo 의존성 |
 
 ---
 
-최종 수정: 2026-03-24
+최종 수정: 2026-03-25

@@ -11,4 +11,5 @@
 template class gtsam_points::IntegratedMixtureLightNDTFactor_<gtsam_points::PointCloud>;
 
 #include <gtsam_points/types/dummy_frame.hpp>
+
 template class gtsam_points::IntegratedMixtureLightNDTFactor_<gtsam_points::DummyFrame>;

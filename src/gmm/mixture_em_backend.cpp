@@ -16,7 +16,8 @@ namespace {
 // 전체 포인트의 표본 평균과 표본 공분산으로 단일 가우시안 생성.
 GMMFitResult single_component_fallback(
     const std::vector<Eigen::Vector4d>& points,
-    double regularization) {
+  double regularization)
+{
   const size_t N = points.size();
 
   // 표본 평균 계산: μ = (1/N) Σ p_i
@@ -57,7 +58,8 @@ GMMFitResult single_component_fallback(
 
 // Eigen 4D 동차 벡터 → Armadillo 3×N 행렬 변환.
 // Armadillo gmm_full은 3D 데이터를 기대하므로 w-component 제거.
-arma::mat eigen_to_arma(const std::vector<Eigen::Vector4d>& points) {
+arma::mat eigen_to_arma(const std::vector<Eigen::Vector4d>& points)
+{
   const size_t N = points.size();
   arma::mat data(3, N);  // 3행(xyz) × N열(포인트 수)
   for (size_t i = 0; i < N; i++) {
@@ -73,7 +75,8 @@ arma::mat eigen_to_arma(const std::vector<Eigen::Vector4d>& points) {
 GMMFitResult extract_result(
     const arma::gmm_full& model,
     const GMMFitParams& params,
-    bool converged) {
+  bool converged)
+{
   GMMFitResult result;
   result.converged = converged;
   result.iterations_run = params.max_em_iterations;
@@ -153,7 +156,8 @@ GMMFitResult extract_result(
 // random_spread: K개 초기 평균을 데이터에서 유클리드 거리 기반으로 분산 선택.
 GMMFitResult fit_gmm(
     const std::vector<Eigen::Vector4d>& points,
-    const GMMFitParams& params) {
+  const GMMFitParams& params)
+{
   const size_t N = points.size();
 
   // 포인트 0개이면 빈 결과 반환 (NaN 방지 — empty vector를 single_component_fallback에 넘기면 mean /= 0)
@@ -200,7 +204,8 @@ GMMFitResult fit_gmm(
 GMMFitResult fit_gmm(
     const std::vector<Eigen::Vector4d>& points,
     const GMMFitParams& params,
-    const std::vector<GMMComponent>& initial_components) {
+  const std::vector<GMMComponent>& initial_components)
+{
   const size_t N = points.size();
 
   // 무효한 입력이면 cold-start로 폴백

@@ -38,7 +38,8 @@ IntegratedMixtureLightNDTFactor_<SourceFrame>::IntegratedMixtureLightNDTFactor_(
   // dynamic_pointer_cast: GaussianVoxelMap → GMMVoxelMapCPU 다운캐스트
   // 실패 시 nullptr → 아래에서 abort()
   target_voxels(std::dynamic_pointer_cast<const GMMVoxelMapCPU>(target_voxels)),
-  source(source) {
+  source(source)
+{
   // 소스 포인트 유효성 검사
   if (!frame::has_points(*source)) {
     std::cerr << "error: source points have not been allocated!!" << std::endl;
@@ -68,7 +69,8 @@ IntegratedMixtureLightNDTFactor_<SourceFrame>::IntegratedMixtureLightNDTFactor_(
   correspondence_update_tolerance_trans(0.0),
   inv_cov_cached(false),
   target_voxels(std::dynamic_pointer_cast<const GMMVoxelMapCPU>(target_voxels)),
-  source(source) {
+  source(source)
+{
   if (!frame::has_points(*source)) {
     std::cerr << "error: source points have not been allocated!!" << std::endl;
     abort();
@@ -80,13 +82,16 @@ IntegratedMixtureLightNDTFactor_<SourceFrame>::IntegratedMixtureLightNDTFactor_(
 }
 
 template <typename SourceFrame>
-IntegratedMixtureLightNDTFactor_<SourceFrame>::~IntegratedMixtureLightNDTFactor_() {}
+IntegratedMixtureLightNDTFactor_<SourceFrame>::~IntegratedMixtureLightNDTFactor_()
+{
+}
 
 // ============================================================
 // print: 팩터 정보 출력 (디버깅용)
 // ============================================================
 template <typename SourceFrame>
-void IntegratedMixtureLightNDTFactor_<SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+void IntegratedMixtureLightNDTFactor_<SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const
+{
   std::cout << s << "IntegratedMixtureLightNDTFactor";
   if (is_binary) {
     std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
@@ -101,7 +106,8 @@ void IntegratedMixtureLightNDTFactor_<SourceFrame>::print(const std::string& s, 
 // memory_usage: 메모리 사용량 근사 추정
 // ============================================================
 template <typename SourceFrame>
-size_t IntegratedMixtureLightNDTFactor_<SourceFrame>::memory_usage() const {
+size_t IntegratedMixtureLightNDTFactor_<SourceFrame>::memory_usage() const
+{
   return sizeof(*this) + sizeof(MixtureNdtCorrespondence) * correspondences.capacity();
 }
 
@@ -118,7 +124,8 @@ size_t IntegratedMixtureLightNDTFactor_<SourceFrame>::memory_usage() const {
 //      이웃 복셀 탐색 → 각 복셀의 각 GMM 컴포넌트에 대해 마할라노비스 거리 계산
 //      → 최소 거리 컴포넌트를 winner-take-all로 선택
 template <typename SourceFrame>
-void IntegratedMixtureLightNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+void IntegratedMixtureLightNDTFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const
+{
   linearization_point = delta;
 
   // 포즈 변위 허용 오차 검사: 직전 탐색 포즈로부터의 변위가 임계치 미만이면 스킵
@@ -158,10 +165,13 @@ void IntegratedMixtureLightNDTFactor_<SourceFrame>::update_correspondences(const
       break;
     case NDTSearchMode::DIRECT27:
       // 3×3×3 이웃 전체 (가장 정확, 가장 느림)
-      for (int dx = -1; dx <= 1; dx++)
-        for (int dy = -1; dy <= 1; dy++)
-          for (int dz = -1; dz <= 1; dz++)
+      for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+          for (int dz = -1; dz <= 1; dz++) {
             neighbor_offsets.push_back(Eigen::Vector3i(dx, dy, dz));
+          }
+        }
+      }
       break;
   }
 
@@ -189,7 +199,8 @@ void IntegratedMixtureLightNDTFactor_<SourceFrame>::update_correspondences(const
   // ============================================================
   // 소스 포인트별 대응 탐색 (병렬)
   // ============================================================
-  const auto perpoint_task = [&](int i) {
+  const auto perpoint_task = [&](int i)
+  {
     if (do_update) {
       correspondences[i].valid = false;
 
@@ -205,14 +216,18 @@ void IntegratedMixtureLightNDTFactor_<SourceFrame>::update_correspondences(const
       for (const auto& offset : neighbor_offsets) {
         Eigen::Vector3i neighbor_coord = coord + offset;
         const auto voxel_id = target_voxels->lookup_voxel_index(neighbor_coord);
-        if (voxel_id < 0) continue;  // 해당 좌표에 복셀 없음
+        if (voxel_id < 0) {
+          continue;  // 해당 좌표에 복셀 없음
+        }
 
         const auto& voxel = target_voxels->lookup_voxel(voxel_id);
         const auto& comps = voxel.components();
 
         // 해당 복셀의 모든 GMM 컴포넌트 순회 (winner-take-all)
         for (size_t k = 0; k < comps.size(); k++) {
-          if (inv_cov_cache[voxel_id].empty()) continue;
+          if (inv_cov_cache[voxel_id].empty()) {
+            continue;
+          }
 
           // Σ_k^{-1} 캐시에서 가져옴
           const Eigen::Matrix4d& inv_cov = inv_cov_cache[voxel_id][k];
@@ -246,7 +261,8 @@ void IntegratedMixtureLightNDTFactor_<SourceFrame>::update_correspondences(const
     }
   } else {
 #ifdef GTSAM_POINTS_USE_TBB
-    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range)
+    {
       for (int i = range.begin(); i < range.end(); i++) {
         perpoint_task(i);
       }
@@ -277,7 +293,8 @@ double IntegratedMixtureLightNDTFactor_<SourceFrame>::evaluate(
   Eigen::Matrix<double, 6, 6>* H_source,
   Eigen::Matrix<double, 6, 6>* H_target_source,
   Eigen::Matrix<double, 6, 1>* b_target,
-  Eigen::Matrix<double, 6, 1>* b_source) const {
+  Eigen::Matrix<double, 6, 1>* b_source) const
+{
 
   // 대응이 아직 계산되지 않았으면 업데이트
   if (correspondences.size() != static_cast<size_t>(frame::size(*source))) {
@@ -290,7 +307,8 @@ double IntegratedMixtureLightNDTFactor_<SourceFrame>::evaluate(
                                  Eigen::Matrix<double, 6, 6>* H_source,
                                  Eigen::Matrix<double, 6, 6>* H_target_source,
                                  Eigen::Matrix<double, 6, 1>* b_target,
-                                 Eigen::Matrix<double, 6, 1>* b_source) {
+                                 Eigen::Matrix<double, 6, 1>* b_source)
+  {
     const auto& corr = correspondences[i];
     if (!corr.valid) {
       return 0.0;  // 대응 없는 포인트는 비용 기여 없음

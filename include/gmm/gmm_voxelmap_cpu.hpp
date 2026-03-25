@@ -16,7 +16,8 @@ namespace gtsam_points {
 /// @brief One Gaussian component of a GMM.
 // GMM 혼합 모델의 단일 가우시안 컴포넌트.
 // 각 복셀 내 K개 컴포넌트 중 하나로, mean(μ_k), cov(Σ_k), weight(π_k)를 보유.
-struct GMMComponent {
+struct GMMComponent
+{
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   Eigen::Vector4d mean = Eigen::Vector4d::Zero();  ///< homogeneous mean (w=0)
   // 동차 좌표 평균: (x, y, z, 0). w=0으로 설정하여 4x4 연산에서 차원 일관성 유지
@@ -30,7 +31,8 @@ struct GMMComponent {
 ///        and fits a K-component GMM on finalize().
 // 복셀 단위 GMM: 포인트를 저수지 샘플링(Algorithm R)으로 수집한 뒤,
 // finalize() 호출 시 Armadillo EM으로 K-컴포넌트 GMM을 피팅.
-struct GMMVoxel {
+struct GMMVoxel
+{
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Ptr = std::shared_ptr<GMMVoxel>;
@@ -38,7 +40,8 @@ public:
 
   /// @brief Per-voxel configuration, stored in IncrementalVoxelMap::voxel_setting.
   // 복셀별 GMM 설정: IncrementalVoxelMap의 voxel_insertion_setting()으로 전달
-  struct Setting {
+  struct Setting
+  {
     int max_components = 3;                ///< Maximum GMM components per voxel
     // 복셀당 최대 가우시안 컴포넌트 수 K. 포인트 분포가 단순하면 pruning으로 줄어듬
     int max_em_iterations = 20;            ///< EM iteration limit
@@ -79,7 +82,8 @@ public:
   // 복셀 내 모든 GMM 컴포넌트 평균에 대해 유클리드 거리 기반 KNN 탐색.
   // w-component 차이를 0으로 강제하여 동차 좌표 편향 방지.
   template <typename Result>
-  void knn_search(const Eigen::Vector4d& pt, Result& result) const {
+  void knn_search(const Eigen::Vector4d& pt, Result& result) const
+  {
     for (size_t k = 0; k < components_.size(); k++) {
       Eigen::Vector4d diff = pt - components_[k].mean;
       diff(3) = 0.0;  // w 성분 무시 (query w=1, mean w=0 → +1 편향 제거)
@@ -89,18 +93,30 @@ public:
   }
 
   /// @brief Access finalized GMM components.
-  const std::vector<GMMComponent>& components() const { return components_; }
+  const std::vector<GMMComponent>& components() const
+  {
+    return components_;
+  }
 
   /// @brief Access raw reservoir points.
-  const std::vector<Eigen::Vector4d>& reservoir() const { return reservoir_; }
+  const std::vector<Eigen::Vector4d>& reservoir() const
+  {
+    return reservoir_;
+  }
 
   /// @brief True if new points added since last finalize.
   // add() 호출 후 finalize() 전까지 true. 불필요한 재피팅 방지용 플래그.
-  bool is_dirty() const { return dirty_; }
+  bool is_dirty() const
+  {
+    return dirty_;
+  }
 
   /// @brief Total number of points ever seen by this voxel.
   // 저수지를 거친 총 포인트 수 (저수지 크기와 무관). Algorithm R의 N에 해당.
-  size_t total_points_seen() const { return total_points_seen_; }
+  size_t total_points_seen() const
+  {
+    return total_points_seen_;
+  }
 
 private:
   // 저수지 샘플링 상태
@@ -125,23 +141,51 @@ private:
 namespace frame {
 
 template <>
-struct traits<GMMVoxel> {
-  static int size(const GMMVoxel& v) { return static_cast<int>(v.size()); }
+struct traits<GMMVoxel>
+{
+  static int size(const GMMVoxel& v)
+  {
+    return static_cast<int>(v.size());
+  }
   // 컴포넌트 개수 K 반환
 
-  static bool has_points(const GMMVoxel& v) { return v.size() > 0; }
+  static bool has_points(const GMMVoxel& v)
+  {
+    return v.size() > 0;
+  }
   // 최소 1개 컴포넌트 존재 시 true
-  static bool has_normals(const GMMVoxel&) { return false; }
-  static bool has_covs(const GMMVoxel& v) { return v.size() > 0; }
+  static bool has_normals(const GMMVoxel&)
+  {
+    return false;
+  }
+  static bool has_covs(const GMMVoxel& v)
+  {
+    return v.size() > 0;
+  }
   // GMM 컴포넌트는 항상 공분산을 보유
-  static bool has_intensities(const GMMVoxel&) { return false; }
+  static bool has_intensities(const GMMVoxel&)
+  {
+    return false;
+  }
 
   // 값(by-value) 반환: components_ 벡터 내부 데이터의 복사본.
   // decltype(auto) in frame::point() free function이 이를 올바르게 처리.
-  static Eigen::Vector4d point(const GMMVoxel& v, size_t k) { return v.components()[k].mean; }
-  static Eigen::Vector4d normal(const GMMVoxel&, size_t) { return Eigen::Vector4d::Zero(); }
-  static Eigen::Matrix4d cov(const GMMVoxel& v, size_t k) { return v.components()[k].cov; }
-  static double intensity(const GMMVoxel&, size_t) { return 0.0; }
+  static Eigen::Vector4d point(const GMMVoxel& v, size_t k)
+  {
+    return v.components()[k].mean;
+  }
+  static Eigen::Vector4d normal(const GMMVoxel&, size_t)
+  {
+    return Eigen::Vector4d::Zero();
+  }
+  static Eigen::Matrix4d cov(const GMMVoxel& v, size_t k)
+  {
+    return v.components()[k].cov;
+  }
+  static double intensity(const GMMVoxel&, size_t)
+  {
+    return 0.0;
+  }
 };
 
 }  // namespace frame
@@ -156,17 +200,42 @@ struct traits<GMMVoxel> {
 namespace frame {
 
 template <>
-struct traits<IncrementalVoxelMap<GMMVoxel>> {
-  static bool has_points(const IncrementalVoxelMap<GMMVoxel>& ivox) { return ivox.has_points(); }
-  static bool has_normals(const IncrementalVoxelMap<GMMVoxel>& ivox) { return ivox.has_normals(); }
-  static bool has_covs(const IncrementalVoxelMap<GMMVoxel>& ivox) { return ivox.has_covs(); }
-  static bool has_intensities(const IncrementalVoxelMap<GMMVoxel>& ivox) { return ivox.has_intensities(); }
+struct traits<IncrementalVoxelMap<GMMVoxel>>
+{
+  static bool has_points(const IncrementalVoxelMap<GMMVoxel>& ivox)
+  {
+    return ivox.has_points();
+  }
+  static bool has_normals(const IncrementalVoxelMap<GMMVoxel>& ivox)
+  {
+    return ivox.has_normals();
+  }
+  static bool has_covs(const IncrementalVoxelMap<GMMVoxel>& ivox)
+  {
+    return ivox.has_covs();
+  }
+  static bool has_intensities(const IncrementalVoxelMap<GMMVoxel>& ivox)
+  {
+    return ivox.has_intensities();
+  }
 
   // ivox.point(i): 전역 flat 인덱스 i에 해당하는 복셀/컴포넌트의 평균
-  static Eigen::Vector4d point(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i) { return ivox.point(i); }
-  static Eigen::Vector4d normal(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i) { return ivox.normal(i); }
-  static Eigen::Matrix4d cov(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i) { return ivox.cov(i); }
-  static double intensity(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i) { return ivox.intensity(i); }
+  static Eigen::Vector4d point(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i)
+  {
+    return ivox.point(i);
+  }
+  static Eigen::Vector4d normal(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i)
+  {
+    return ivox.normal(i);
+  }
+  static Eigen::Matrix4d cov(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i)
+  {
+    return ivox.cov(i);
+  }
+  static double intensity(const IncrementalVoxelMap<GMMVoxel>& ivox, size_t i)
+  {
+    return ivox.intensity(i);
+  }
 };
 
 }  // namespace frame
@@ -177,7 +246,8 @@ struct traits<IncrementalVoxelMap<GMMVoxel>> {
 // GaussianVoxelMap 인터페이스를 구현하면서 내부적으로 IncrementalVoxelMap<GMMVoxel>을 사용.
 // GaussianVoxelMapCPU와 달리 복셀당 K개 GMM 컴포넌트를 보유.
 // 다이아몬드 상속 아님: GaussianVoxelMap(추상)과 IncrementalVoxelMap(구현)을 다중 상속.
-class GMMVoxelMapCPU : public GaussianVoxelMap, public IncrementalVoxelMap<GMMVoxel> {
+class GMMVoxelMapCPU : public GaussianVoxelMap, public IncrementalVoxelMap<GMMVoxel>
+{
 public:
   using Ptr = std::shared_ptr<GMMVoxelMapCPU>;
   using ConstPtr = std::shared_ptr<const GMMVoxelMapCPU>;
@@ -200,7 +270,10 @@ public:
 
   /// @brief GMM-specific setting accessor.
   // IncrementalVoxelMap::voxel_insertion_setting()을 GMMVoxel::Setting& 타입으로 노출
-  GMMVoxel::Setting& gmm_setting() { return voxel_insertion_setting(); }
+  GMMVoxel::Setting& gmm_setting()
+  {
+    return voxel_insertion_setting();
+  }
 
   /// @brief Compute voxel coordinate from a point.
   // 4D 동차 좌표 → 3D 정수 복셀 좌표: floor(x * inv_leaf_size).head<3>()
@@ -216,7 +289,10 @@ public:
 
   /// @brief Number of voxels.
   // 현재 맵에 존재하는 복셀 수. flat_voxels 벡터 크기.
-  size_t num_voxels() const { return flat_voxels.size(); }
+  size_t num_voxels() const
+  {
+    return flat_voxels.size();
+  }
 
   /// @brief Finalize all dirty voxels (deferred EM fitting).
   // 지연된 EM 피팅 일괄 실행: insert() 시 생략된 finalize()를 모든 dirty 복셀에 대해 수행.
@@ -245,16 +321,41 @@ private:
 namespace frame {
 
 template <>
-struct traits<GMMVoxelMapCPU> {
-  static bool has_points(const GMMVoxelMapCPU& ivox) { return ivox.has_points(); }
-  static bool has_normals(const GMMVoxelMapCPU& ivox) { return ivox.has_normals(); }
-  static bool has_covs(const GMMVoxelMapCPU& ivox) { return ivox.has_covs(); }
-  static bool has_intensities(const GMMVoxelMapCPU& ivox) { return ivox.has_intensities(); }
+struct traits<GMMVoxelMapCPU>
+{
+  static bool has_points(const GMMVoxelMapCPU& ivox)
+  {
+    return ivox.has_points();
+  }
+  static bool has_normals(const GMMVoxelMapCPU& ivox)
+  {
+    return ivox.has_normals();
+  }
+  static bool has_covs(const GMMVoxelMapCPU& ivox)
+  {
+    return ivox.has_covs();
+  }
+  static bool has_intensities(const GMMVoxelMapCPU& ivox)
+  {
+    return ivox.has_intensities();
+  }
 
-  static decltype(auto) point(const GMMVoxelMapCPU& ivox, size_t i) { return ivox.point(i); }
-  static decltype(auto) normal(const GMMVoxelMapCPU& ivox, size_t i) { return ivox.normal(i); }
-  static decltype(auto) cov(const GMMVoxelMapCPU& ivox, size_t i) { return ivox.cov(i); }
-  static decltype(auto) intensity(const GMMVoxelMapCPU& ivox, size_t i) { return ivox.intensity(i); }
+  static decltype(auto) point(const GMMVoxelMapCPU& ivox, size_t i)
+  {
+    return ivox.point(i);
+  }
+  static decltype(auto) normal(const GMMVoxelMapCPU& ivox, size_t i)
+  {
+    return ivox.normal(i);
+  }
+  static decltype(auto) cov(const GMMVoxelMapCPU& ivox, size_t i)
+  {
+    return ivox.cov(i);
+  }
+  static decltype(auto) intensity(const GMMVoxelMapCPU& ivox, size_t i)
+  {
+    return ivox.intensity(i);
+  }
 };
 
 }  // namespace frame
