@@ -135,6 +135,7 @@ docs/
 | [gmm-mathematical-foundations.md](./gmm/gmm-mathematical-foundations.md) | **GMM 수학적 기반 종합 문서** — EM 유도, 저수지 샘플링 증명, SE(3) Jacobian, Gauss-Newton Hessian, 수식-코드 매핑 22건, 참고 문헌 10건 |
 | [gmm-work-status.md](./gmm/gmm-work-status.md) | GMM 구현 작업 현황 추적 |
 | [gmm-voxel-structure-study.md](./gmm/gmm-voxel-structure-study.md) | **GMM/gtsam_points 복셀 생성 구조 학습 가이드** — IncrementalVoxelMap 해싱, GaussianVoxel vs GMMVoxel, Reservoir→EM 파이프라인, Factor 비교, Armadillo 의존성 |
+| [lightndt-vs-mixture-lightndt-comparison.md](./gmm/lightndt-vs-mixture-lightndt-comparison.md) | **LightNDT vs MixtureLightNDT 코드 레벨 정밀 비교** — 헤더/구현 라인 단위 비교, update_correspondences/evaluate 차이, π_k 가중 Hessian, diff(3) 보정, 요약 테이블, 학습 질문 |
 
 ---
 
