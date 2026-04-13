@@ -20,7 +20,9 @@ namespace gtsam_points {
 
 template class IncrementalVoxelMap<GaussianVoxel>;
 
+// yuchan : voxel 가평균, 가분산 how?
 void GaussianVoxel::add(const Setting& setting, const PointCloud& points, size_t i) {
+  // finalized면 평균/분산을 다시 복원
   if (finalized) {
     this->finalized = false;
     this->mean *= num_points;
@@ -40,7 +42,8 @@ void GaussianVoxel::finalize() {
   if (finalized) {
     return;
   }
-
+  // yuchan : 가평균, 가분산
+  // 가분산은 복셀내 포인트들의 공간적 분포로 계산x -> 포인트들의 공분산 평균으로 계산
   mean /= num_points;
   cov /= num_points;
   finalized = true;

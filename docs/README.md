@@ -76,6 +76,7 @@ docs/
 | [NDT_수학_코드_7문항_상세분석_2026-03-09.md](./ndt/analysis/NDT_수학_코드_7문항_상세분석_2026-03-09.md) | d1/d2/d3, Jacobian 4×6, weight, LM 불일치 등 7문항 상세 분석 |
 | [NDT_Hessian_H1_H2_H3_수학_분석_2026-03-09.md](./ndt/analysis/NDT_Hessian_H1_H2_H3_수학_분석_2026-03-09.md) | **H1/H2/H3 Hessian 수학적 분해** — PSD 조건, 수렴 효과, GTSAM 호환성, 달팽이 수렴 원인 |
 | [NDT_multi_resolution_상세분석_ko.md](./ndt/analysis/NDT_multi_resolution_상세분석_ko.md) | multi-resolution NDT 구조와 효과 분석 |
+| [NDT_가평균_가분산_계산방식_상세분석.md](./ndt/analysis/NDT_가평균_가분산_계산방식_상세분석.md) | **가평균/가분산 계산 방식 상세 분석** — GaussianVoxel의 mean/cov 파이프라인, CPU/GPU 수식, VGICP-style vs 전통 NDT 비교 |
 
 ### 3.3 비교 문서 (`docs/ndt/comparison/`)
 
@@ -136,7 +137,9 @@ docs/
 | [gmm-work-status.md](./gmm/gmm-work-status.md) | GMM 구현 작업 현황 추적 |
 | [gmm-voxel-structure-study.md](./gmm/gmm-voxel-structure-study.md) | **GMM/gtsam_points 복셀 생성 구조 학습 가이드** — IncrementalVoxelMap 해싱, GaussianVoxel vs GMMVoxel, Reservoir→EM 파이프라인, Factor 비교, Armadillo 의존성 |
 | [lightndt-vs-mixture-lightndt-comparison.md](./gmm/lightndt-vs-mixture-lightndt-comparison.md) | **LightNDT vs MixtureLightNDT 코드 레벨 정밀 비교** — 헤더/구현 라인 단위 비교, update_correspondences/evaluate 차이, π_k 가중 Hessian, diff(3) 보정, 요약 테이블, 학습 질문 |
+| [em-mog-fitting-tutorial.md](./gmm/em-mog-fitting-tutorial.md) | **EM 기반 MoG 피팅 튜토리얼** — EM 알고리즘 이론, E/M-step 수식, 수치 예제, 저수지 샘플링, Cold/Warm-Start 흐름도, 후처리(정칙화·Pruning·재정규화), End-to-End 데이터 흐름, 의사 코드, 수식-코드 매핑 |
+| [em-mog-point-cloud-theory.md](./gmm/em-mog-point-cloud-theory.md) | **Point Cloud MoG Fitting 수학적 이론** — 확률 모델 정의, MLE 난관, EM full derivation (Q-function, E/M-step 행렬 미적분 유도, Lagrange multiplier), 수렴 보장 증명, K-Means++ 초기화, degenerate covariance 처리, 공분산 구조 제한, 대규모 처리(sufficient statistics·mini-batch), 수치 안정성(logsumexp·Cholesky), BIC/AIC/ICL/DPGMM model selection |
 
 ---
 
-최종 수정: 2026-03-25
+최종 수정: 2026-04-02

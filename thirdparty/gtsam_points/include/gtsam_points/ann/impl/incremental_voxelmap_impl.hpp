@@ -29,23 +29,24 @@ void IncrementalVoxelMap<VoxelContents>::clear() {
 
 template <typename VoxelContents>
 void IncrementalVoxelMap<VoxelContents>::insert(const PointCloud& points) {
-  // Insert points to the voxelmap
+  // yuchan : 복셀 삽입
+  // Insert points to the voxelmap 포인트별 복셀 삽입
   for (size_t i = 0; i < points.size(); i++) {
     const Eigen::Vector3i coord = fast_floor(points.points[i] * inv_leaf_size).template head<3>();
 
     auto found = voxels.find(coord);
     if (found == voxels.end()) {
       auto voxel = std::make_shared<std::pair<VoxelInfo, VoxelContents>>(VoxelInfo(coord, lru_counter), VoxelContents());
-
+      // 새로운 복셀 생성
       found = voxels.emplace_hint(found, coord, flat_voxels.size());
       flat_voxels.emplace_back(voxel);
     }
 
     auto& [info, voxel] = *flat_voxels[found->second];
     info.lru = lru_counter;
-    voxel.add(voxel_setting, points, i);
+    voxel.add(voxel_setting, points, i);  // VoxelContents::add() 호출: 포인트 추가, dirty 플래그 설정
   }
-
+  // yuchan : LRU 제거
   if ((++lru_counter) % lru_clear_cycle == 0) {
     // Remove least recently used voxels
     auto remove_counter =
@@ -54,7 +55,7 @@ void IncrementalVoxelMap<VoxelContents>::insert(const PointCloud& points) {
       });
     flat_voxels.erase(remove_counter, flat_voxels.end());
 
-    // Rehash
+    // 해시맵 재구성
     voxels.clear();
     for (size_t i = 0; i < flat_voxels.size(); i++) {
       voxels[flat_voxels[i]->first.coord] = i;
